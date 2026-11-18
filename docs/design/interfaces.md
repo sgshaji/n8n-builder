@@ -2,7 +2,7 @@
 
 **Purpose:** the exact hand-overs between the HARSLL workflows, so they can be built in parallel and fit together. The [design](HARSLL-n8n-design.md) says *what* each part does; this document says *what passes between them*. If the two disagree, raise it; do not guess.
 
-**Status:** stage 1 of the parallel build, 19 November 2026.
+**Status:** written for the parallel build (19 November 2026) and updated at the reconcile stage to match what was built.
 
 ## Shared conventions
 
@@ -19,6 +19,7 @@
 | Node names | Plain English, saying what the step does: "Check 1: row usable?", "Refer case", not "IF1" |
 | Workflow settings | `executionOrder: v1`, `timezone: Europe/London`. Leave run-history settings at their defaults during the build; they are set at the reconcile stage |
 | Validation | Validate every workflow with the n8n-mcp validator before saving, and fix errors |
+| **Silent expression errors** | In n8n 2.48.5 an expression that hits an ordinary JavaScript error (bad JSON, a property of `null`) does **not** stop the node: the value becomes `null`. Never rely on an expression failing to stop a dangerous path. Parse JSON only in Code nodes (they do stop), and check other values explicitly, with the cautious branch as the fallback |
 
 ## Settings
 
@@ -49,7 +50,7 @@ Workflow **HARSLL – Settings** (`lq2vGGGRcILxjPpb`, published). Returns one it
 | `inputFolder`, `archiveFolder`, `rejectedFolder`, `reportsFolder` | `/files/input`, `/files/archive`, `/files/rejected`, `/files/reports` | |
 | `rbisBaseUrl` | `http://mock-rbis:8080` | |
 | `casesTableId`, `batchesTableId`, `lockTableId` | See [Tables](#tables) | |
-| `performerWorkflowId`, `adapterWorkflowId` | `""` until built | Filled in at the reconcile stage |
+| `performerWorkflowId`, `adapterWorkflowId` | `Bxb1mMwb4TOFuP8j`, `UEa9ahhsExQ8SXfb` | The Performer and the RBIS adapter |
 
 The email credential is **Mailpit (local test mailbox)** (`qwZ9yygtBArarq6Q`, SMTP to `mailpit:1025`).
 
@@ -91,7 +92,7 @@ Each lock table has one row: `{ name: "dispatcher", lockedAt: null, lockedBy: ""
 | `stepsDone` | string | Performer | JSON array of step IDs, see [Step IDs](#step-ids). `"[]"` initially |
 | `attempts` | number | Performer (claim) | `0` initially |
 | `submissions` | number | Dispatcher | `1` initially; +1 when reopened |
-| `previousResult` | string | Dispatcher | On reopen: JSON `{"status","reasonCode","batchId"}` of the earlier result. `""` otherwise |
+| `previousResult` | string | Dispatcher | On reopen: JSON `{"status","reasonCode","batchId"}` of the earlier result. `""` otherwise. A reopened case also takes the new row's details (row number, address text, contacts, forwarding address, lead and joint links) |
 | `lastAttemptAt` | date | Performer (claim) | Time the latest try started |
 | `errorDetail` | string | Performer | Technical error text for `failed`; `""` otherwise |
 
@@ -114,7 +115,7 @@ The Dispatcher has **three** triggers. All three run the same steps.
 | Trigger | Node | Detail |
 | --- | --- | --- |
 | File added | **Local File Trigger** | Folder from the trigger node (it cannot read settings): `/files/input` in production, `/files/trackB/input` during the build. Event "File Added", **Use Polling** and **Await Write Finish** on, then a **Wait** of `fileSettleSeconds` |
-| Timer | **Schedule Trigger** | Every 15 minutes |
+| Timer | **Schedule Trigger** | Every 15 minutes, not on the quarter hour. It is also the only trigger for files copied with an old modified time, which the file trigger may not notice |
 | **Run now** | **Webhook**, `POST /webhook/harsll-run-now`, responds immediately with `{"started": true}` | **Addition to the design.** Lets the test runner start a run, for example to retry failed cases, without waiting for the timer. No waiting step. Local only; review before production |
 
 ## Dispatcher → Performer
@@ -148,7 +149,7 @@ The Dispatcher calls **HARSLL – Performer** (ID from `settings.performerWorkfl
 }
 ```
 
-`claimed: false` means another run had the case; the other fields are then the case's current values. The Performer writes every result to the Cases table itself; the output is for the Dispatcher's counts only. **The Performer must never fail as a whole**: every error ends with the case marked `failed`, and the output says so.
+`claimed: false` means another run had the case; the other fields are then the case's current values. A joint row whose lead row is still unfinished is **released**: put back as the Dispatcher found it, with output `claimed: true` and that status (`new` or `failed`). The Dispatcher reads statuses from the Cases table, so it treats such a row as unfinished. The Performer writes every result to the Cases table itself; the output is for the Dispatcher's counts only. **The Performer must never fail as a whole**: every error ends with the case marked `failed`, and the output says so.
 
 ## Performer → RBIS adapter
 
@@ -191,7 +192,16 @@ On failure `ok` is `false` and `error` is `{ "code", "message", "httpStatus", "t
 | `setContactDetails` | `{ name, email, phone }` | `{ account }` | The same contact is already saved | |
 | `setForwardingAddress` | `{ address }` | `{ account }` | The same address is already saved | |
 
-Address match for `findAccount`: `normalise(address)` and `normalise(postcode)` both equal the account's.
+Address match for `findAccount`: `normalise(address)` and `normalise(postcode)` both equal the account's. Only a `404` with code `ACCOUNT_NOT_FOUND` counts as "not found"; any other 404 (for example a wrong `rbisBaseUrl`) is an error. `data.account` is `null` whenever `found` is `false`.
+
+Further adapter error codes, all with `httpStatus: null`:
+
+| Code | `transient` | Meaning |
+| --- | --- | --- |
+| `RBIS_UNREACHABLE`, `RBIS_TIMEOUT` | `true` | No answer from RBIS. HTTP 408 and 429 also count as transient, like 5xx |
+| `UNKNOWN_OPERATION`, `MISSING_REF`, `MISSING_RBIS_BASE_URL`, `INVALID_PARAMS` | `false` | The call was wrong. `endLiability` without `parties` is `INVALID_PARAMS` |
+| `UNEXPECTED_RBIS_ANSWER` | `false` | RBIS answered in a shape the adapter cannot read; refused before any comparison or write |
+| `ADAPTER_ERROR` | `false` | Anything else inside the adapter |
 
 ### Step IDs
 
@@ -211,13 +221,15 @@ A step whose call returned `alreadyDone: true` is recorded too.
 
 | Who | URL from n8n | URL from your machine | Rule |
 | --- | --- | --- | --- |
-| Reconcile stage only | `http://mock-rbis:8080` | http://localhost:8088 | **Do not use during the parallel build** |
-| Track A | `http://mock-rbis-a:8080` | http://localhost:8089 | Track A may reset it and simulate outages |
-| Track C | `http://mock-rbis-c:8080` | http://localhost:8091 | Track C may reset it and simulate outages |
+| Everyone, after the build | `http://mock-rbis:8080` | http://localhost:8088 | Used by the workflows and the test runner |
+| Track A (build only, removed) | `http://mock-rbis-a:8080` | http://localhost:8089 | |
+| Track C (build only, removed) | `http://mock-rbis-c:8080` | http://localhost:8091 | |
 
 All load `test-data/rbis-accounts.json`. Endpoints: [mock-rbis/README.md](../../mock-rbis/README.md).
 
-## Track resources
+## Track resources (build only)
+
+These existed during the parallel build and were **removed at the reconcile stage**. Kept here as a record.
 
 | Track | Builds | Uses | Folders |
 | --- | --- | --- | --- |

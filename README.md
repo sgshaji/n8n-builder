@@ -12,7 +12,7 @@ HARSLL keeps council tax accounts in step with council tenancy changes: when a t
 | 1 | Run n8n locally with Docker | ✅ Done |
 | 2 | Connect the n8n MCP servers to Claude Code | ✅ Done |
 | 3 | Design the n8n workflows | ✅ Done: [design](docs/design/HARSLL-n8n-design.md), revision 3 approved |
-| 4 | Build and test, against a pretend RBIS | ⏳ In progress: trials passed, pretend RBIS built; workflows next |
+| 4 | Build and test, against a pretend RBIS | ✅ Done: four workflows built; all 37 test scenarios pass ([testing](docs/testing.md)) |
 | 5 | Move to the real environment | Not started |
 
 ## How the rebuild works
@@ -42,14 +42,16 @@ n8n-builder/
 ├── data/                  Spreadsheets in and out (contents ignored by Git)
 ├── docs/                  All documentation (start at docs/README.md)
 │   ├── business/          Business overview, plain English
-│   ├── design/            How HARSLL is rebuilt in n8n
+│   ├── build-notes/       What each parallel build track did
+│   ├── design/            How HARSLL is rebuilt in n8n, and the exact interfaces
 │   ├── process/           How the current UiPath robots work
 │   ├── setup/             Step-by-step setup guides
 │   └── source/            Original flowcharts (local only, not committed)
 ├── mock-rbis/             Pretend RBIS: a stand-in for the real council tax system
-├── scripts/               Helpers that start the MCP servers, reading secrets from .env
-├── test-data/             Made-up accounts and test spreadsheets
-└── workflows/             Exported n8n workflows (JSON)
+├── scripts/               Test runner, spreadsheet generator, MCP launchers (secrets read from .env)
+├── test-data/             Made-up accounts, the 37 test scenarios and their spreadsheets
+├── tests/                 Component tests from the parallel build (record only)
+└── workflows/             The four exported n8n workflows (JSON)
 ```
 
 ## Getting started
@@ -68,6 +70,15 @@ Then follow **[Run n8n locally with Docker](docs/setup/01-run-n8n-locally.md)**.
 3. Open http://localhost:5678 and create your owner account.
 
 To let Claude Code build workflows, follow **[Connect the n8n MCP servers](docs/setup/02-connect-mcp-servers.md)**.
+
+To check everything works, import and publish the four workflows from [`workflows/`](workflows/README.md), then run the tests (about 11 minutes):
+
+```bash
+node --test scripts/ mock-rbis/
+node scripts/run-tests.mjs
+```
+
+See **[Testing HARSLL](docs/testing.md)**.
 
 | Service | Address |
 | --- | --- |

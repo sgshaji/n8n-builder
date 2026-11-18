@@ -98,6 +98,7 @@ A missing key or token, or n8n not running, is reported in plain words. Neither 
 
 | Problem | What to do |
 | --- | --- |
+| `n8n-mcp` tools say "Unable to connect to n8n" after n8n was restarted | `n8n-mcp` shares the n8n container's network, so a restart of n8n cuts it off. In Claude Code, run `/mcp` and reconnect `n8n-mcp` (or reload VS Code) |
 | `/mcp` shows `n8n-mcp` as failed | Check n8n is running (`docker compose ps`). The script needs the container `n8n-builder-n8n-1` to exist |
 | `N8N_API_KEY is missing or empty in .env` | Do step 1, then restart Claude Code |
 | `N8N_MCP_TOKEN is missing or empty in .env` | Do step 2, then restart Claude Code |

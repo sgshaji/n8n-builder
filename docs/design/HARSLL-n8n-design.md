@@ -1,7 +1,7 @@
 # HARSLL in n8n: design
 
-**Status:** Revision 3, **approved** 19 November 2026
-**Phase:** design (3 of 5) complete. The build (Phase 4) follows this document.
+**Status:** Revision 3, **approved** 19 November 2026, with the [changes made during the build](#changes-made-during-the-build-phase-4)
+**Phase:** design (3 of 5) complete; built in Phase 4. Exact hand-overs between the workflows: [interfaces.md](interfaces.md)
 **Read first:** [Business overview](../business/HARSLL-business-overview.md) · [Current UiPath process](../process/HARSLL-uipath-process.md)
 
 ## Summary
@@ -14,6 +14,41 @@ HARSLL is rebuilt as **four n8n workflows**, a **Cases table** with two small he
 - **Unknown business rules are settings** with cautious defaults, listed in [Settings and assumptions](#settings-and-assumptions).
 
 ## Revision history
+
+### Changes made during the build (Phase 4)
+
+The three build tracks met situations this design did not cover, or covered loosely. Each was settled with the most cautious reading and is now part of the design. Detail is in the [build notes](../build-notes/).
+
+**New behaviour**
+
+| # | Situation | What the workflows do | From |
+| --- | --- | --- | --- |
+| B1 | **n8n hides some errors.** In n8n 2.48.5 an expression that hits an ordinary JavaScript error (bad JSON, reading a property of nothing) does not stop the step; the value just becomes empty | **Build rule:** never rely on an expression failing. JSON is parsed only in Code nodes, which do stop on errors, and other values are checked explicitly. Added checks: "Settings complete?" (Dispatcher), "Case row and settings usable?" (Performer), "RBIS answer readable?" (adapter) | Track A |
+| B2 | **The reply to the first RBIS change is lost** | On a retry only: if nobody is liable and the liability this case ends ended on exactly the case's date, the first change is counted as done and the case carries on. The first try stays strict | Track A |
+| B3 | **A joint row runs while its lead row is unfinished** (should not happen) | The joint row is put back as the Dispatcher found it and waits | Track A |
+| B4 | **RBIS refuses a step part-way through an update** | Adding a person refused → `UNABLE_TO_ADD_PARTY`; ending refused → `NO_OPTION_TO_TERMINATE`; end before start → `CHECK_DATES`; anything else → `failed` | Track A |
+| B5 | **RBIS gives an answer the adapter cannot read, or the RBIS address is wrong** | Refused as a technical error, so a misconfiguration cannot refer every case as "address not found" | Track A |
+| B6 | **Settings are needed before the lock** (the lock table and the wait time are settings) | The Dispatcher loads settings first. Loading changes nothing | Track B |
+| B7 | **When to decide a hold** | Just before each case, so a move-in can run in the same pass once its move-out has succeeded | Track B |
+| B8 | **The same row twice in one file** | Recorded once | Track B |
+| B9 | **A referred row sent again** | The reopened case takes the new row's details as well as the new batch | Track B |
+| B10 | **A file whose rows were all recorded before** | Archived, and the summary email is still sent, with zero counts | Track B |
+| B11 | **Nothing in a batch needs a person** | No worklist file; the email says none is needed | Track B |
+| B12 | **Rejected file names** | `<date-time>_<name>`, like archived files | Track B |
+| B13 | **The same unsafe file name arrives again** | No second rename email | Track B |
+| B14 | **Another run takes over the lock** (after it went stale) | This run stops and does not report | Track B |
+| B15 | **A header-only, zero-byte or text file named `.xlsx`** | Rejected at once as "no rows". Only a damaged spreadsheet is "unreadable" and retried | Track B |
+| B16 | **Starting a run for tests** | A third Dispatcher trigger, **Run now** (`POST /webhook/harsll-run-now`), for local testing. Review before production | Interfaces |
+
+**Found during the build, not yet settled.** These are listed in [Open questions](#open-questions).
+
+- **Files copied with their old modified time** (normal for a Windows copy) do not reliably start the file trigger. The 15-minute timer picks them up. Fresh files start a run within about 3 seconds.
+- **The pretend RBIS ends every current liability.** A move-out of one of two joint tenants ends both. A move-in also passes when a tenant is liable alongside the landlord, and that tenant would be ended too.
+- **A row number is one lower than in Excel** for rows after a completely blank row.
+- **File names ending `.XLSX` in capitals are ignored**, with no email.
+- **`isFlat` follows the literal rule**: "Flatford Road" would count as a flat.
+- **Adding a person to an existing tenancy** (switched off): the detail record for that start date usually exists already, so the new person is not listed in it.
+- **`jointTenantHandling: referLaterRows`** refers joint rows with `EARLIER_ROW_NOT_COMPLETED`, whose wording does not quite fit. A new reason code may be wanted.
 
 ### What changed in revision 3
 
@@ -681,3 +716,9 @@ These add to the [business overview's decisions](../business/HARSLL-business-ove
 | 9 | How long should case records, worklists and archived files be kept? | Personal data |
 | 10 | Where will files arrive in production, and which mail server sends the summary? | Phase 5 |
 | 11 | How can RBIS be reached: API, database or screens only? | Whether n8n can do the RBIS steps at all |
+| 12 | When one of two joint tenants moves out, should the other stay liable? Should a move-in be referred if a tenant is liable alongside the landlord? | Move-out path, check 4 |
+| 13 | How will files reach the input folder in production? A copy that keeps the old modified time waits for the 15-minute timer | Dispatcher trigger, timer interval |
+| 14 | Should a file ending `.XLSX` in capitals be read, or get a rename email? | Dispatcher intake |
+| 15 | Is "starts with Flat" the right test for a flat? ("Flatford Road" would count) | `isFlat`, address search |
+| 16 | When a person is added to an existing tenancy, should the existing detail record list them? | `addPersonToExistingTenancy` |
+| 17 | Does the **Run now** trigger stay in production? If so, it needs authentication | Dispatcher triggers |

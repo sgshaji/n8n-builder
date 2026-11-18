@@ -26,6 +26,13 @@ services:
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
       N8N_DIAGNOSTICS_ENABLED: "false"
 
+      # --- Run history ---
+      # The HARSLL workflows keep no data from successful runs (a setting on each workflow).
+      # Failed runs are kept for diagnosis, then removed after 168 hours (7 days): they can
+      # hold spreadsheet rows and case details.
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+
       # --- Files ---
       # Workflows may only read and write files under /files (the local data/ folder).
       N8N_RESTRICT_FILE_ACCESS_TO: /files

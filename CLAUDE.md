@@ -28,7 +28,10 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 - Local stack: `compose.yaml` runs n8n (pinned in `.env`, currently 2.48.5) at http://localhost:5678 and Mailpit at http://localhost:8025. Setup guide: `docs/setup/01-run-n8n-locally.md`.
 - Pretend RBIS: `mock-rbis/server.mjs` (plain Node.js, no packages) runs as the `mock-rbis` service at http://localhost:8088; workflows reach it at `http://mock-rbis:8080`. Accounts come from `test-data/rbis-accounts.json`. Run its checks with `node --test mock-rbis/` after any change, then `docker compose restart mock-rbis`.
 - In Git Bash, a command passed to `docker compose exec` must not contain absolute container paths (they are rewritten to Windows paths). Use relative paths or `sh -c '...'`.
-- Deleting an active n8n workflow fails: deactivate it first.
+- Deleting an n8n workflow through the API needs it deactivated, then archived (`POST /workflows/{id}/archive`), then deleted.
+- Restarting n8n (including test scenario 36) cuts off the `n8n-mcp` server: reconnect it with `/mcp`. Meanwhile, use the n8n public API (key in `.env`) or `n8n-instance`.
+- In n8n 2.48.5 an expression that hits a plain JavaScript error yields `null` instead of failing. Parse JSON only in Code nodes and check values explicitly (see `docs/design/interfaces.md`).
+- Tests: `node --test scripts/ mock-rbis/` (unit), then `node scripts/run-tests.mjs` (all 37 scenarios end to end, ~11 min; `--include-slow` adds scenario 36). Guide: `docs/testing.md`. Never change an expected result just to match a workflow: settle it from the design.
 - A workflow called by another (Execute Sub-workflow) runs **only its published version**: publish it, and after every edit check the published version is current (`n8n_get_workflow` mode `active`).
 - Workflow and table IDs can come from expressions, e.g. `{"__rl": true, "mode": "id", "value": "={{ $json.settings.casesTableId }}"}`. Proven for Execute Sub-workflow and Data table nodes.
 - The handovers between workflows (settings, tables, keys, Performer and adapter input/output) are fixed in `docs/design/interfaces.md`.

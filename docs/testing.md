@@ -1,6 +1,6 @@
 # Testing HARSLL
 
-**Status:** draft, written during the parallel build (track C), 19 November 2026. The workflows did not exist yet when it was written, so the timings below are estimates. Update them after the first full run.
+**Status:** in use. Written during the parallel build (track C), 19 November 2026; timings measured on the first full runs against the finished workflows.
 
 This guide explains how the HARSLL workflows are tested: what the tests cover, how to run them, how long they take, how to read the results, and how to add a test. The tests follow the test plan in the [design](design/HARSLL-n8n-design.md#test-plan).
 
@@ -72,9 +72,9 @@ Everything is plain Node.js with no extra packages.
 | To | Run | Time |
 | --- | --- | --- |
 | See the groups and scenarios, without running anything | `node scripts/run-tests.mjs --list` | Seconds |
-| Run every scenario except the slow one | `node scripts/run-tests.mjs` | About 14 minutes |
+| Run every scenario except the slow one | `node scripts/run-tests.mjs` | About 10–11 minutes |
 | Run some scenarios | `node scripts/run-tests.mjs --only 1,2,6` | About 2–3 minutes per group |
-| Also run scenario 36 (stops and starts n8n) | `node scripts/run-tests.mjs --include-slow` | Up to 15 minutes more |
+| Also run scenario 36 (stops and starts n8n) | `node scripts/run-tests.mjs --include-slow` | About 3 minutes more |
 | Check the test kit itself, without n8n | `node --test scripts/` | Seconds |
 | Check the runner against the track C copies, without the workflows | `node scripts/run-tests.mjs --profile trackC --self-check` | Seconds |
 
@@ -83,6 +83,8 @@ Everything is plain Node.js with no extra packages.
 **`--only`** runs the whole group a scenario belongs to, because the scenarios of a group share their files, but it reports only the scenarios you asked for. `--only 2` therefore takes as long as the main group.
 
 **Scenario 36** stops the n8n container, drops a file, and starts n8n again. The Dispatcher's 15-minute timer then has to find the file. It runs only with `--include-slow`, and only with the production profile, because stopping n8n interrupts anyone else using it.
+
+**After scenario 36, reconnect the n8n-mcp server** in Claude Code (`/mcp`, then reconnect `n8n-mcp`). It shares n8n's network, so an n8n restart cuts it off.
 
 ### Other options
 

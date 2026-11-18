@@ -19,6 +19,11 @@ import * as kit from "./lib/scenario-kit.mjs";
 import { buildXlsx, readXlsx } from "./lib/xlsx.mjs";
 import { buildAllFiles, staleFiles } from "./make-test-spreadsheets.mjs";
 
+// Worklist file name, as in the design's example: the batch ID without ".xlsx", then "_worklist.xlsx".
+export function worklistNameFor(batchId) {
+  return `${String(batchId).replace(/\.xlsx$/i, "")}_worklist.xlsx`;
+}
+
 // ---------------------------------------------------------------------------
 // Profiles
 // ---------------------------------------------------------------------------
@@ -484,9 +489,11 @@ export function compareGroup(ctx, state, { checkpoint, groupScenarios } = {}) {
         add(id, [`worklist for ${JSON.stringify(w.file)}: no batch row, so no worklist to find`]);
         continue;
       }
-      const name = state.folders.reports.find((n) => n === `${batchId}_worklist.xlsx`) ?? state.folders.reports.find((n) => n.includes(batchId) && /worklist/i.test(n));
+      // The design's example drops ".xlsx" from the batch ID: reports/<date-time>_<file name without .xlsx>_worklist.xlsx
+      const expectedName = worklistNameFor(batchId);
+      const name = state.folders.reports.find((n) => n === expectedName);
       if (!name) {
-        add(id, [`worklist for ${JSON.stringify(w.file)}: expected reports/${batchId}_worklist.xlsx; not found (${state.folders.reports.length} file(s) in reports)`]);
+        add(id, [`worklist for ${JSON.stringify(w.file)}: expected reports/${expectedName}; not found (${state.folders.reports.length} file(s) in reports: ${state.folders.reports.join(", ") || "none"})`]);
         continue;
       }
       try {
@@ -764,7 +771,7 @@ export async function simulateGroup(ctx, group) {
   for (const id of group.scenarios) {
     for (const w of data.scenarios.find((s) => s.id === id).worklists ?? []) {
       const cases = expected.filter((e) => !e.noCase && finalBatchOf(e).file === w.file);
-      ctx.c.folders.write("reports", `${batchOf(w.file)}_worklist.xlsx`, worklistXlsx(cases, data.reasonTexts));
+      ctx.c.folders.write("reports", worklistNameFor(batchOf(w.file)), worklistXlsx(cases, data.reasonTexts));
     }
   }
   return { replayProblems, batchOf };
@@ -861,7 +868,7 @@ async function selfCheck(ctx) {
     await ctx.c.n8n.insertRows(T.cases, [{ ...mia.fields, status: "referred", reasonCode: "ADDRESS_NOT_FOUND" }]);
     await ctx.c.n8n.insertRows(T.cases, [{ caseKey: "TENANCY_START|AC100099|99 nowhere|nobody test|2026-11-01", status: "new" }]);
     const mainCases = ctx.groupExpected.filter((e) => !e.noCase && finalBatchOf(e).file === "harsll-main.xlsx");
-    ctx.c.folders.write("reports", `${sim.batchOf("harsll-main.xlsx")}_worklist.xlsx`, worklistXlsx(mainCases, ctx.data.reasonTexts, { urgentLast: true }));
+    ctx.c.folders.write("reports", worklistNameFor(sim.batchOf("harsll-main.xlsx")), worklistXlsx(mainCases, ctx.data.reasonTexts, { urgentLast: true }));
     ctx.c.folders.clean("rejected");
     await ctx.c.n8n.updateRows(T.batches, [{ columnName: "fileName", condition: "eq", value: "no-rows.xlsx" }], { status: "received" });
 

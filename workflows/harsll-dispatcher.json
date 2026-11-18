@@ -1,11 +1,16 @@
 {
+  "updatedAt": "2026-11-18T22:27:50.375Z",
+  "createdAt": "2026-11-18T21:05:19.186Z",
   "id": "ixS5Wg5EN0IZwAjX",
   "name": "HARSLL – Dispatcher",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "id": "d2d17062-29af-4576-a24e-9f9570ee89d7",
       "name": "File added to input folder",
-      "notes": "Folder is fixed here because a trigger cannot read settings. Production: /files/input. Build: /files/trackB/input.",
+      "notes": "Folder is fixed here because a trigger cannot read settings. Production: /files/input.",
       "type": "n8n-nodes-base.localFileTrigger",
       "typeVersion": 1,
       "position": [
@@ -14,7 +19,7 @@
       ],
       "parameters": {
         "triggerOn": "folder",
-        "path": "/files/trackB/input",
+        "path": "/files/input",
         "events": [
           "add"
         ],
@@ -76,7 +81,7 @@
     {
       "id": "2b3db291-7840-4ed3-a9e9-c72366b78e27",
       "name": "Load settings",
-      "notes": "Loaded once per run and passed on. Track B uses HARSLL – Settings (track B, dev); the reconcile stage points this at HARSLL – Settings.",
+      "notes": "Loaded once per run and passed on. Points at HARSLL – Settings.",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.4,
       "executeOnce": true,
@@ -89,7 +94,7 @@
         "workflowId": {
           "__rl": true,
           "mode": "id",
-          "value": "lI18cfcKFPSv2heB"
+          "value": "lq2vGGGRcILxjPpb"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -548,6 +553,7 @@
     {
       "id": "1950bf46-41c3-4eba-a10d-4bd78df60e20",
       "name": "Email: please rename the file",
+      "webhookId": "ef6ebc19-7f07-45c7-98f9-a96b0cfeb805",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "executeOnce": true,
@@ -573,8 +579,7 @@
           "id": "qwZ9yygtBArarq6Q",
           "name": "Mailpit (local test mailbox)"
         }
-      },
-      "webhookId": "ef6ebc19-7f07-45c7-98f9-a96b0cfeb805"
+      }
     },
     {
       "id": "091541a1-0f6a-4c84-add0-4057a73b55a9",
@@ -1170,6 +1175,7 @@
     {
       "id": "4e15079e-6155-44f4-ab3c-78eae1745a00",
       "name": "Email: file rejected",
+      "webhookId": "a3011af0-aa49-4134-88f3-e9afecd09f02",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "executeOnce": true,
@@ -1196,8 +1202,7 @@
           "id": "qwZ9yygtBArarq6Q",
           "name": "Mailpit (local test mailbox)"
         }
-      },
-      "webhookId": "a3011af0-aa49-4134-88f3-e9afecd09f02"
+      }
     },
     {
       "id": "4b17dffc-8c53-4852-acc2-89b0f0014def",
@@ -3143,6 +3148,7 @@
     {
       "id": "8b7e62b4-7287-43a4-a4c5-0e6ab7f08023",
       "name": "Send the summary email",
+      "webhookId": "7b5533e4-e144-4102-874e-36e8ab6bfb26",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "executeOnce": true,
@@ -3168,8 +3174,7 @@
           "id": "qwZ9yygtBArarq6Q",
           "name": "Mailpit (local test mailbox)"
         }
-      },
-      "webhookId": "7b5533e4-e144-4102-874e-36e8ab6bfb26"
+      }
     },
     {
       "id": "0d879596-fd3a-4130-a50f-0f7085d5af24",
@@ -4248,7 +4253,33 @@
   "settings": {
     "timezone": "Europe/London",
     "executionOrder": "v1",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
   },
-  "versionId": "ad001667-524d-4b7e-9d3a-ee775b82be6d"
+  "staticData": {
+    "node:Every 15 minutes": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "68de4fbd-09c4-4c93-b4fe-40faa87648f4",
+  "activeVersionId": "68de4fbd-09c4-4c93-b4fe-40faa87648f4",
+  "versionCounter": 5,
+  "triggerCount": 3,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }
