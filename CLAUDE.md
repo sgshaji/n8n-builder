@@ -24,6 +24,9 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 
 ## Environment notes
 
-- Windows 11, PowerShell and Git Bash. Docker Desktop (WSL 2) runs n8n.
+- Windows 11 on ARM (arm64), PowerShell and Git Bash. Docker Desktop (WSL 2) runs n8n.
+- Local stack: `compose.yaml` runs n8n (pinned in `.env`, currently 2.48.5) at http://localhost:5678 and Mailpit at http://localhost:8025. Setup guide: `docs/setup/01-run-n8n-locally.md`.
+- Inside n8n, `data/` is `/files` (the only folder workflows may touch) and `workflows/` is `/workflows`.
+- Local File Trigger and Execute Command are re-enabled via `NODES_EXCLUDE=[]` for local use only.
 - The repo sits in a OneDrive-synced folder. n8n runtime data must live in Docker volumes, never inside this folder.
 - Local Node.js is v26, newer than n8n supports, so n8n runs in Docker, not with `npx`.

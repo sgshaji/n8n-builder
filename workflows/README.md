@@ -16,4 +16,4 @@ Exported n8n workflows live here as JSON files, one file per workflow. This fold
 | `harsll-dispatcher.json` | Starts when a spreadsheet arrives, creates one case per row, archives the file, emails a summary | Not started |
 | `harsll-performer.json` | Runs the five safety checks on one case, then updates the account or refers the case | Not started |
 
-How to import and export workflows is covered in the setup guide (added in Phase 1).
+How to import and export workflows is covered in [Run n8n locally with Docker](../docs/setup/01-run-n8n-locally.md#importing-and-exporting-workflows).

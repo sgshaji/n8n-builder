@@ -1,0 +1,70 @@
+# Local development stack for the HARSLL n8n rebuild.
+#
+#   docker compose up -d      start everything
+#   docker compose down       stop everything (data is kept)
+#
+# Full guide: docs/setup/01-run-n8n-locally.md
+# Settings come from .env (copy .env.example to create it).
+
+name: n8n-builder
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:?Set N8N_VERSION in .env}
+    restart: unless-stopped
+    ports:
+      # Bound to localhost only: n8n is not reachable from other machines.
+      - "127.0.0.1:${N8N_PORT:-5678}:5678"
+    environment:
+      # --- Basics ---
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_WEBHOOK_URL: http://localhost:${N8N_PORT:-5678}/
+      GENERIC_TIMEZONE: ${TIMEZONE:-Europe/London}
+      TZ: ${TIMEZONE:-Europe/London}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+
+      # --- Files ---
+      # Workflows may only read and write files under /files (the local data/ folder).
+      N8N_RESTRICT_FILE_ACCESS_TO: /files
+
+      # --- Nodes ---
+      # n8n 2.x turns off the Local File Trigger and Execute Command nodes by default.
+      # HARSLL needs both: one to start when a spreadsheet arrives, one to move it to the archive.
+      # An empty list re-enables them. Local development only; review before production.
+      NODES_EXCLUDE: "[]"
+
+      # --- Test email ---
+      # Mail sent by workflows goes to Mailpit (see http://localhost:8025), never to real inboxes.
+      N8N_EMAIL_MODE: smtp
+      N8N_SMTP_HOST: mailpit
+      N8N_SMTP_PORT: 1025
+      N8N_SMTP_SSL: "false"
+      N8N_SMTP_SENDER: n8n@harsll.local
+    volumes:
+      # n8n's own database and settings: a Docker volume, kept out of OneDrive.
+      - n8n_data:/home/node/.n8n
+      # Spreadsheets in and out: data/input, data/archive (ignored by Git).
+      - ./data:/files
+      # Exported workflows, for importing and exporting with the n8n command line.
+      - ./workflows:/workflows
+    depends_on:
+      - mailpit
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  mailpit:
+    # A local test mailbox: catches every email so nothing reaches a real person.
+    image: axllent/mailpit:${MAILPIT_VERSION:-v1.34.0}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
+volumes:
+  n8n_data:

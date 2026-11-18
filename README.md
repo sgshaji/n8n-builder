@@ -9,8 +9,8 @@ HARSLL keeps council tax accounts in step with council tenancy changes: when a t
 | Phase | What | Status |
 | --- | --- | --- |
 | 0 | Repository setup | ✅ Done |
-| 1 | Run n8n locally with Docker | ⏳ Next |
-| 2 | Connect the n8n MCP servers to Claude Code | Not started |
+| 1 | Run n8n locally with Docker | ✅ Done |
+| 2 | Connect the n8n MCP servers to Claude Code | ⏳ Next |
 | 3 | Design the n8n workflows (for approval) | Not started |
 | 4 | Build and test, against a pretend RBIS | Not started |
 | 5 | Move to the real environment | Not started |
@@ -36,27 +36,38 @@ flowchart LR
 n8n-builder/
 ├── README.md              This file
 ├── CLAUDE.md              Working rules for Claude Code sessions in this repo
+├── compose.yaml           Local n8n + test mailbox (Docker)
+├── .env.example           Settings template: copy to .env (ignored by Git)
+├── data/                  Spreadsheets in and out (contents ignored by Git)
 ├── docs/                  All documentation (start at docs/README.md)
 │   ├── business/          Business overview, plain English
 │   ├── process/           How the current UiPath robots work
+│   ├── setup/             Step-by-step setup guides
 │   └── source/            Original flowcharts (local only, not committed)
 └── workflows/             Exported n8n workflows (JSON)
 ```
 
-Folders for Docker setup, test data and the pretend RBIS are added in later phases.
+Folders for test data and the pretend RBIS are added in later phases.
 
 ## Getting started
 
-The local setup guide arrives in Phase 1. You will need:
-
-- **Docker Desktop**, running (on Windows it uses WSL 2)
-- **Git**
-- **Claude Code**, for Phase 2 onwards
+You need **Docker Desktop** (running), **Git**, and from Phase 2 **Claude Code**.
 
 ```bash
 git clone https://github.com/sgshaji/n8n-builder.git
 cd n8n-builder
 ```
+
+Then follow **[Run n8n locally with Docker](docs/setup/01-run-n8n-locally.md)**. In short:
+
+1. Copy `.env.example` to `.env` and set a random `N8N_ENCRYPTION_KEY`.
+2. Run `docker compose up -d --wait`.
+3. Open http://localhost:5678 and create your owner account.
+
+| Service | Address |
+| --- | --- |
+| n8n editor | http://localhost:5678 |
+| Test mailbox (Mailpit) | http://localhost:8025 |
 
 ## Ground rules
 

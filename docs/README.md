@@ -7,12 +7,12 @@ Start with the business overview, then go deeper as needed.
 | [Business overview](business/HARSLL-business-overview.md) | Business stakeholders | Purpose, benefits, scope, safety checks, referred cases, decisions needed |
 | [Current UiPath process](process/HARSLL-uipath-process.md) | IT and process specialists | How today's Dispatcher and Performer robots work, step by step, and every reason a case stops |
 | [Source documents](source/README.md) | Anyone checking the originals | The flowcharts this work is based on (kept local, not in Git) |
+| [Run n8n locally with Docker](setup/01-run-n8n-locally.md) | Anyone working on the workflows | First-time setup, everyday commands, settings, import and export, upgrades, troubleshooting |
 
 ## Coming in later phases
 
 | Document | Phase |
 | --- | --- |
-| Setup guide: running n8n locally with Docker | 1 |
 | Setup guide: connecting the n8n MCP servers to Claude Code | 2 |
 | n8n design: how the HARSLL process is rebuilt in n8n | 3 |
 | Testing guide and test data | 4 |
