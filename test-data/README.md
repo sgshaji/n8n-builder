@@ -5,8 +5,12 @@ Made-up data for building and testing HARSLL. **Everything here is invented**: t
 | File | What it is | Used by |
 | --- | --- | --- |
 | [`rbis-accounts.json`](rbis-accounts.json) | The accounts the pretend RBIS starts with: 31 accounts, each set up for one or more test scenarios | [`mock-rbis`](../mock-rbis/README.md) |
+| [`scenarios.json`](scenarios.json) | The 37 test scenarios: spreadsheet rows, set-up, groups and expected results | [`scripts/run-tests.mjs`](../scripts/run-tests.mjs) |
+| [`spreadsheets/`](spreadsheets/) | The test spreadsheets, generated from `scenarios.json` by [`scripts/make-test-spreadsheets.mjs`](../scripts/make-test-spreadsheets.mjs). Do not edit them by hand | The test runner |
 
-Test spreadsheets and the list of scenarios with their expected results are added when the Performer and Dispatcher workflows are built.
+How to run the tests: [Testing HARSLL](../docs/testing.md).
+
+`spreadsheets/~$temp-book.xlsx` (an Excel temporary file, for scenario 33) is generated but not committed, because `.gitignore` ignores `~$*` files. The test runner builds it when it needs it.
 
 ## The accounts
 
@@ -21,7 +25,7 @@ Each account has a `note` saying which scenario in the [design's test plan](../d
 | `refuseParties` | People RBIS refuses to add (scenarios 21 and 22) |
 | `note` | What the account is for. Not visible to HARSLL |
 
-Two scenarios need an account that is **not** in the file: scenario 13 uses `AC999999`, which does not exist, and scenario 29 adds `AC100029` while the test runs.
+Three scenarios need an account that is **not** in the file: scenario 13 uses `AC999999`, which does not exist; scenario 29 adds `AC100029` while the test runs; and scenario 33 adds `AC100033` while the test runs (both are in `scenarios.json`, under `accountsAddedAtRunTime`). Scenarios 30, 31 and 32 name `AC100030` to `AC100032`, which do not exist, so a row from a rejected file that became a case by mistake would show.
 
 After changing this file, reload it:
 

@@ -1,0 +1,541 @@
+{
+  "id": "V6d1AbXAlOPwo9Uw",
+  "name": "HARSLL – Performer (stand-in, track B)",
+  "nodes": [
+    {
+      "id": "d52a0e3c-0edc-40ab-aec7-688383ed2dd7",
+      "name": "Case from the Dispatcher",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "ae6f63e6-1257-455c-ae47-54c16e57014d",
+      "name": "Claim the case",
+      "notes": "Claims the case and counts the try, but only if its status and attempts are still what the Dispatcher saw. Returns the row if claimed, an empty item if not.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Case from the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Case from the Dispatcher').first().json.caseId }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "={{ $('Case from the Dispatcher').first().json.expectedStatus }}"
+            },
+            {
+              "keyName": "attempts",
+              "condition": "eq",
+              "keyValue": "={{ $('Case from the Dispatcher').first().json.expectedAttempts }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "in_progress",
+            "attempts": "={{ Number($('Case from the Dispatcher').first().json.expectedAttempts) + 1 }}",
+            "lastAttemptAt": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lastAttemptAt",
+              "displayName": "lastAttemptAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "52f7f32b-1bf4-41a5-ab8c-f894603d0366",
+      "name": "Claimed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d2884e8b-6ff0-4d17-a44b-f99996ad5e65",
+              "leftValue": "={{ $json.id !== undefined && $json.status === 'in_progress' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b6aa108d-2906-4815-adfc-46379cac5562",
+      "name": "Read the case as it is now",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Case from the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Case from the Dispatcher').first().json.caseId }}"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "7a17c323-3569-4678-a01e-0aa03e693281",
+      "name": "Answer: not claimed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ caseId: $('Case from the Dispatcher').first().json.caseId, caseKey: $json.caseKey ?? '', claimed: false, status: $json.status ?? '', reasonCode: $json.reasonCode ?? '', outcome: $json.outcome ?? '', urgent: $json.urgent === true }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d7dc909c-8fbd-4e13-a8a3-020235b66d9f",
+      "name": "Find the lead row",
+      "notes": "Only matters for joint rows: the stand-in copies check 2 (a joint row takes its result from its lead row).",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Case from the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "caseKey",
+              "condition": "eq",
+              "keyValue": "={{ $json.coveredByCaseKey || '(not a joint row)' }}"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "e6735277-42c7-48f3-a46a-2b1ad75eab88",
+      "name": "Choose the pretend result",
+      "notes": "Why Code: test stand-in. Every pretend rule in one place (chosen from the tenant's name); a Switch with a Set per branch would be much longer. Rules are listed in docs/build-notes/track-B.md.",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "executeOnce": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        880,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "// Why Code: this is a test stand-in. One place holds every pretend rule (chosen mostly from the tenant's name), which would otherwise need a large Switch and one Set node per branch. It never throws: any error becomes a \"failed\" result.\nconst input = $('Case from the Dispatcher').first().json;\nconst s = input.settings || {};\nconst c = $('Claim the case').first().json;\nconst lead = $input.first().json || {};\n\nconst TEXT = {\n  DATES_INVALID: 'The dates on the spreadsheet row are wrong or missing',\n  DEATH_REFERRED: 'The tenancy ended because the tenant died; these are passed to staff',\n  CHANGE_REASON_NOT_VALID: 'The reason for the change is not one the automation handles',\n  SAME_TENANCY_AS_EARLIER_ROW: 'Covered by an earlier row for the same tenancy',\n  EARLIER_ROW_NOT_COMPLETED: 'The earlier row for this tenancy was not completed, so this person was not added',\n  ADDRESS_NOT_FOUND: 'The account could not be found in RBIS',\n  UNABLE_TO_ADD_PARTY: 'A person could not be added to the account',\n  NO_CONTACT_DETAILS: 'Liability started, but there were no contact details to record',\n  RBIS_ERROR: 'RBIS did not respond or returned an error',\n};\nconst norm = (x) => String(x ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\nconst name = String(c.tenantName || '').toLowerCase();\nconst has = (w) => name.includes(w.toLowerCase());\nconst maxAttempts = Number(s.maxAttempts) || 3;\nconst realDate = (d) => /^\\d{4}-\\d{2}-\\d{2}$/.test(d || '') && DateTime.fromISO(d).isValid;\nconst result = (status, reasonCode = '', extra = {}) => ({\n  status,\n  reasonCode,\n  reasonText: reasonCode ? TEXT[reasonCode] || reasonCode : '',\n  outcome: '',\n  urgent: false,\n  stepsDone: '[]',\n  errorDetail: '',\n  hang: false,\n  ...extra,\n});\n\nlet r;\ntry {\n  if (has('Hang')) {\n    r = result('in_progress', '', { hang: true });\n  } else if (has('FailAlways')) {\n    r = result('failed', 'RBIS_ERROR', { errorDetail: 'Pretend RBIS error (stand-in Performer, FailAlways)' });\n  } else if (has('FailOnce') && Number(c.attempts) === 1) {\n    r = result('failed', 'RBIS_ERROR', { errorDetail: 'Pretend RBIS error (stand-in Performer, FailOnce)' });\n  } else if (has('Urgent')) {\n    r = result('referred', 'UNABLE_TO_ADD_PARTY', { urgent: true, stepsDone: JSON.stringify(['endLiability']) });\n  } else if (has('ReferOnce') && Number(c.submissions || 1) <= 1) {\n    r = result('referred', 'ADDRESS_NOT_FOUND');\n  } else if (has('Refer') && !has('ReferOnce')) {\n    r = result('referred', 'ADDRESS_NOT_FOUND');\n  } else if (c.coveredByCaseKey) {\n    // Check 2: a joint row takes its result from its lead row.\n    if (lead.status === 'updated') r = result('duplicate', 'SAME_TENANCY_AS_EARLIER_ROW');\n    else if (lead.status === 'referred' || lead.status === 'duplicate' || (lead.status === 'failed' && Number(lead.attempts) >= maxAttempts)) r = result('referred', 'EARLIER_ROW_NOT_COMPLETED');\n    else r = result('failed', 'RBIS_ERROR', { errorDetail: `Stand-in: lead row not finished (${lead.status ?? 'not found'})` });\n  } else if (!realDate(c.relevantDate) || (realDate(c.startDate) && realDate(c.endDate) && c.endDate < c.startDate)) {\n    r = result('referred', 'DATES_INVALID');\n  } else if ((s.deathChangeReasons || ['DECEASED']).includes(c.changeReason)) {\n    r = result('referred', 'DEATH_REFERRED');\n  } else if (!(s.allowedChangeReasons || ['TENANCY_START', 'TENANCY_END']).includes(c.changeReason)) {\n    r = result('referred', 'CHANGE_REASON_NOT_VALID');\n  } else if (c.changeReason === 'TENANCY_START') {\n    let joint = [];\n    try { joint = JSON.parse(c.jointTenants || '[]'); } catch (e) { joint = []; }\n    const people = [{ name: c.tenantName, email: c.contactEmail, phone: c.contactPhone }, ...joint];\n    const withContacts = people.filter((p) => p.email || p.phone);\n    const steps = ['endLiability', ...people.map((p) => 'addLiableParty:' + norm(p.name)), 'createDetail', ...withContacts.map((p) => 'setContactDetails:' + norm(p.name))];\n    r = result('updated', withContacts.length ? '' : 'NO_CONTACT_DETAILS', { outcome: 'liability started', stepsDone: JSON.stringify(steps) });\n  } else {\n    const fwd = !!c.forwardingAddress;\n    const steps = ['endLiability', 'addLiableParty:' + norm((s.landlordNames || ['landlord'])[0])];\n    if (fwd) steps.push('setForwardingAddress');\n    r = result('updated', '', { outcome: fwd ? 'liability ended, address saved' : 'liability ended', stepsDone: JSON.stringify(steps) });\n  }\n} catch (e) {\n  r = result('failed', 'RBIS_ERROR', { errorDetail: 'Stand-in error: ' + e.message });\n}\nreturn [{ json: r }];\n"
+      }
+    },
+    {
+      "id": "a28d7edf-3161-474e-a148-9222a4b22f36",
+      "name": "Pretend to crash?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dcc14e41-62d0-4870-a854-7d302d6b315d",
+              "leftValue": "={{ $json.hang === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0f0053f2-cb01-4d91-ad04-911ef2b90be5",
+      "name": "Answer: left in progress",
+      "notes": "Simulates a crash: the case is left in_progress, as if the Performer stopped part-way.",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        1320,
+        -250
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ caseId: $('Case from the Dispatcher').first().json.caseId, caseKey: $('Claim the case').first().json.caseKey, claimed: true, status: 'in_progress', reasonCode: '', outcome: '', urgent: false }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "32eb62c3-43f3-4409-a7ee-953a1465c601",
+      "name": "Record the result",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Case from the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Case from the Dispatcher').first().json.caseId }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "in_progress"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "reasonCode": "={{ $json.reasonCode }}",
+            "reasonText": "={{ $json.reasonText }}",
+            "outcome": "={{ $json.outcome }}",
+            "urgent": "={{ $json.urgent }}",
+            "stepsDone": "={{ $json.stepsDone }}",
+            "errorDetail": "={{ $json.errorDetail }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonCode",
+              "displayName": "reasonCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonText",
+              "displayName": "reasonText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgent",
+              "displayName": "urgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stepsDone",
+              "displayName": "stepsDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorDetail",
+              "displayName": "errorDetail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "72adeb6c-002a-4b68-a1ab-e77180abb8f7",
+      "name": "Answer: result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ caseId: $('Case from the Dispatcher').first().json.caseId, caseKey: $('Claim the case').first().json.caseKey, claimed: true, status: $('Choose the pretend result').first().json.status, reasonCode: $('Choose the pretend result').first().json.reasonCode, outcome: $('Choose the pretend result').first().json.outcome, urgent: $('Choose the pretend result').first().json.urgent === true }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Case from the Dispatcher": {
+      "main": [
+        [
+          {
+            "node": "Claim the case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim the case": {
+      "main": [
+        [
+          {
+            "node": "Claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claimed?": {
+      "main": [
+        [
+          {
+            "node": "Find the lead row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read the case as it is now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the case as it is now": {
+      "main": [
+        [
+          {
+            "node": "Answer: not claimed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the lead row": {
+      "main": [
+        [
+          {
+            "node": "Choose the pretend result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose the pretend result": {
+      "main": [
+        [
+          {
+            "node": "Pretend to crash?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pretend to crash?": {
+      "main": [
+        [
+          {
+            "node": "Answer: left in progress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record the result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record the result": {
+      "main": [
+        [
+          {
+            "node": "Answer: result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Europe/London",
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "07df9db1-a6b1-49e1-930d-d3e1a0e43d86"
+}

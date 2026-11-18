@@ -1,0 +1,1064 @@
+{
+  "_about": "The 37 test scenarios from the design's test plan (docs/design/HARSLL-n8n-design.md, revision 3), with the spreadsheet rows they use and the results expected with the default settings. Made-up data only. The spreadsheets in test-data/spreadsheets/ are generated from this file by scripts/make-test-spreadsheets.mjs; scripts/run-tests.mjs runs the groups and compares the results. See docs/testing.md.",
+  "schemaVersion": 1,
+  "designRevision": 3,
+  "settingsAssumed": {
+    "landlordNames": ["Example Housing Association"],
+    "landlordLiabilityEndsOn": "startDate",
+    "landlordLiableFrom": "endDate",
+    "confirmLeaverIsLiable": true,
+    "jointTenantHandling": "leadRowAddsAll",
+    "addPersonToExistingTenancy": false,
+    "allowedChangeReasons": ["TENANCY_START", "TENANCY_END"],
+    "deathHandling": "refer",
+    "deathChangeReasons": ["DECEASED"],
+    "nameMatch": "normalised",
+    "maxAttempts": 3,
+    "maxFileReadAttempts": 3,
+    "fileSettleSeconds": 60,
+    "summaryEmailTo": "harsll-team@example.test",
+    "summaryEmailFrom": "harsll@example.test"
+  },
+  "columns": ["ChangeReason", "AccountRef", "TenantName", "Address", "Postcode", "StartDate", "EndDate", "ForwardingAddress", "ContactEmail", "ContactPhone", "SourceSystem"],
+  "reasonTexts": {
+    "DATES_INVALID": "The dates on the spreadsheet row are wrong or missing",
+    "DEATH_REFERRED": "The tenancy ended because the tenant died; these are passed to staff",
+    "CHANGE_REASON_NOT_VALID": "The reason for the change is not one the automation handles",
+    "SAME_TENANCY_AS_EARLIER_ROW": "Covered by an earlier row for the same tenancy",
+    "EARLIER_ROW_NOT_COMPLETED": "The earlier row for this tenancy was not completed, so this person was not added",
+    "NO_ACCOUNT_REF": "The row has no account reference",
+    "ADDRESS_NOT_FOUND": "The account could not be found in RBIS",
+    "NO_START_DATE": "RBIS has no start date to compare against",
+    "CHECK_DATES": "The dates in RBIS do not match the spreadsheet",
+    "ACCOUNT_ALREADY_PROCESSED": "RBIS already shows this change",
+    "LEAVER_NOT_LIABLE": "The person leaving is not the liable person in RBIS",
+    "NO_OPTION_TO_TERMINATE": "RBIS does not allow the current liability to be ended",
+    "UNABLE_TO_ADD_PARTY": "A person could not be added to the account",
+    "NO_CONTACT_DETAILS": "Liability started, but there were no contact details to record",
+    "RBIS_ERROR": "RBIS did not respond or returned an error",
+    "PROCESSING_STOPPED": "Processing stopped unexpectedly and the tries ran out"
+  },
+  "files": [
+    { "name": "harsll-main.xlsx", "kind": "rows", "description": "The main file: every row-level scenario that needs no special timing (1-23, 37)." },
+    { "name": "together.xlsx", "kind": "rows", "description": "Scenario 34, first of the files dropped together." },
+    { "name": "together (2).xlsx", "kind": "rows", "description": "Scenario 34, second file. Brackets and a space in the name are allowed by the safe-name rule." },
+    { "name": "missing-column.xlsx", "kind": "rows", "omitColumns": ["Postcode"], "description": "Scenario 30: the Postcode column is missing." },
+    { "name": "no-rows.xlsx", "kind": "rows", "description": "Scenario 30: a header row and no data rows." },
+    { "name": "unsafe;name$test.xlsx", "kind": "rows", "description": "Scenario 32: a ';' and a '$' make the name unsafe." },
+    { "name": "retry-24.xlsx", "kind": "rows", "description": "Scenario 24." },
+    { "name": "retry-25.xlsx", "kind": "rows", "description": "Scenario 25." },
+    { "name": "retry-27.xlsx", "kind": "rows", "description": "Scenario 27: the move-in is the first row, so row order alone would run it first." },
+    { "name": "fails-every-try.xlsx", "kind": "rows", "description": "Scenario 26." },
+    { "name": "unreadable.xlsx", "kind": "truncated", "description": "Scenario 31: a valid spreadsheet cut off at 60% of its bytes, as if half copied. n8n's Extract from File fails on it. (A plain text file is NOT unreadable to n8n: it reads as a sheet with no rows.)" },
+    { "name": "same-file.xlsx", "kind": "rows", "description": "Scenario 28: dropped twice." },
+    { "name": "resend-first.xlsx", "kind": "rows", "description": "Scenario 29: the row is referred because the account is not in RBIS yet." },
+    { "name": "resend-second.xlsx", "kind": "rows", "description": "Scenario 29: the same row sent again after the account is added." },
+    { "name": "copying.xlsx", "kind": "rows", "description": "Scenario 33: dropped with a fresh modification time, so it is not settled yet." },
+    { "name": "~$temp-book.xlsx", "kind": "excelOwnerFile", "description": "Scenario 33: an Excel temporary (owner) file. Not a spreadsheet." },
+    { "name": "two-runs.xlsx", "kind": "rows", "description": "Scenario 35: dropped already settled, then two runs are started at the same moment." },
+    { "name": "while-stopped.xlsx", "kind": "rows", "description": "Scenario 36: dropped while n8n is stopped." }
+  ],
+  "accountsAddedAtRunTime": {
+    "AC100029": {
+      "address": "29 Example Street",
+      "postcode": "EX1 3AJ",
+      "liabilities": [{ "party": "Example Housing Association", "type": "landlord", "start": "2026-09-01", "end": null }],
+      "note": "Scenario 29. Added after the first file, to stand for staff correcting RBIS."
+    },
+    "AC100033": {
+      "address": "33 Example Street",
+      "postcode": "EX1 7AJ",
+      "liabilities": [{ "party": "Example Housing Association", "type": "landlord", "start": "2026-09-01", "end": null }],
+      "note": "Scenario 33. Empty property for the file that is still being copied. Proposed for rbis-accounts.json."
+    }
+  },
+  "groups": [
+    {
+      "id": "main",
+      "title": "Main file, two files together, rejected and unsafe files",
+      "scenarios": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 30, 32, 34, 37],
+      "steps": [
+        { "do": "outage", "body": { "mode": "before", "ref": "AC100023", "includeReads": true, "count": 1 }, "why": "Scenario 23: the first RBIS call for AC100023 fails, then RBIS recovers" },
+        { "do": "drop", "files": ["harsll-main.xlsx", "together.xlsx", "together (2).xlsx", "missing-column.xlsx", "no-rows.xlsx", "unsafe;name$test.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["harsll-main.xlsx", "together.xlsx", "together (2).xlsx", "missing-column.xlsx", "no-rows.xlsx"], "batchesExist": ["unsafe;name$test.xlsx"] }, "timeoutSeconds": 600 },
+        { "do": "runNowUntil", "until": { "allFinal": true }, "maxRuns": 4, "why": "Retries scenario 23; also covers cases held behind an earlier case for the same account" },
+        { "do": "runNow", "why": "One more run: the rename email must not be sent again, and nothing may be processed twice" }
+      ]
+    },
+    {
+      "id": "retry-24",
+      "title": "Outage after the first RBIS call",
+      "scenarios": [24],
+      "steps": [
+        { "do": "outage", "body": { "mode": "before", "ref": "AC100024", "operations": ["addLiableParty"], "count": 1 } },
+        { "do": "drop", "files": ["retry-24.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["retry-24.xlsx"] }, "timeoutSeconds": 300 },
+        { "do": "checkpoint", "name": "afterFirstPass" },
+        { "do": "runNowUntil", "until": { "allFinal": true }, "maxRuns": 3 }
+      ]
+    },
+    {
+      "id": "retry-25",
+      "title": "RBIS makes a change but the reply is lost",
+      "scenarios": [25],
+      "steps": [
+        { "do": "outage", "body": { "mode": "afterChange", "ref": "AC100025", "operations": ["addLiableParty"], "count": 1 } },
+        { "do": "drop", "files": ["retry-25.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["retry-25.xlsx"] }, "timeoutSeconds": 300 },
+        { "do": "checkpoint", "name": "afterFirstPass" },
+        { "do": "runNowUntil", "until": { "allFinal": true }, "maxRuns": 3 }
+      ]
+    },
+    {
+      "id": "retry-27",
+      "title": "Move-out fails once; the move-in for the same account waits",
+      "scenarios": [27],
+      "steps": [
+        { "do": "outage", "body": { "mode": "before", "ref": "AC100027", "operations": ["terminate"], "count": 1 } },
+        { "do": "drop", "files": ["retry-27.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["retry-27.xlsx"] }, "timeoutSeconds": 300 },
+        { "do": "checkpoint", "name": "afterFirstPass" },
+        { "do": "runNowUntil", "until": { "allFinal": true }, "maxRuns": 4 }
+      ]
+    },
+    {
+      "id": "fails-and-unreadable",
+      "title": "A case that fails on every try, and a file that cannot be read",
+      "scenarios": [26, 31],
+      "steps": [
+        { "do": "outage", "body": { "mode": "before", "ref": "AC100026", "includeReads": true }, "why": "Every RBIS call for AC100026 fails until switched off" },
+        { "do": "drop", "files": ["fails-every-try.xlsx", "unreadable.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["fails-every-try.xlsx"], "batchesExist": ["unreadable.xlsx"] }, "timeoutSeconds": 300 },
+        { "do": "checkpoint", "name": "afterFirstPass" },
+        { "do": "runNowUntil", "until": { "cases": { "26.uma": { "attempts": 3 } }, "filesGone": ["unreadable.xlsx"] }, "maxRuns": 5 },
+        { "do": "runNow", "why": "One more run: the case must not be tried a fourth time, and no second rejection email" },
+        { "do": "outageOff" }
+      ]
+    },
+    {
+      "id": "re-runs",
+      "title": "Same file twice; a referred row sent again",
+      "scenarios": [28, 29],
+      "steps": [
+        { "do": "drop", "files": ["same-file.xlsx", "resend-first.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["same-file.xlsx", "resend-first.xlsx"], "allFinal": true }, "timeoutSeconds": 300 },
+        { "do": "checkpoint", "name": "afterFirstDrop" },
+        { "do": "addAccount", "ref": "AC100029", "why": "Staff correct RBIS" },
+        { "do": "drop", "files": ["same-file.xlsx", "resend-second.xlsx"] },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["same-file.xlsx", "resend-second.xlsx"], "allFinal": true }, "timeoutSeconds": 300 }
+      ]
+    },
+    {
+      "id": "copying",
+      "title": "A file still being copied; an Excel temporary file",
+      "scenarios": [33],
+      "steps": [
+        { "do": "addAccount", "ref": "AC100033" },
+        { "do": "drop", "files": ["copying.xlsx", "~$temp-book.xlsx"] },
+        { "do": "runNow", "why": "Starts at once, while copying.xlsx is less than a minute old: it must not be read" },
+        { "do": "checkpoint", "name": "whileCopying" },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["copying.xlsx"], "allFinal": true }, "timeoutSeconds": 300, "nudgeAfterSeconds": 150 }
+      ]
+    },
+    {
+      "id": "two-runs",
+      "title": "Two runs started at the same moment",
+      "scenarios": [35],
+      "steps": [
+        { "do": "drop", "files": ["two-runs.xlsx"], "backdateSeconds": 120, "why": "Already settled, so both runs could read it" },
+        { "do": "runNow", "parallel": 2 },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["two-runs.xlsx"], "allFinal": true }, "timeoutSeconds": 300 }
+      ]
+    },
+    {
+      "id": "while-stopped",
+      "title": "A file dropped while n8n is stopped",
+      "scenarios": [36],
+      "slow": true,
+      "productionOnly": true,
+      "steps": [
+        { "do": "stopN8n" },
+        { "do": "drop", "files": ["while-stopped.xlsx"] },
+        { "do": "startN8n" },
+        { "do": "waitForDispatcher", "until": { "filesGone": ["while-stopped.xlsx"], "allFinal": true }, "timeoutSeconds": 1080, "why": "The 15-minute timer, or the file trigger on start-up, must find the file" }
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": 1,
+      "title": "Move-in, landlord liable, contact details",
+      "section": "Updates",
+      "path": "Check 1 pass → check 2 single row → check 3 found → check 4 move-in, landlord liable → check 5 can end → Moved in",
+      "accounts": ["AC100001"],
+      "rows": [
+        {
+          "id": "amy",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100001", "TenantName": "Amy Sample", "Address": "1 Example Street", "Postcode": "EX1 2AB", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "amy.sample@example.test", "ContactPhone": "07700 900011", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:amy sample", "createDetail", "setContactDetails:amy sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100001": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Amy Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Amy Sample"] },
+          { "operation": "setContact", "name": "Amy Sample", "email": "amy.sample@example.test", "phone": "07700 900011" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "title": "Move-in, two joint tenants on two rows",
+      "section": "Updates",
+      "path": "Lead row: Moved in for both people. Joint row: check 1 pass → check 2 joint row, lead updated → duplicate",
+      "notes": "The joint row is the last row of the file, not next to its lead row: the design links matching rows wherever they are.",
+      "accounts": ["AC100002"],
+      "rows": [
+        {
+          "id": "bella",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100002", "TenantName": "Bella Sample", "Address": "2 Example Street", "Postcode": "EX1 3AC", "StartDate": { "excelDate": "2026-11-02" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "bella.sample@example.test", "ContactPhone": "07700 900021", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [{ "name": "Bruno Sample", "email": "bruno.sample@example.test", "phone": "07700 900022" }], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:bella sample", "addLiableParty:bruno sample", "createDetail", "setContactDetails:bella sample", "setContactDetails:bruno sample"] }
+        },
+        {
+          "id": "bruno",
+          "file": "harsll-main.xlsx",
+          "position": "end",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100002", "TenantName": "Bruno Sample", "Address": "2 Example Street", "Postcode": "EX1 3AC", "StartDate": { "excelDate": "2026-11-02" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "bruno.sample@example.test", "ContactPhone": "07700 900022", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "duplicate", "reasonCode": "SAME_TENANCY_AS_EARLIER_ROW", "urgent": false, "outcome": "", "isLeadRow": false, "coveredBy": "bella", "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100002": [
+          { "operation": "terminate", "endDate": "2026-11-02", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Bella Sample", "type": "tenant", "startDate": "2026-11-02" },
+          { "operation": "addLiableParty", "name": "Bruno Sample", "type": "tenant", "startDate": "2026-11-02" },
+          { "operation": "createDetail", "startDate": "2026-11-02", "tenants": ["Bella Sample", "Bruno Sample"] },
+          { "operation": "setContact", "name": "Bella Sample", "email": "bella.sample@example.test", "phone": "07700 900021" },
+          { "operation": "setContact", "name": "Bruno Sample", "email": "bruno.sample@example.test", "phone": "07700 900022" }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "title": "Move-in, nobody has contact details",
+      "section": "Updates",
+      "path": "Checks pass → Moved in, call 4 skipped → updated with follow-up NO_CONTACT_DETAILS",
+      "accounts": ["AC100003"],
+      "rows": [
+        {
+          "id": "cara",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100003", "TenantName": "Cara Sample", "Address": "3 Example Street", "Postcode": "EX1 4AD", "StartDate": "03/11/2026", "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "NO_CONTACT_DETAILS", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:cara sample", "createDetail"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100003": [
+          { "operation": "terminate", "endDate": "2026-11-03", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Cara Sample", "type": "tenant", "startDate": "2026-11-03" },
+          { "operation": "createDetail", "startDate": "2026-11-03", "tenants": ["Cara Sample"] }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "title": "Move-out, forwarding address",
+      "section": "Updates",
+      "path": "Check 4 move-out, landlord not liable, leaver liable → check 5 can end → Moved out, forwarding address known",
+      "notes": "The row also has the tenancy start date and contact details. Neither changes the move-out path: no contact call is expected.",
+      "accounts": ["AC100004"],
+      "rows": [
+        {
+          "id": "alan",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100004", "TenantName": "Alan Sample", "Address": "4 Example Street", "Postcode": "EX1 5AE", "StartDate": { "excelDate": "2025-04-01" }, "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "9 New Road, EX2 2BB", "ContactEmail": "alan.sample@example.test", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability ended, address saved", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:example housing association", "setForwardingAddress"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100004": [
+          { "operation": "terminate", "endDate": "2026-10-31", "ended": ["Alan Sample"] },
+          { "operation": "addLiableParty", "name": "Example Housing Association", "type": "landlord", "startDate": "2026-10-31" },
+          { "operation": "setForwardingAddress", "address": "9 New Road, EX2 2BB" }
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "title": "Move-out, no forwarding address",
+      "section": "Updates",
+      "path": "Check 4 move-out, leaver liable → check 5 can end → Moved out, no forwarding address",
+      "notes": "Also checks tidying: the change reason is lower case, the account reference is lower case with spaces, the name has a trailing space, and the date is dd/MM/yyyy text.",
+      "accounts": ["AC100005"],
+      "rows": [
+        {
+          "id": "beth",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "tenancy_end", "AccountRef": " ac100005 ", "TenantName": "Beth Sample ", "Address": "5 Example Street", "Postcode": "EX1 6AF", "StartDate": "", "EndDate": "30/10/2026", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability ended", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:example housing association"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100005": [
+          { "operation": "terminate", "endDate": "2026-10-30", "ended": ["Beth Sample"] },
+          { "operation": "addLiableParty", "name": "Example Housing Association", "type": "landlord", "startDate": "2026-10-30" }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "title": "Move-out and move-in at the same address in one file",
+      "section": "Updates",
+      "path": "Move-out: Moved out, no forwarding address. Then move-in: check 4 landlord liable → Moved in",
+      "notes": "Both rows have the same date, and the move-in is the earlier row in the file, so only the rule 'move-outs before move-ins on the same date' runs them in the right order. The landlord is liable for no days (from and to 1 November); that is what the default settings give.",
+      "accounts": ["AC100006"],
+      "rows": [
+        {
+          "id": "della",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100006", "TenantName": "Della Sample", "Address": "Flat 1, 6 Example Street", "Postcode": "EX1 7AG", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "della.sample@example.test", "ContactPhone": "07700 900061", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:della sample", "createDetail", "setContactDetails:della sample"] }
+        },
+        {
+          "id": "carl",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100006", "TenantName": "Carl Sample", "Address": "Flat 1, 6 Example Street", "Postcode": "EX1 7AG", "StartDate": "", "EndDate": { "excelDate": "2026-11-01" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability ended", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:example housing association"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100006": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Carl Sample"] },
+          { "operation": "addLiableParty", "name": "Example Housing Association", "type": "landlord", "startDate": "2026-11-01" },
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Della Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Della Sample"] },
+          { "operation": "setContact", "name": "Della Sample", "email": "della.sample@example.test", "phone": "07700 900061" }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "Impossible date",
+      "section": "Check 1",
+      "path": "Check 1 (a): the date is not real → refer",
+      "notes": "The impossible date stays as text in the Cases table, and in the case key.",
+      "accounts": ["AC100007"],
+      "rows": [
+        {
+          "id": "dora",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100007", "TenantName": "Dora Sample", "Address": "7 Example Street", "Postcode": "EX1 8AH", "StartDate": "", "EndDate": "31/02/2026", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "DATES_INVALID", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100007": [] }
+    },
+    {
+      "id": 8,
+      "title": "End date before start date",
+      "section": "Check 1",
+      "path": "Check 1 (a): end date before start date → refer",
+      "accounts": ["AC100007"],
+      "rows": [
+        {
+          "id": "dean",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100007", "TenantName": "Dean Sample", "Address": "7 Example Street", "Postcode": "EX1 8AH", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": { "excelDate": "2026-10-15" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "DATES_INVALID", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100007": [] }
+    },
+    {
+      "id": 9,
+      "title": "Unknown change reason",
+      "section": "Check 1",
+      "path": "Check 1 (c): change reason not allowed → refer",
+      "notes": "Both dates are real and in order, so only test (c) can stop the row. The relevant date of a change reason other than TENANCY_START is the end date (interfaces, Keys).",
+      "accounts": ["AC100007"],
+      "rows": [
+        {
+          "id": "dawn",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_TRANSFER", "AccountRef": "AC100007", "TenantName": "Dawn Sample", "Address": "7 Example Street", "Postcode": "EX1 8AH", "StartDate": { "excelDate": "2026-10-01" }, "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "CHANGE_REASON_NOT_VALID", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100007": [] }
+    },
+    {
+      "id": 10,
+      "title": "Death",
+      "section": "Check 1",
+      "path": "Check 1 (b): death, deathHandling refer → refer before the allowed-reasons test",
+      "accounts": ["AC100010"],
+      "rows": [
+        {
+          "id": "eric",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "DECEASED", "AccountRef": "AC100010", "TenantName": "Eric Sample", "Address": "10 Example Street", "Postcode": "EX1 2AC", "StartDate": "", "EndDate": { "excelDate": "2026-10-28" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "DEATH_REFERRED", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100010": [] }
+    },
+    {
+      "id": 11,
+      "title": "Joint tenants, lead row referred",
+      "section": "Check 2",
+      "path": "Lead row: check 4 move-in, a tenant liable from another date → CHECK_DATES. Joint row: check 2, lead referred → EARLIER_ROW_NOT_COMPLETED",
+      "accounts": ["AC100011"],
+      "rows": [
+        {
+          "id": "gina",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100011", "TenantName": "Gina Sample", "Address": "11 Example Street", "Postcode": "EX1 3AD", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "gina.sample@example.test", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "CHECK_DATES", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [{ "name": "Gus Sample", "email": "", "phone": "" }], "attempts": 1, "stepsDone": [] }
+        },
+        {
+          "id": "gus",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100011", "TenantName": "Gus Sample", "Address": "11 Example Street", "Postcode": "EX1 3AD", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "EARLIER_ROW_NOT_COMPLETED", "urgent": false, "outcome": "", "isLeadRow": false, "coveredBy": "gina", "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100011": [] }
+    },
+    {
+      "id": 12,
+      "title": "No account reference",
+      "section": "Check 3",
+      "path": "Check 3: no account reference → refer",
+      "accounts": [],
+      "rows": [
+        {
+          "id": "hugo",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "", "TenantName": "Hugo Sample", "Address": "12 Example Street", "Postcode": "EX1 4AE", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "hugo.sample@example.test", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "NO_ACCOUNT_REF", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": {}
+    },
+    {
+      "id": 13,
+      "title": "Account not in RBIS",
+      "section": "Check 3",
+      "path": "Check 3: the reference is not in RBIS, or its address does not match → refer",
+      "notes": "Two rows: AC999999 does not exist; AC100013 exists but the row's address does not match it (13b, from the account's note).",
+      "accounts": ["AC999999", "AC100013"],
+      "rows": [
+        {
+          "id": "iris",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC999999", "TenantName": "Iris Sample", "Address": "99 Example Street", "Postcode": "EX9 9ZZ", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "ADDRESS_NOT_FOUND", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        },
+        {
+          "id": "jade",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100013", "TenantName": "Jade Sample", "Address": "13 Other Street", "Postcode": "EX1 5AF", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "ADDRESS_NOT_FOUND", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC999999": [], "AC100013": [] }
+    },
+    {
+      "id": 14,
+      "title": "Move-in, tenant already liable from the same date",
+      "section": "Check 4",
+      "path": "Check 4 move-in, landlord not liable → start date present and equal to the row's start date → ACCOUNT_ALREADY_PROCESSED",
+      "accounts": ["AC100014"],
+      "rows": [
+        {
+          "id": "hana",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100014", "TenantName": "Hana Sample", "Address": "14 Example Street", "Postcode": "EX1 6AG", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "ACCOUNT_ALREADY_PROCESSED", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100014": [] }
+    },
+    {
+      "id": 15,
+      "title": "Move-in, tenant already liable from another date",
+      "section": "Check 4",
+      "path": "Check 4 move-in, landlord not liable → start date differs → CHECK_DATES",
+      "accounts": ["AC100015"],
+      "rows": [
+        {
+          "id": "ivan",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100015", "TenantName": "Ivan Sample", "Address": "15 Example Street", "Postcode": "EX1 7AH", "StartDate": "01/11/2026", "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "CHECK_DATES", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100015": [] }
+    },
+    {
+      "id": 16,
+      "title": "Move-out, landlord already liable from the end date",
+      "section": "Check 4",
+      "path": "Check 4 move-out, landlord liable → start date equals the row's end date → ACCOUNT_ALREADY_PROCESSED",
+      "accounts": ["AC100016"],
+      "rows": [
+        {
+          "id": "jill",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100016", "TenantName": "Jill Sample", "Address": "16 Example Street", "Postcode": "EX1 8AA", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "ACCOUNT_ALREADY_PROCESSED", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100016": [] }
+    },
+    {
+      "id": 17,
+      "title": "Move-out, landlord already liable from another date",
+      "section": "Check 4",
+      "path": "Check 4 move-out, landlord liable → start date differs → CHECK_DATES",
+      "accounts": ["AC100017"],
+      "rows": [
+        {
+          "id": "kim",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100017", "TenantName": "Kim Sample", "Address": "17 Example Street", "Postcode": "EX1 9AB", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "CHECK_DATES", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100017": [] }
+    },
+    {
+      "id": 18,
+      "title": "Current liability has no start date",
+      "section": "Check 4",
+      "path": "Check 4 move-out, landlord liable → RBIS has no start date → NO_START_DATE",
+      "notes": "A move-out, because a move-in with the landlord liable passes check 4 without any date test.",
+      "accounts": ["AC100018"],
+      "rows": [
+        {
+          "id": "lena",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100018", "TenantName": "Lena Sample", "Address": "18 Example Street", "Postcode": "EX1 1AC", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "NO_START_DATE", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100018": [] }
+    },
+    {
+      "id": 19,
+      "title": "Move-out, someone else is liable",
+      "section": "Check 4",
+      "path": "Check 4 move-out, landlord not liable → leaver is not one of the liable people → LEAVER_NOT_LIABLE (confirmLeaverIsLiable on)",
+      "accounts": ["AC100019"],
+      "rows": [
+        {
+          "id": "liam",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100019", "TenantName": "Liam Sample", "Address": "19 Example Street", "Postcode": "EX1 2AD", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "LEAVER_NOT_LIABLE", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100019": [] }
+    },
+    {
+      "id": 20,
+      "title": "RBIS will not allow ending the liability",
+      "section": "Check 5",
+      "path": "Check 4 pass (leaver liable) → check 5: no option to terminate → NO_OPTION_TO_TERMINATE",
+      "accounts": ["AC100020"],
+      "rows": [
+        {
+          "id": "mona",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100020", "TenantName": "Mona Sample", "Address": "Flat 3, 20 Example Street", "Postcode": "EX1 3AE", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "NO_OPTION_TO_TERMINATE", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": { "AC100020": [] }
+    },
+    {
+      "id": 21,
+      "title": "A joint tenant cannot be added",
+      "section": "Updates that stop part-way",
+      "path": "Lead row: Moved in; landlord ended, lead tenant added, RBIS refuses the joint tenant → UNABLE_TO_ADD_PARTY, urgent. Joint row: lead referred → EARLIER_ROW_NOT_COMPLETED",
+      "accounts": ["AC100021"],
+      "rows": [
+        {
+          "id": "noah",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100021", "TenantName": "Noah Sample", "Address": "21 Example Street", "Postcode": "EX1 4AF", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "noah.sample@example.test", "ContactPhone": "07700 900211", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "UNABLE_TO_ADD_PARTY", "urgent": true, "outcome": "", "isLeadRow": true, "jointTenants": [{ "name": "Nina Sample", "email": "nina.sample@example.test", "phone": "07700 900212" }], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:noah sample"] }
+        },
+        {
+          "id": "nina",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100021", "TenantName": "Nina Sample", "Address": "21 Example Street", "Postcode": "EX1 4AF", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "nina.sample@example.test", "ContactPhone": "07700 900212", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "EARLIER_ROW_NOT_COMPLETED", "urgent": false, "outcome": "", "isLeadRow": false, "coveredBy": "noah", "attempts": 1, "stepsDone": [] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100021": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Noah Sample", "type": "tenant", "startDate": "2026-11-01" }
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "title": "Landlord ended, then the lead tenant cannot be added",
+      "section": "Updates that stop part-way",
+      "path": "Moved in; landlord ended, RBIS refuses the lead tenant → UNABLE_TO_ADD_PARTY, urgent",
+      "notes": "Also checks the main file's worklist (urgent cases first) and summary email (counts, the urgent line, no names or addresses).",
+      "accounts": ["AC100022"],
+      "rows": [
+        {
+          "id": "paul",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100022", "TenantName": "Paul Sample", "Address": "22 Example Street", "Postcode": "EX1 5AG", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "paul.sample@example.test", "ContactPhone": "07700 900221", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "referred", "reasonCode": "UNABLE_TO_ADD_PARTY", "urgent": true, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100022": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] }
+        ]
+      },
+      "summaries": [{ "file": "harsll-main.xlsx" }],
+      "worklists": [{ "file": "harsll-main.xlsx" }]
+    },
+    {
+      "id": 23,
+      "title": "Outage before any RBIS call",
+      "section": "Failures and retries",
+      "path": "First try: the first RBIS call fails → failed, RBIS_ERROR, nothing changed. Automatic retry: checks run again → Moved in",
+      "notes": "The outage covers reads too (includeReads), so even the account lookup fails. It recovers after one failed call. The try count shows the failed try.",
+      "accounts": ["AC100023"],
+      "rows": [
+        {
+          "id": "olive",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100023", "TenantName": "Olive Sample", "Address": "23 Example Street", "Postcode": "EX1 6AH", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "olive.sample@example.test", "ContactPhone": "07700 900231", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 2, "stepsDone": ["endLiability", "addLiableParty:olive sample", "createDetail", "setContactDetails:olive sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100023": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Olive Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Olive Sample"] },
+          { "operation": "setContact", "name": "Olive Sample", "email": "olive.sample@example.test", "phone": "07700 900231" }
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "title": "Outage after the first RBIS call",
+      "section": "Failures and retries",
+      "path": "First try: landlord ended, then adding the tenant fails → failed, stepsDone kept. Retry: carries on from the tenant, checks skipped → updated",
+      "accounts": ["AC100024"],
+      "rows": [
+        {
+          "id": "vera",
+          "file": "retry-24.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100024", "TenantName": "Vera Sample", "Address": "24 Example Street", "Postcode": "EX1 7AA", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "vera.sample@example.test", "ContactPhone": "07700 900241", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstPass": { "status": "failed", "reasonCode": "RBIS_ERROR", "urgent": false, "attempts": 1, "stepsDone": ["endLiability"], "errorDetail": { "$nonEmpty": true } }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 2, "stepsDone": ["endLiability", "addLiableParty:vera sample", "createDetail", "setContactDetails:vera sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100024": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Vera Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Vera Sample"] },
+          { "operation": "setContact", "name": "Vera Sample", "email": "vera.sample@example.test", "phone": "07700 900241" }
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "title": "RBIS makes a change but the reply is lost",
+      "section": "Failures and retries",
+      "path": "First try: tenant ended; RBIS makes the landlord liable but the reply is lost → failed. Retry: carries on at the landlord, the adapter sees it is already done → updated",
+      "notes": "The lost reply is on the second change, not the first. If the reply to the FIRST change were lost, stepsDone would be empty, the retry would run the checks again and check 4 would misread the half-changed account (see docs/build-notes/track-C.md, ambiguity A1).",
+      "accounts": ["AC100025"],
+      "rows": [
+        {
+          "id": "quinn",
+          "file": "retry-25.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100025", "TenantName": "Quinn Sample", "Address": "25 Example Street", "Postcode": "EX1 8AB", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "8 New Road, EX2 3CC", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstPass": { "status": "failed", "reasonCode": "RBIS_ERROR", "urgent": false, "attempts": 1, "stepsDone": ["endLiability"], "errorDetail": { "$nonEmpty": true } }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability ended, address saved", "isLeadRow": true, "jointTenants": [], "attempts": 2, "stepsDone": ["endLiability", "addLiableParty:example housing association", "setForwardingAddress"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100025": [
+          { "operation": "terminate", "endDate": "2026-10-31", "ended": ["Quinn Sample"] },
+          { "operation": "addLiableParty", "name": "Example Housing Association", "type": "landlord", "startDate": "2026-10-31", "replyLost": true },
+          { "operation": "setForwardingAddress", "address": "8 New Road, EX2 3CC" }
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "title": "A case that fails on every try",
+      "section": "Failures and retries",
+      "path": "Every try: the first RBIS call fails → failed. After 3 tries it stays failed and is not tried again",
+      "notes": "Not urgent: no RBIS call succeeded. Listed in the worklist (failed with no tries left) and in the summary.",
+      "accounts": ["AC100026"],
+      "rows": [
+        {
+          "id": "uma",
+          "file": "fails-every-try.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100026", "TenantName": "Uma Sample", "Address": "26 Example Street", "Postcode": "EX1 9AC", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "uma.sample@example.test", "ContactPhone": "07700 900261", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstPass": { "status": "failed", "reasonCode": "RBIS_ERROR", "urgent": false, "stepsDone": [] }
+          },
+          "expect": { "status": "failed", "reasonCode": "RBIS_ERROR", "urgent": false, "outcome": "", "isLeadRow": true, "jointTenants": [], "attempts": 3, "stepsDone": [], "errorDetail": { "$nonEmpty": true } }
+        }
+      ],
+      "rbisChanges": { "AC100026": [] },
+      "summaries": [{ "file": "fails-every-try.xlsx" }],
+      "worklists": [{ "file": "fails-every-try.xlsx" }]
+    },
+    {
+      "id": 27,
+      "title": "Move-out fails once; move-in for the same account in the same file",
+      "section": "Failures and retries",
+      "path": "Move-out: ending the tenant's liability fails → failed; the move-in waits. Retry: move-out updated, then the move-in → updated",
+      "notes": "The move-in is never tried before the move-out is finished, so it ends with 1 try. Tried early, check 4 would have referred it as CHECK_DATES.",
+      "accounts": ["AC100027"],
+      "rows": [
+        {
+          "id": "ruby",
+          "file": "retry-27.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100027", "TenantName": "Ruby Sample", "Address": "27 Example Street", "Postcode": "EX1 1AD", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "ruby.sample@example.test", "ContactPhone": "07700 900271", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstPass": { "status": "new", "attempts": 0, "stepsDone": [] }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:ruby sample", "createDetail", "setContactDetails:ruby sample"] }
+        },
+        {
+          "id": "rosa",
+          "file": "retry-27.xlsx",
+          "cells": { "ChangeReason": "TENANCY_END", "AccountRef": "AC100027", "TenantName": "Rosa Sample", "Address": "27 Example Street", "Postcode": "EX1 1AD", "StartDate": "", "EndDate": { "excelDate": "2026-10-31" }, "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstPass": { "status": "failed", "reasonCode": "RBIS_ERROR", "urgent": false, "attempts": 1, "stepsDone": [] }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability ended", "isLeadRow": true, "jointTenants": [], "attempts": 2, "stepsDone": ["endLiability", "addLiableParty:example housing association"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100027": [
+          { "operation": "terminate", "endDate": "2026-10-31", "ended": ["Rosa Sample"] },
+          { "operation": "addLiableParty", "name": "Example Housing Association", "type": "landlord", "startDate": "2026-10-31" },
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Ruby Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Ruby Sample"] },
+          { "operation": "setContact", "name": "Ruby Sample", "email": "ruby.sample@example.test", "phone": "07700 900271" }
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "title": "Same file dropped twice",
+      "section": "Files and re-runs",
+      "path": "First drop: Moved in. Second drop: the case key exists as updated → skipped",
+      "accounts": ["AC100028"],
+      "rows": [
+        {
+          "id": "abel",
+          "file": "same-file.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100028", "TenantName": "Abel Sample", "Address": "28 Example Street", "Postcode": "EX1 2AE", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "abel.sample@example.test", "ContactPhone": "07700 900281", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstDrop": { "status": "updated", "attempts": 1 }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "submissions": 1, "batch": { "file": "same-file.xlsx", "drop": 1 }, "stepsDone": ["endLiability", "addLiableParty:abel sample", "createDetail", "setContactDetails:abel sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100028": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Abel Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Abel Sample"] },
+          { "operation": "setContact", "name": "Abel Sample", "email": "abel.sample@example.test", "phone": "07700 900281" }
+        ]
+      },
+      "fileChecks": [
+        { "file": "same-file.xlsx", "endsIn": "archive", "batchCount": 2, "batch": { "drop": 1, "status": "received", "rowCount": 1 } }
+      ]
+    },
+    {
+      "id": 29,
+      "title": "Referred row sent again after RBIS data is corrected",
+      "section": "Files and re-runs",
+      "path": "First file: account not in RBIS → ADDRESS_NOT_FOUND. Account added. Second file, same row: reopened in the new batch → Moved in",
+      "accounts": ["AC100029"],
+      "rows": [
+        {
+          "id": "cleo",
+          "file": "resend-first.xlsx",
+          "alsoIn": ["resend-second.xlsx"],
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100029", "TenantName": "Cleo Sample", "Address": "29 Example Street", "Postcode": "EX1 3AJ", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "cleo.sample@example.test", "ContactPhone": "07700 900291", "SourceSystem": "ABRITAS" },
+          "checkpoints": {
+            "afterFirstDrop": { "status": "referred", "reasonCode": "ADDRESS_NOT_FOUND", "attempts": 1, "submissions": 1, "batch": { "file": "resend-first.xlsx" } }
+          },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "submissions": 2, "batch": { "file": "resend-second.xlsx" }, "previousResult": { "status": "referred", "reasonCode": "ADDRESS_NOT_FOUND", "batch": { "file": "resend-first.xlsx" } }, "stepsDone": ["endLiability", "addLiableParty:cleo sample", "createDetail", "setContactDetails:cleo sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100029": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Cleo Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Cleo Sample"] },
+          { "operation": "setContact", "name": "Cleo Sample", "email": "cleo.sample@example.test", "phone": "07700 900291" }
+        ]
+      },
+      "summaries": [{ "file": "resend-second.xlsx" }]
+    },
+    {
+      "id": 30,
+      "title": "File missing a required column; empty file",
+      "section": "Files and re-runs",
+      "path": "Required columns present and at least one row? No → moved to rejected, team emailed the reason",
+      "notes": "Two files. The rows name AC100030, which is not in RBIS: if a row became a case by mistake, it would show.",
+      "accounts": [],
+      "rows": [
+        {
+          "id": "mia",
+          "file": "missing-column.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100030", "TenantName": "Mia Test", "Address": "30 Example Street", "Postcode": "EX1 4AG", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "noCase": true }
+        }
+      ],
+      "rbisChanges": {},
+      "fileChecks": [
+        { "file": "missing-column.xlsx", "endsIn": "rejected", "emailsAbout": 1, "batch": { "status": "rejected" } },
+        { "file": "no-rows.xlsx", "endsIn": "rejected", "emailsAbout": 1, "batch": { "status": "rejected" } }
+      ]
+    },
+    {
+      "id": 31,
+      "title": "File that cannot be read",
+      "section": "Files and re-runs",
+      "path": "Can the file be read? No → left for the next run, twice → third try: moved to rejected, one email",
+      "accounts": [],
+      "rows": [
+        {
+          "id": "ola",
+          "file": "unreadable.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100031", "TenantName": "Ola Test", "Address": "31 Example Street", "Postcode": "EX1 5AH", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "noCase": true }
+        }
+      ],
+      "rbisChanges": {},
+      "fileChecks": [
+        {
+          "file": "unreadable.xlsx",
+          "endsIn": "rejected",
+          "emailsAbout": 1,
+          "batchCount": 1,
+          "batch": { "status": "rejected", "readAttempts": 3 },
+          "checkpoints": { "afterFirstPass": { "endsIn": "input", "emailsAbout": 0, "batch": { "status": "unreadable" } } }
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "title": "File with an unsafe name",
+      "section": "Files and re-runs",
+      "path": "File name safe? No → left in place, team emailed once to rename it; no command run on it",
+      "notes": "The group runs the Dispatcher at least twice after the drop, so 'once' is tested. The rows name AC100032, which is not in RBIS.",
+      "accounts": [],
+      "rows": [
+        {
+          "id": "nora",
+          "file": "unsafe;name$test.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100032", "TenantName": "Nora Test", "Address": "32 Example Street", "Postcode": "EX1 6AJ", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "", "ContactPhone": "", "SourceSystem": "ABRITAS" },
+          "expect": { "noCase": true }
+        }
+      ],
+      "rbisChanges": {},
+      "fileChecks": [
+        { "file": "unsafe;name$test.xlsx", "endsIn": "input", "emailsAbout": 1, "batchCount": 1, "batch": { "status": "needs_rename" } }
+      ]
+    },
+    {
+      "id": 33,
+      "title": "File still being copied; Excel temporary file",
+      "section": "Files and re-runs",
+      "path": "List .xlsx files unchanged for a minute, ignoring Excel temporary files: the new file is skipped until it has settled; the temporary file is never read",
+      "notes": "A run started while copying.xlsx is less than a minute old must not read it. The temporary file gets no batch and no email.",
+      "accounts": ["AC100033"],
+      "rows": [
+        {
+          "id": "wendy",
+          "file": "copying.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100033", "TenantName": "Wendy Sample", "Address": "33 Example Street", "Postcode": "EX1 7AJ", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "wendy.sample@example.test", "ContactPhone": "07700 900331", "SourceSystem": "ABRITAS" },
+          "checkpoints": { "whileCopying": { "noCase": true } },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:wendy sample", "createDetail", "setContactDetails:wendy sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100033": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Wendy Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Wendy Sample"] },
+          { "operation": "setContact", "name": "Wendy Sample", "email": "wendy.sample@example.test", "phone": "07700 900331" }
+        ]
+      },
+      "fileChecks": [
+        { "file": "copying.xlsx", "endsIn": "archive", "batchCount": 1, "checkpoints": { "whileCopying": { "endsIn": "input", "batchCount": 0 } } },
+        { "file": "~$temp-book.xlsx", "endsIn": "input", "batchCount": 0, "emailsAbout": 0 }
+      ]
+    },
+    {
+      "id": 34,
+      "title": "Two files dropped together",
+      "section": "Files and re-runs",
+      "path": "Both files taken in by one run; each case processed once",
+      "notes": "Dropped with the other files of the main group, so six files arrive together. The second file's name has brackets and a space, which the safe-name rule allows.",
+      "accounts": ["AC100034", "AC100035"],
+      "rows": [
+        {
+          "id": "zara",
+          "file": "together.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100034", "TenantName": "Zara Sample", "Address": "34 Example Street", "Postcode": "EX1 8AC", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "zara.sample@example.test", "ContactPhone": "07700 900341", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:zara sample", "createDetail", "setContactDetails:zara sample"] }
+        },
+        {
+          "id": "zack",
+          "file": "together (2).xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100035", "TenantName": "Zack Sample", "Address": "35 Example Street", "Postcode": "EX1 9AD", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "zack.sample@example.test", "ContactPhone": "07700 900351", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:zack sample", "createDetail", "setContactDetails:zack sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100034": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Zara Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Zara Sample"] },
+          { "operation": "setContact", "name": "Zara Sample", "email": "zara.sample@example.test", "phone": "07700 900341" }
+        ],
+        "AC100035": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Zack Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Zack Sample"] },
+          { "operation": "setContact", "name": "Zack Sample", "email": "zack.sample@example.test", "phone": "07700 900351" }
+        ]
+      },
+      "fileChecks": [
+        { "file": "together.xlsx", "endsIn": "archive", "batchCount": 1, "batch": { "status": "received", "rowCount": 1 } },
+        { "file": "together (2).xlsx", "endsIn": "archive", "batchCount": 1, "batch": { "status": "received", "rowCount": 1 } }
+      ],
+      "summaries": [{ "file": "together.xlsx" }, { "file": "together (2).xlsx" }]
+    },
+    {
+      "id": 35,
+      "title": "Two runs started at the same moment",
+      "section": "Files and re-runs",
+      "path": "Two runs race for the lock: one takes it and processes the file; the other ends",
+      "accounts": ["AC100035"],
+      "rows": [
+        {
+          "id": "xena",
+          "file": "two-runs.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100035", "TenantName": "Xena Sample", "Address": "35 Example Street", "Postcode": "EX1 9AD", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "xena.sample@example.test", "ContactPhone": "07700 900352", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:xena sample", "createDetail", "setContactDetails:xena sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100035": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Xena Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Xena Sample"] },
+          { "operation": "setContact", "name": "Xena Sample", "email": "xena.sample@example.test", "phone": "07700 900352" }
+        ]
+      },
+      "fileChecks": [
+        { "file": "two-runs.xlsx", "endsIn": "archive", "batchCount": 1, "batch": { "status": "received", "rowCount": 1 } }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "File dropped while n8n is stopped",
+      "section": "Files and re-runs",
+      "path": "n8n stopped, file dropped, n8n started → the timer (or the file trigger on start-up) finds the file → Moved in",
+      "notes": "Slow: up to 15 minutes for the timer. Stops and starts the n8n container, so it runs only with --include-slow and only in the production profile.",
+      "accounts": ["AC100036"],
+      "rows": [
+        {
+          "id": "yuri",
+          "file": "while-stopped.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100036", "TenantName": "Yuri Sample", "Address": "36 Example Street", "Postcode": "EX1 1AE", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "yuri.sample@example.test", "ContactPhone": "07700 900361", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:yuri sample", "createDetail", "setContactDetails:yuri sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100036": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Yuri Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Yuri Sample"] },
+          { "operation": "setContact", "name": "Yuri Sample", "email": "yuri.sample@example.test", "phone": "07700 900361" }
+        ]
+      },
+      "fileChecks": [
+        { "file": "while-stopped.xlsx", "endsIn": "archive", "batchCount": 1 }
+      ]
+    },
+    {
+      "id": 37,
+      "title": "Dates as text, as Excel dates and as Excel numbers",
+      "section": "Files and re-runs",
+      "path": "Tidy rows: three forms of 1 November 2026 → all stored as 2026-11-01 → Moved in",
+      "accounts": ["AC100037", "AC100038", "AC100039"],
+      "rows": [
+        {
+          "id": "tara",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100037", "TenantName": "Tara Sample", "Address": "37 Example Street", "Postcode": "EX1 2AF", "StartDate": "01/11/2026", "EndDate": "", "ForwardingAddress": "", "ContactEmail": "tara.sample@example.test", "ContactPhone": "07700 900371", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:tara sample", "createDetail", "setContactDetails:tara sample"] }
+        },
+        {
+          "id": "theo",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100038", "TenantName": "Theo Sample", "Address": "38 Example Street", "Postcode": "EX1 3AG", "StartDate": { "excelDate": "2026-11-01" }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "theo.sample@example.test", "ContactPhone": "07700 900381", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:theo sample", "createDetail", "setContactDetails:theo sample"] }
+        },
+        {
+          "id": "tess",
+          "file": "harsll-main.xlsx",
+          "cells": { "ChangeReason": "TENANCY_START", "AccountRef": "AC100039", "TenantName": "Tess Sample", "Address": "39 Example Street", "Postcode": "EX1 4AH", "StartDate": { "number": 46327 }, "EndDate": "", "ForwardingAddress": "", "ContactEmail": "tess.sample@example.test", "ContactPhone": "07700 900391", "SourceSystem": "ABRITAS" },
+          "expect": { "status": "updated", "reasonCode": "", "urgent": false, "outcome": "liability started", "isLeadRow": true, "jointTenants": [], "attempts": 1, "stepsDone": ["endLiability", "addLiableParty:tess sample", "createDetail", "setContactDetails:tess sample"] }
+        }
+      ],
+      "rbisChanges": {
+        "AC100037": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Tara Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Tara Sample"] },
+          { "operation": "setContact", "name": "Tara Sample", "email": "tara.sample@example.test", "phone": "07700 900371" }
+        ],
+        "AC100038": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Theo Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Theo Sample"] },
+          { "operation": "setContact", "name": "Theo Sample", "email": "theo.sample@example.test", "phone": "07700 900381" }
+        ],
+        "AC100039": [
+          { "operation": "terminate", "endDate": "2026-11-01", "ended": ["Example Housing Association"] },
+          { "operation": "addLiableParty", "name": "Tess Sample", "type": "tenant", "startDate": "2026-11-01" },
+          { "operation": "createDetail", "startDate": "2026-11-01", "tenants": ["Tess Sample"] },
+          { "operation": "setContact", "name": "Tess Sample", "email": "tess.sample@example.test", "phone": "07700 900391" }
+        ]
+      }
+    }
+  ]
+}

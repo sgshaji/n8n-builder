@@ -1,0 +1,122 @@
+[
+  {
+    "updatedAt": "2026-11-18T20:59:44.076Z",
+    "createdAt": "2026-11-18T20:59:44.076Z",
+    "id": "Q2EM7lajNcwWV5qJ",
+    "name": "Track A – test harness",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "id": "6a2aeab2-3b17-44c4-a710-3b11f1f1a5b9",
+        "name": "Test request",
+        "webhookId": "b0d44295-3181-4775-99b5-57f9cb17c755",
+        "notes": "Track A test harness only. Body: { workflowId, input }.",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "track-a-harness",
+          "responseMode": "lastNode",
+          "responseData": "allEntries",
+          "options": {}
+        }
+      },
+      {
+        "id": "563f6895-c458-479e-94db-567d10eef81b",
+        "name": "Input for the workflow under test",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          260,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify($json.body.input) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "0485b95e-13dc-4bfa-967f-38d5fbe8b41d",
+        "name": "Run the workflow under test",
+        "notes": "If the workflow under test fails as a whole, the error comes back as { error } so the test can see it.",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "onError": "continueRegularOutput",
+        "position": [
+          520,
+          0
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('Test request').first().json.body.workflowId }}"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Test request": {
+        "main": [
+          [
+            {
+              "node": "Input for the workflow under test",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Input for the workflow under test": {
+        "main": [
+          [
+            {
+              "node": "Run the workflow under test",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "timezone": "Europe/London",
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": null,
+    "versionId": "938fdd30-1c0f-412c-9d60-0d3d637c8ee9",
+    "activeVersionId": "938fdd30-1c0f-412c-9d60-0d3d637c8ee9",
+    "versionCounter": 1,
+    "triggerCount": 1,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

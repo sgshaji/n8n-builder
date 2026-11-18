@@ -1,0 +1,1374 @@
+[
+  {
+    "updatedAt": "2026-11-18T21:12:43.811Z",
+    "createdAt": "2026-11-18T20:59:37.141Z",
+    "id": "UEa9ahhsExQ8SXfb",
+    "name": "HARSLL – RBIS adapter",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "id": "27989717-3182-4ff9-b1d4-5b2f935718d0",
+        "name": "When called by the Performer",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "3599f1ae-bdca-4e65-a618-1c3133716a41",
+        "name": "Tidy the request",
+        "notes": "Picks out the four inputs (operation, rbisBaseUrl, ref, params), works out the RBIS call for a write, and refuses a request it cannot carry out: an unknown operation, no account reference, no RBIS address, or endLiability without the names of the people whose liability should end.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          260,
+          0
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b3a28ac9-fb8f-433b-9924-2a1d088fb9e3",
+                "name": "operation",
+                "value": "={{ String($json.operation ?? '').trim() }}",
+                "type": "string"
+              },
+              {
+                "id": "3d15b73c-e9c1-42ff-9153-386f8c27235c",
+                "name": "ref",
+                "value": "={{ String($json.ref ?? '').trim() }}",
+                "type": "string"
+              },
+              {
+                "id": "3094528c-d6e8-44a4-a66d-39c25b3f18e2",
+                "name": "baseUrl",
+                "value": "={{ String($json.rbisBaseUrl ?? '').trim().replace(/\\/+$/, '') }}",
+                "type": "string"
+              },
+              {
+                "id": "a05f5857-8912-4677-9eec-da0c192fcf96",
+                "name": "params",
+                "value": "={{ $json.params && typeof $json.params === 'object' && !Array.isArray($json.params) ? $json.params : ({}) }}",
+                "type": "object"
+              },
+              {
+                "id": "4d92c293-595d-4c31-b055-ea8973824da5",
+                "name": "readPath",
+                "value": "={{ String($json.operation ?? '').trim() === 'canTerminate' ? '/termination-options' : '' }}",
+                "type": "string"
+              },
+              {
+                "id": "c8e09d05-7765-41b7-a3b6-f2b4a37abf61",
+                "name": "write",
+                "value": "={{ ({\n  endLiability: { method: 'POST', path: '/terminate', body: { endDate: $json.params?.endDate ?? null } },\n  addLiableParty: { method: 'POST', path: '/liable-parties', body: { name: $json.params?.name ?? null, type: $json.params?.type ?? null, startDate: $json.params?.startDate ?? null } },\n  createDetail: { method: 'POST', path: '/details', body: { startDate: $json.params?.startDate ?? null, tenants: $json.params?.tenants ?? null } },\n  setContactDetails: { method: 'PUT', path: '/contact', body: { name: $json.params?.name ?? null, email: $json.params?.email || null, phone: $json.params?.phone || null } },\n  setForwardingAddress: { method: 'PUT', path: '/forwarding-address', body: { address: $json.params?.address ?? null } }\n})[String($json.operation ?? '').trim()] ?? ({ method: 'GET', path: '', body: null }) }}",
+                "type": "object"
+              },
+              {
+                "id": "e214540c-ee9e-42c4-9926-a73b146a3098",
+                "name": "requestError",
+                "value": "={{ !['findAccount','getAccount','canTerminate','endLiability','addLiableParty','createDetail','setContactDetails','setForwardingAddress'].includes(String($json.operation ?? '').trim()) ? 'UNKNOWN_OPERATION'\n  : !String($json.ref ?? '').trim() ? 'MISSING_REF'\n  : !/^https?:\\/\\/\\S+$/.test(String($json.rbisBaseUrl ?? '').trim()) ? 'MISSING_RBIS_BASE_URL'\n  : (String($json.operation ?? '').trim() === 'endLiability' && !(Array.isArray($json.params?.parties) && $json.params.parties.length > 0)) ? 'INVALID_PARAMS'\n  : '' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "e53aa8e8-b548-4881-acae-2e4bd22b87f0",
+        "name": "Request valid?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          520,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "a4c4195b-e154-454a-a584-c21ed49436fd",
+                "leftValue": "={{ $json.requestError === '' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "f00ec162-09e0-4297-8f80-14424813449a",
+        "name": "Answer: request refused",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          780,
+          -380
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: false, operation: $json.operation, ref: $json.ref, alreadyDone: false, data: null, error: { code: $json.requestError, message: ({ UNKNOWN_OPERATION: 'The adapter has no operation called ' + JSON.stringify($json.operation), MISSING_REF: 'No account reference was given', MISSING_RBIS_BASE_URL: 'No RBIS address (rbisBaseUrl) was given', INVALID_PARAMS: 'endLiability needs the names of the people whose liability should end (params.parties)' })[$json.requestError] ?? 'The request was refused', httpStatus: null, transient: false } }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "5b66cca5-908c-4a38-91bb-bfe971a72e90",
+        "name": "Read the account from RBIS",
+        "notes": "Every operation reads first: the account, or for canTerminate its termination options. 'Never error' is on, so RBIS's own answers (404, 409, 503) come out of the success output and are sorted below. Only a failure to reach RBIS at all (refused, unknown host, timeout) goes to the error output.",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          780,
+          0
+        ],
+        "parameters": {
+          "url": "={{ $json.baseUrl }}/accounts/{{ encodeURIComponent($json.ref) }}{{ $json.readPath }}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            },
+            "timeout": 10000
+          }
+        }
+      },
+      {
+        "id": "54223c4e-21d0-4608-b447-0a034d2652b0",
+        "name": "Read answered?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1040,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "fbd81593-2e7b-4cb3-ab0d-be81a85d8a0d",
+                "leftValue": "={{ $json.statusCode === 200 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "466b0321-2a38-4fa4-8ac1-93471a8eb416",
+        "name": "Answer: read failed",
+        "notes": "RBIS answered the read with something other than 200. For findAccount, 404 ACCOUNT_NOT_FOUND is a normal answer: found = false, reason NOT_FOUND. Otherwise: 5xx, 408 and 429 are transient (try again later); any other answer is a business error with RBIS's own code.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1300,
+          380
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({\n  ok: $('Tidy the request').item.json.operation === 'findAccount' && $json.statusCode === 404 && $json.body?.error === 'ACCOUNT_NOT_FOUND',\n  operation: $('Tidy the request').item.json.operation,\n  ref: $('Tidy the request').item.json.ref,\n  alreadyDone: false,\n  data: $('Tidy the request').item.json.operation === 'findAccount' && $json.statusCode === 404 && $json.body?.error === 'ACCOUNT_NOT_FOUND' ? { found: false, reason: 'NOT_FOUND', account: null } : null,\n  error: $('Tidy the request').item.json.operation === 'findAccount' && $json.statusCode === 404 && $json.body?.error === 'ACCOUNT_NOT_FOUND' ? null : { code: $json.body?.error ?? ('HTTP_' + $json.statusCode), message: $json.body?.message ?? $json.statusMessage ?? '', httpStatus: $json.statusCode, transient: $json.statusCode >= 500 || [408, 429].includes($json.statusCode) }\n}) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "5e983eb7-27d3-480a-b660-dd6402af2b11",
+        "name": "RBIS answer readable?",
+        "notes": "Safety: n8n treats an expression that fails as empty, so the look-before-writing tests below must only ever see an account in the expected shape. Anything else stops here and nothing is written.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1300,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "4f63ac54-369c-40b1-9bb6-12a635de7257",
+                "leftValue": "={{ $('Tidy the request').item.json.operation === 'canTerminate' ? typeof $json.body?.canTerminate === 'boolean' : ($json.body !== null && typeof $json.body === 'object' && !Array.isArray($json.body) && Array.isArray($json.body.current) && Array.isArray($json.body.liabilities) && Array.isArray($json.body.details) && Array.isArray($json.body.contacts)) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "47ea0be1-82de-4f23-9588-4246a7b5fb56",
+        "name": "Answer: RBIS answer not understood",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1560,
+          1330
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: false, operation: $('Tidy the request').item.json.operation, ref: $('Tidy the request').item.json.ref, alreadyDone: false, data: null, error: { code: 'UNEXPECTED_RBIS_ANSWER', message: 'RBIS answered 200 but not with the expected account data: ' + JSON.stringify($json.body ?? null).slice(0, 200), httpStatus: null, transient: false } }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "89d22594-f784-4b24-a9ce-6127dd716fe9",
+        "name": "Which operation?",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1560,
+          0
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "e0e73933-5dc4-41c2-b68c-49cf12da8741",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'findAccount' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "findAccount"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "900374e3-5e4f-44a0-b4f6-1adb16705821",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'getAccount' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "getAccount"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "ddfa0cb7-53a8-4237-897c-72341e14b11e",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'canTerminate' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "canTerminate"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "b1dad1c9-168d-499d-8360-3bf8982b0d0b",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'endLiability' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "endLiability"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "1a619c54-57ae-43cd-9220-8f420eb30be1",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'addLiableParty' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "addLiableParty"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "4a09fac4-f90d-4d82-bf71-acaa188d5455",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'createDetail' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "createDetail"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "f01db9b5-2647-4daf-8ba0-c8cfc063fe7c",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'setContactDetails' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "setContactDetails"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "eadc969b-969a-4a66-811d-b39edba93e72",
+                      "leftValue": "={{ $('Tidy the request').item.json.operation === 'setForwardingAddress' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "setForwardingAddress"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "Other"
+          }
+        }
+      },
+      {
+        "id": "908d8110-aecb-4d60-9b1a-26f9e1f80a20",
+        "name": "Answer: findAccount",
+        "notes": "The account exists. It is 'found' only if normalise(address) and normalise(postcode) both equal the account's; otherwise ADDRESS_MISMATCH.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          -570
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: true, operation: 'findAccount', ref: $('Tidy the request').item.json.ref, alreadyDone: false, data: String($json.body.address ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Tidy the request').item.json.params.address ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && String($json.body.postcode ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Tidy the request').item.json.params.postcode ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() ? { found: true, reason: null, account: $json.body } : { found: false, reason: 'ADDRESS_MISMATCH', account: null }, error: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "ded2fd1b-4dd6-4bab-89db-3175a2808e56",
+        "name": "Answer: getAccount",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          -380
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: true, operation: 'getAccount', ref: $('Tidy the request').item.json.ref, alreadyDone: false, data: { account: $json.body }, error: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "7a50a2ae-277b-4495-b182-407b3d1d8a8f",
+        "name": "Answer: canTerminate",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          -190
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: true, operation: 'canTerminate', ref: $('Tidy the request').item.json.ref, alreadyDone: false, data: { canTerminate: $json.body?.canTerminate === true, reason: $json.body?.reason ?? null }, error: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "2ae4cb5a-6d54-476d-ab57-5df7974c9b22",
+        "name": "endLiability: change already in RBIS?",
+        "notes": "Look before writing. Already done when none of the named people is liable now, and each has a liability that ended on endDate.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "05568b68-3088-48f6-b87f-79b912d156fd",
+                "leftValue": "={{ $('Tidy the request').item.json.params.parties.every(p => !$json.body.current.some(c => String(c.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String(p ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()) && $json.body.liabilities.some(l => String(l.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String(p ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && l.end === $('Tidy the request').item.json.params.endDate)) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "a86145ab-12bc-4c7a-97e5-9b62168492a8",
+        "name": "addLiableParty: change already in RBIS?",
+        "notes": "Look before writing. Already done when the person is liable now from that start date. (If they are liable from another date, RBIS answers 409 ALREADY_LIABLE to the write, which also counts as already done.)",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "10d1f66c-3961-4904-b136-bb5fb7982883",
+                "leftValue": "={{ $json.body.current.some(c => String(c.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Tidy the request').item.json.params.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && c.start === $('Tidy the request').item.json.params.startDate) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "8616c3b4-2b6c-4101-9c89-af3dfc3d6f41",
+        "name": "createDetail: change already in RBIS?",
+        "notes": "Look before writing. Already done when a detail record exists for that start date.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          380
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "f7744032-1bc3-4eb2-86ea-f987eb6f9935",
+                "leftValue": "={{ $json.body.details.some(d => d.startDate === $('Tidy the request').item.json.params.startDate) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "63b53073-a233-49d0-a7a6-262149b3a0be",
+        "name": "setContactDetails: change already in RBIS?",
+        "notes": "Look before writing. Already done when the same email and phone are saved for this person.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          570
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d29725d5-2d64-4509-9859-16c05360c53a",
+                "leftValue": "={{ $json.body.contacts.some(c => String(c.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Tidy the request').item.json.params.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && (c.email || null) === ($('Tidy the request').item.json.params.email || null) && (c.phone || null) === ($('Tidy the request').item.json.params.phone || null)) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "a4c5f332-c830-4ba2-b91f-28df304db37b",
+        "name": "setForwardingAddress: change already in RBIS?",
+        "notes": "Look before writing. Already done when the same forwarding address is saved.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          760
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "a53f5699-67bf-4565-a63d-bedb47020f77",
+                "leftValue": "={{ ($json.body.forwardingAddress ?? null) === String($('Tidy the request').item.json.params.address ?? '').trim() }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "790dff66-245d-4537-a8cc-844ea44d0af1",
+        "name": "Answer: already done",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          2080,
+          190
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: true, operation: $('Tidy the request').item.json.operation, ref: $('Tidy the request').item.json.ref, alreadyDone: true, data: { account: $json.body }, error: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "1ccccdef-a9be-434d-890e-aadf83d4128e",
+        "name": "Write to RBIS",
+        "notes": "Only reached when the change is not yet in RBIS. Never retried here: a repeat must always look first.",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          2080,
+          570
+        ],
+        "parameters": {
+          "method": "={{ $('Tidy the request').item.json.write.method }}",
+          "url": "={{ $('Tidy the request').item.json.baseUrl }}/accounts/{{ encodeURIComponent($('Tidy the request').item.json.ref) }}{{ $('Tidy the request').item.json.write.path }}",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($('Tidy the request').item.json.write.body) }}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            },
+            "timeout": 10000
+          }
+        }
+      },
+      {
+        "id": "8b7d3bf0-1198-477d-b961-ee2561e0873a",
+        "name": "Answer: write result",
+        "notes": "2xx: done. 409 ALREADY_LIABLE or DETAIL_EXISTS: already done. 5xx, 408, 429: transient. Any other answer: a business error with RBIS's code, such as PARTY_REFUSED.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          2340,
+          570
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({\n  ok: ($json.statusCode >= 200 && $json.statusCode < 300) || ($json.statusCode === 409 && ['ALREADY_LIABLE', 'DETAIL_EXISTS'].includes($json.body?.error)),\n  operation: $('Tidy the request').item.json.operation,\n  ref: $('Tidy the request').item.json.ref,\n  alreadyDone: ($json.statusCode === 409 && ['ALREADY_LIABLE', 'DETAIL_EXISTS'].includes($json.body?.error)),\n  data: ($json.statusCode >= 200 && $json.statusCode < 300) ? { account: $json.body } : ($json.statusCode === 409 && ['ALREADY_LIABLE', 'DETAIL_EXISTS'].includes($json.body?.error)) ? { account: $('Read the account from RBIS').item.json.body } : null,\n  error: ($json.statusCode >= 200 && $json.statusCode < 300) || ($json.statusCode === 409 && ['ALREADY_LIABLE', 'DETAIL_EXISTS'].includes($json.body?.error)) ? null : { code: $json.body?.error ?? ('HTTP_' + $json.statusCode), message: $json.body?.message ?? $json.statusMessage ?? '', httpStatus: $json.statusCode, transient: $json.statusCode >= 500 || [408, 429].includes($json.statusCode) }\n}) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "9551b0a4-46a4-41b3-ae5a-3cbf562f8205",
+        "name": "Answer: RBIS could not be reached",
+        "notes": "RBIS did not answer at all: connection refused, unknown host or timeout. Always transient.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1040,
+          950
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: false, operation: $('Tidy the request').first().json.operation, ref: $('Tidy the request').first().json.ref, alreadyDone: false, data: null, error: { code: /timeout|timed out|ETIMEDOUT|ESOCKETTIMEDOUT|ECONNABORTED/i.test((typeof $json.error === 'string' ? $json.error : [$json.error?.code, $json.error?.message, $json.error?.description].filter(x => x).join(': ')) || 'no detail') ? 'RBIS_TIMEOUT' : 'RBIS_UNREACHABLE', message: (typeof $json.error === 'string' ? $json.error : [$json.error?.code, $json.error?.message, $json.error?.description].filter(x => x).join(': ')) || 'no detail', httpStatus: null, transient: true } }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "34bc2f46-c510-4a16-8d6b-cf2b1553dc25",
+        "name": "Answer: adapter error",
+        "notes": "Something unexpected went wrong inside the adapter, for example RBIS answered in a shape the adapter does not understand. Reported as a non-transient error, so the adapter itself never fails.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1820,
+          1140
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: false, operation: String($('When called by the Performer').first().json.operation ?? ''), ref: String($('When called by the Performer').first().json.ref ?? ''), alreadyDone: false, data: null, error: { code: 'ADAPTER_ERROR', message: (typeof $json.error === 'string' ? $json.error : [$json.error?.code, $json.error?.message, $json.error?.description].filter(x => x).join(': ')) || 'no detail', httpStatus: null, transient: false } }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "dc6c946d-9758-4b82-9980-0fe7ad8f5165",
+        "name": "Adapter answer",
+        "notes": "Every answer leaves through here, so the output always has exactly: ok, operation, ref, alreadyDone, data, error.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2860,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ ok: $json.ok === true, operation: $json.operation ?? '', ref: $json.ref ?? '', alreadyDone: $json.alreadyDone === true, data: $json.data ?? null, error: $json.error ?? null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "When called by the Performer": {
+        "main": [
+          [
+            {
+              "node": "Tidy the request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tidy the request": {
+        "main": [
+          [
+            {
+              "node": "Request valid?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Request valid?": {
+        "main": [
+          [
+            {
+              "node": "Read the account from RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: request refused",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read the account from RBIS": {
+        "main": [
+          [
+            {
+              "node": "Read answered?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: RBIS could not be reached",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read answered?": {
+        "main": [
+          [
+            {
+              "node": "RBIS answer readable?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: read failed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "RBIS answer readable?": {
+        "main": [
+          [
+            {
+              "node": "Which operation?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: RBIS answer not understood",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Which operation?": {
+        "main": [
+          [
+            {
+              "node": "Answer: findAccount",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: getAccount",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: canTerminate",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "endLiability: change already in RBIS?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "addLiableParty: change already in RBIS?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "createDetail: change already in RBIS?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "setContactDetails: change already in RBIS?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "setForwardingAddress: change already in RBIS?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "endLiability: change already in RBIS?": {
+        "main": [
+          [
+            {
+              "node": "Answer: already done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Write to RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "addLiableParty: change already in RBIS?": {
+        "main": [
+          [
+            {
+              "node": "Answer: already done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Write to RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "createDetail: change already in RBIS?": {
+        "main": [
+          [
+            {
+              "node": "Answer: already done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Write to RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "setContactDetails: change already in RBIS?": {
+        "main": [
+          [
+            {
+              "node": "Answer: already done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Write to RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "setForwardingAddress: change already in RBIS?": {
+        "main": [
+          [
+            {
+              "node": "Answer: already done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Write to RBIS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write to RBIS": {
+        "main": [
+          [
+            {
+              "node": "Answer: write result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: RBIS could not be reached",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: request refused": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: read failed": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: findAccount": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: getAccount": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: canTerminate": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: already done": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: write result": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: RBIS answer not understood": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Answer: adapter error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: RBIS could not be reached": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Answer: adapter error": {
+        "main": [
+          [
+            {
+              "node": "Adapter answer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "timezone": "Europe/London",
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": null,
+    "versionId": "42d16449-2b95-4bd3-8f07-6468e5a0bc7e",
+    "activeVersionId": "42d16449-2b95-4bd3-8f07-6468e5a0bc7e",
+    "versionCounter": 4,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

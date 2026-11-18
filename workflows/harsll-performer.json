@@ -1,0 +1,4150 @@
+[
+  {
+    "updatedAt": "2026-11-18T21:12:44.327Z",
+    "createdAt": "2026-11-18T21:04:11.755Z",
+    "id": "Bxb1mMwb4TOFuP8j",
+    "name": "HARSLL – Performer",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "id": "48741c04-12f1-4eb5-9396-52311536efa9",
+        "name": "When called by the Dispatcher",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "d10b5ee4-df36-4caa-8da9-a719782054c5",
+        "name": "Claim the case",
+        "notes": "One update that only succeeds if the case still has the status and number of tries the Dispatcher saw. It sets in_progress, counts the try and stamps the time. Only one of several runs racing for the same case gets the row back; the others get an empty item.",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "alwaysOutputData": true,
+        "onError": "continueRegularOutput",
+        "position": [
+          260,
+          0
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.caseId }}"
+              },
+              {
+                "keyName": "status",
+                "condition": "eq",
+                "keyValue": "={{ $json.expectedStatus }}"
+              },
+              {
+                "keyName": "attempts",
+                "condition": "eq",
+                "keyValue": "={{ $json.expectedAttempts }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "in_progress",
+              "attempts": "={{ Number($json.expectedAttempts) + 1 }}",
+              "lastAttemptAt": "={{ $now.toISO() }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "attempts",
+                "displayName": "attempts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "lastAttemptAt",
+                "displayName": "lastAttemptAt",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "dateTime",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "a1b9fd92-dd0c-45e4-9ea7-33ab64a6cdbf",
+        "name": "Claimed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          520,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "bfbd8d80-6425-4c5e-9aec-b59e9dacb61b",
+                "leftValue": "={{ $json.id !== undefined && $json.id !== null && $json.status === 'in_progress' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "d7ae10da-b357-4391-8ce7-25913f9fcfaf",
+        "name": "Read the case as it is now",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueRegularOutput",
+        "position": [
+          780,
+          -570
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings?.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "returnAll": false,
+          "limit": 1
+        }
+      },
+      {
+        "id": "a0fab6bf-d101-404a-8e65-fa251ce9607f",
+        "name": "Return: not claimed",
+        "notes": "Another run has the case, or its status or tries changed since the Dispatcher read it. Nothing is changed; the case's current values are returned.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "executeOnce": true,
+        "position": [
+          1040,
+          -570
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ caseId: $('When called by the Dispatcher').first().json.caseId ?? null, caseKey: $json.caseKey ?? '', claimed: false, status: $json.status ?? '', reasonCode: $json.reasonCode ?? '', outcome: $json.outcome ?? '', urgent: $json.urgent === true }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "3c0be6f7-07de-41ab-bc47-70ff96b161e2",
+        "name": "Read the claimed case",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          780,
+          0
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ce907378-bec1-4451-82f4-6176c4880a34",
+                "name": "caseId",
+                "value": "={{ $json.id }}",
+                "type": "number"
+              },
+              {
+                "id": "0d5f6420-7f0b-400d-bfd3-14e22327f835",
+                "name": "case",
+                "value": "={{ $json }}",
+                "type": "object"
+              },
+              {
+                "id": "0335827b-36ca-409d-b830-cab113ba09ce",
+                "name": "settings",
+                "value": "={{ $('When called by the Dispatcher').first().json.settings }}",
+                "type": "object"
+              },
+              {
+                "id": "595f0473-803c-4056-a068-6d3c4a8e1255",
+                "name": "stepsDone",
+                "value": "={{ $json.stepsDone ? JSON.parse($json.stepsDone) : [] }}",
+                "type": "array"
+              },
+              {
+                "id": "68c8b990-6e74-44a8-9a39-ec41a0e5be86",
+                "name": "jointTenants",
+                "value": "={{ $json.jointTenants ? JSON.parse($json.jointTenants) : [] }}",
+                "type": "array"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "58441b33-5d3c-4454-bee0-18769055ac67",
+        "name": "Case row and settings usable?",
+        "notes": "Safety: n8n turns an expression that fails (for example JSON that cannot be read) into an empty value instead of an error. A corrupt stepsDone would then look like 'no steps done' and a corrupt jointTenants like 'nobody else'. Both, and missing settings, stop the case here as failed.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          780,
+          380
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "24281c48-8cf0-4b01-b901-fb1be7ee144b",
+                "leftValue": "={{ [\n    !(Array.isArray($json.stepsDone) && $json.stepsDone.every(s => typeof s === 'string')) ? 'stepsDone is not a JSON list of step IDs' : '',\n    !(Array.isArray($json.jointTenants) && $json.jointTenants.every(p => p !== null && typeof p === 'object')) ? 'jointTenants is not a JSON list of people' : '',\n    !(Array.isArray($json.settings?.landlordNames) && $json.settings.landlordNames.length > 0) ? 'settings.landlordNames is missing or empty' : '',\n    !Array.isArray($json.settings?.allowedChangeReasons) ? 'settings.allowedChangeReasons is missing' : '',\n    !Array.isArray($json.settings?.deathChangeReasons) ? 'settings.deathChangeReasons is missing' : '',\n    !$json.settings?.adapterWorkflowId ? 'settings.adapterWorkflowId is empty' : '',\n    !$json.settings?.rbisBaseUrl ? 'settings.rbisBaseUrl is empty' : ''\n  ].filter(x => x).length === 0 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "a1853fe3-440d-4bd1-af00-9274d655c381",
+        "name": "Error: case row or settings unusable",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1040,
+          570
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7cfeb4d1-c72e-4f96-8114-7fcb5af81f26",
+                "name": "error",
+                "value": "={{ 'The case row or the settings cannot be used: ' + [\n    !(Array.isArray($json.stepsDone) && $json.stepsDone.every(s => typeof s === 'string')) ? 'stepsDone is not a JSON list of step IDs' : '',\n    !(Array.isArray($json.jointTenants) && $json.jointTenants.every(p => p !== null && typeof p === 'object')) ? 'jointTenants is not a JSON list of people' : '',\n    !(Array.isArray($json.settings?.landlordNames) && $json.settings.landlordNames.length > 0) ? 'settings.landlordNames is missing or empty' : '',\n    !Array.isArray($json.settings?.allowedChangeReasons) ? 'settings.allowedChangeReasons is missing' : '',\n    !Array.isArray($json.settings?.deathChangeReasons) ? 'settings.deathChangeReasons is missing' : '',\n    !$json.settings?.adapterWorkflowId ? 'settings.adapterWorkflowId is empty' : '',\n    !$json.settings?.rbisBaseUrl ? 'settings.rbisBaseUrl is empty' : ''\n  ].filter(x => x).join('; ') }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "56e41b6a-43c2-48f1-a66c-d0ee8ab4ac4f",
+        "name": "Case details",
+        "notes": "kind: moveIn, moveOut (also a death when deathHandling = processAsEnd) or other. rowDate: the row's start date for a move-in, end date otherwise. landlordEndDate / landlordStartDate follow the settings landlordLiabilityEndsOn and landlordLiableFrom. isRetry: this is not the first try.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1040,
+          0
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ecc81f6e-65aa-44da-a839-c7f6b2b89473",
+                "name": "kind",
+                "value": "={{ $json.case.changeReason === 'TENANCY_START' ? 'moveIn' : $json.case.changeReason === 'TENANCY_END' ? 'moveOut' : (($json.settings.deathChangeReasons ?? []).includes($json.case.changeReason) && $json.settings.deathHandling === 'processAsEnd') ? 'moveOut' : 'other' }}",
+                "type": "string"
+              },
+              {
+                "id": "a46b148c-1603-4e8e-bb11-e7625e50f6ac",
+                "name": "isDeath",
+                "value": "={{ ($json.settings.deathChangeReasons ?? []).includes($json.case.changeReason) }}",
+                "type": "boolean"
+              },
+              {
+                "id": "be26eb29-c83b-4832-91c6-37fbf239962a",
+                "name": "rowDate",
+                "value": "={{ $json.case.changeReason === 'TENANCY_START' ? String($json.case.startDate ?? '') : String($json.case.endDate ?? '') }}",
+                "type": "string"
+              },
+              {
+                "id": "faacd6ee-5e30-4499-8342-5c9e474b4136",
+                "name": "landlordEndDate",
+                "value": "={{ $json.settings.landlordLiabilityEndsOn === 'dayBefore' ? (DateTime.fromISO(String($json.case.startDate ?? '')).minus({ days: 1 }).toISODate() ?? '') : String($json.case.startDate ?? '') }}",
+                "type": "string"
+              },
+              {
+                "id": "a69b3d7a-4690-4ce0-b628-fc1ed144c5a0",
+                "name": "landlordStartDate",
+                "value": "={{ $json.settings.landlordLiableFrom === 'dayAfter' ? (DateTime.fromISO(String($json.case.endDate ?? '')).plus({ days: 1 }).toISODate() ?? '') : String($json.case.endDate ?? '') }}",
+                "type": "string"
+              },
+              {
+                "id": "49230c35-a39b-4cbf-b1ae-f20a47a8fa8c",
+                "name": "landlordNamesNormalised",
+                "value": "={{ ($json.settings.landlordNames ?? []).map(n => String(n ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()) }}",
+                "type": "array"
+              },
+              {
+                "id": "7190beb4-054a-4d81-babe-502d787b98e0",
+                "name": "maxAttempts",
+                "value": "={{ Number($json.settings.maxAttempts ?? 3) }}",
+                "type": "number"
+              },
+              {
+                "id": "f66a88c6-6590-410e-b5d3-1e662bef2606",
+                "name": "isRetry",
+                "value": "={{ Number($json.case.attempts) > 1 }}",
+                "type": "boolean"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "e3eaec5c-8437-40cf-958c-37c71a4a51cc",
+        "name": "Resume: RBIS steps already recorded?",
+        "notes": "A retry of a case that already changed RBIS carries on from the first step not recorded, and skips the checks (RBIS is partly changed, so check 4 would misread it). A reopened case has its steps cleared by the Dispatcher, so it runs the checks again.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1300,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cef7ab36-b651-4b2f-ad3f-9a54bf44c1f5",
+                "leftValue": "={{ $json.stepsDone.length > 0 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "ec8653dd-fc37-4cac-981c-51e062e00fac",
+        "name": "Path: carry on from the recorded steps",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1560,
+          -760
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ planMode: 'resume', stepsDone: $('Case details').first().json.stepsDone, account: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "f0e69122-efd2-425f-a08b-0ac360a51f11",
+        "name": "Check 1: dates real and in order?",
+        "notes": "(a) Every date given is a real yyyy-MM-dd date; the date the change needs is there (start date for a move-in, end date for a move-out or death; for any other change reason, at least one date); the end date is not before the start date.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1560,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "20d2804f-f948-4c33-92ed-02981c09f017",
+                "leftValue": "={{ [String($json.case.startDate ?? ''), String($json.case.endDate ?? '')].every(d => d === '' || (/^\\d{4}-\\d{2}-\\d{2}$/.test(d) && DateTime.fromISO(d).isValid)) && ($json.kind === 'other' && !$json.isDeath ? (String($json.case.startDate ?? '') !== '' || String($json.case.endDate ?? '') !== '') : /^\\d{4}-\\d{2}-\\d{2}$/.test($json.rowDate)) && !($json.case.startDate && $json.case.endDate && $json.case.endDate < $json.case.startDate) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "a2446825-6814-42a5-b9dc-1e11e4241e87",
+        "name": "Reason: DATES_INVALID",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          380
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "0995c1d9-67a0-480d-9b75-845c0091c897",
+                "name": "reasonCode",
+                "value": "DATES_INVALID",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "02698d16-93df-4b1a-8ad9-cf3f43485f7d",
+        "name": "Check 1: a death?",
+        "notes": "(b) Deaths are recognised before the allowed-reasons test, so a death is never called 'change reason not valid'.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          1820,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "60912ffa-90ab-47f2-9dec-3babfb84f90a",
+                "leftValue": "={{ $json.isDeath }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "8524ad92-a9a7-46c0-a5ac-054d7ddf0a26",
+        "name": "Check 1: deaths processed as move-outs?",
+        "notes": "Setting deathHandling: refer (default) passes deaths to staff; processAsEnd treats them as a move-out from check 2 on.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          2080,
+          -190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "e2e45d03-a730-4962-8a9a-078fa0c78048",
+                "leftValue": "={{ $json.settings.deathHandling === 'processAsEnd' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "3d4d468e-cec1-4a02-bd5d-a579a5106b9c",
+        "name": "Reason: DEATH_REFERRED",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          2340,
+          -380
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7eebe3fc-43de-4ef4-8d1c-12fd52eacae7",
+                "name": "reasonCode",
+                "value": "DEATH_REFERRED",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "803d9d6d-bc68-4b08-b0fa-c782215a14af",
+        "name": "Check 1: change reason allowed?",
+        "notes": "(c) In the allowedChangeReasons setting, and one of the two changes the automation knows how to make.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          2080,
+          190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "3d80b723-4d5c-4919-b3fc-bb2ff330d031",
+                "leftValue": "={{ ['TENANCY_START', 'TENANCY_END'].includes($json.case.changeReason) && ($json.settings.allowedChangeReasons ?? []).includes($json.case.changeReason) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "c9439dc0-f8fe-4326-9f5f-361e46edf4af",
+        "name": "Reason: CHANGE_REASON_NOT_VALID",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          2340,
+          380
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e91eca76-48a5-48f3-8dcc-e57290611f83",
+                "name": "reasonCode",
+                "value": "CHANGE_REASON_NOT_VALID",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "250145e3-eb16-4b9f-ae54-08ef362bfc53",
+        "name": "Check 2: joint row?",
+        "notes": "A joint row is a later row of a tenancy in the same file. Its lead row (coveredByCaseKey) does the RBIS work for everyone.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          2600,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "bb1afb59-6465-4b05-823f-dd991b21bafb",
+                "leftValue": "={{ String($json.case.coveredByCaseKey ?? '').trim() !== '' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "231cd11f-d97f-40b1-adc9-31087942bc2f",
+        "name": "Check 2: find the lead row",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          2860,
+          -380
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('Case details').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "caseKey",
+                "condition": "eq",
+                "keyValue": "={{ $('Case details').first().json.case.coveredByCaseKey }}"
+              }
+            ]
+          },
+          "returnAll": false,
+          "limit": 1
+        }
+      },
+      {
+        "id": "65c91140-5f9b-47d9-b2c9-aed6cf13548a",
+        "name": "Check 2: what did the lead row do?",
+        "notes": "Lead row updated: this row is a duplicate. Lead row referred, failed with no tries left, or missing: refer this row too, so nobody is dropped. With jointTenantHandling = referLaterRows the lead row adds only its own person, so joint rows always go to staff. Lead row still unfinished (should not happen, the Dispatcher runs it first): release this case unchanged for a later run.",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          3120,
+          -380
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "0b735285-13d6-4ad6-9980-e64bc4dfb123",
+                      "leftValue": "={{ $('Case details').first().json.settings.jointTenantHandling === 'referLaterRows' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Joint rows go to staff (setting)"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "37fead5c-76a5-46a1-aa6a-7c98e750c3e9",
+                      "leftValue": "={{ $json.status === 'updated' }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Lead row updated RBIS"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "4fd679f3-8426-4f45-8083-94a8d5bb35bf",
+                      "leftValue": "={{ $json.id === undefined || $json.id === null || ['referred', 'duplicate'].includes($json.status) || ($json.status === 'failed' && Number($json.attempts) >= $('Case details').first().json.maxAttempts) }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Lead row not completed"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "Lead row not finished yet"
+          }
+        }
+      },
+      {
+        "id": "6e5356c9-bf0a-4236-8312-11eb3f65b361",
+        "name": "Reason: EARLIER_ROW_NOT_COMPLETED",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          3380,
+          -570
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9c26751c-4742-41a7-ba33-26cf8b610f34",
+                "name": "reasonCode",
+                "value": "EARLIER_ROW_NOT_COMPLETED",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "156d98ce-7b26-4816-97bc-bfd2984db4e5",
+        "name": "Mark case duplicate",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          3380,
+          -380
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "duplicate",
+              "reasonCode": "SAME_TENANCY_AS_EARLIER_ROW",
+              "reasonText": "Covered by an earlier row for the same tenancy",
+              "outcome": "",
+              "urgent": false,
+              "errorDetail": ""
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonCode",
+                "displayName": "reasonCode",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonText",
+                "displayName": "reasonText",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "outcome",
+                "displayName": "outcome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "urgent",
+                "displayName": "urgent",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "boolean",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "errorDetail",
+                "displayName": "errorDetail",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "8b052f1a-df6e-4669-b175-4ba4198d5941",
+        "name": "Release the case for a later run",
+        "notes": "Puts the status and number of tries back to what the Dispatcher saw, so this try does not count and the case is picked up again once its lead row has finished.",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          3380,
+          -190
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "={{ $('When called by the Dispatcher').first().json.expectedStatus }}",
+              "attempts": "={{ Number($('When called by the Dispatcher').first().json.expectedAttempts) }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "attempts",
+                "displayName": "attempts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "44a4a705-23bb-4780-8d91-d3b2d7402515",
+        "name": "Check 3: account reference given?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          2860,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b66e6f47-2b20-4e18-8480-ee442fbe09fb",
+                "leftValue": "={{ String($json.case.accountRef ?? '').trim() !== '' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "1cad2005-5f67-45d7-bdb3-f4b1f341f032",
+        "name": "Reason: NO_ACCOUNT_REF",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          3120,
+          190
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "af3dc077-f3b5-4a95-966c-52fc9d822e02",
+                "name": "reasonCode",
+                "value": "NO_ACCOUNT_REF",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "54b85d80-de0d-423d-a636-5f6349986b5e",
+        "name": "Check 3: ask RBIS for the account",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          3120,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ operation: 'findAccount', rbisBaseUrl: $('Case details').first().json.settings.rbisBaseUrl, ref: $('Case details').first().json.case.accountRef, params: { address: $('Case details').first().json.case.address, postcode: $('Case details').first().json.case.postcode } }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "86b3812d-9c63-4eb2-8c74-6f6618f2bb9c",
+        "name": "Check 3: find the account (RBIS adapter)",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          3380,
+          0
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('Case details').first().json.settings.adapterWorkflowId }}"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "23e14796-82fc-4c4b-aedf-864a8f7ad3d6",
+        "name": "Check 3: account found?",
+        "notes": "Found means the account exists and its address and postcode match the row's (after normalise).",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          3640,
+          0
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "2ab7f2c8-a3c3-4c57-82d1-3c7417115bb6",
+                      "leftValue": "={{ $json.ok !== true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "RBIS error"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "d8be134b-9b33-4d07-b22e-430290d02edc",
+                      "leftValue": "={{ $json.data?.found !== true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Not found"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "Found"
+          }
+        }
+      },
+      {
+        "id": "87b9fe54-1646-417d-acb8-8ecb240e5ea3",
+        "name": "Reason: ADDRESS_NOT_FOUND",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          3900,
+          190
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9455c6fd-1bcb-4581-9fb8-aa9711ca0df6",
+                "name": "reasonCode",
+                "value": "ADDRESS_NOT_FOUND",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "ac171eb4-8b2b-4499-a4cb-dbee81c90196",
+        "name": "Retry: first RBIS change already made by an earlier try?",
+        "notes": "Addition to the design (see build notes). If an earlier try's first RBIS call (ending the liability) worked but its reply was lost, no step was recorded, yet nobody is liable now and check 4 would misread the account. On a retry only: if nobody is liable and the liability this case ends has ended on exactly the case's date, record endLiability as done and carry on with the remaining steps.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          3900,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "713e4bb9-82f4-4993-9a31-397916ff9250",
+                "leftValue": "={{ $('Case details').first().json.isRetry && ['moveIn', 'moveOut'].includes($('Case details').first().json.kind) && $json.data.account.current.length === 0 && $json.data.account.liabilities.some(l => $('Case details').first().json.kind === 'moveIn' ? ($('Case details').first().json.landlordNamesNormalised.includes(String(l.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()) && l.end === $('Case details').first().json.landlordEndDate) : (String(l.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Case details').first().json.case.tenantName ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && l.end === $('Case details').first().json.case.endDate)) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "cf26e1b4-cb3c-425f-a5a8-7cc198ea6ba6",
+        "name": "Retry: record the first change as done",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          4160,
+          -380
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "stepsDone": "[\"endLiability\"]"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "stepsDone",
+                "displayName": "stepsDone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "00fc9b04-b735-4c3d-a1e9-bad38793c957",
+        "name": "Path: carry on after the earlier try's first change",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          4420,
+          -380
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ planMode: 'resume', stepsDone: ['endLiability'], account: null }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "41795559-f1ec-4528-9cdd-5dbd645c1e95",
+        "name": "Check 4: who is liable in RBIS now?",
+        "notes": "Uses the account read in check 3. landlordLiable: a current liable party's name is in landlordNames (normalised). rowPersonLiable: the row's person is a current liable party (nameMatch setting). hasStartDate / startDateMatches: about the current liability's start date; for a move-out the row's date is the end date (or the landlord's start date under landlordLiableFrom = dayAfter).",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          4160,
+          0
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c2731c05-f494-47f5-974a-7e4ed96798d8",
+                "name": "account",
+                "value": "={{ $json.data.account }}",
+                "type": "object"
+              },
+              {
+                "id": "740a26cd-3a6e-4160-a5fe-c0239f1e7f9e",
+                "name": "isMoveIn",
+                "value": "={{ $('Case details').first().json.kind === 'moveIn' }}",
+                "type": "boolean"
+              },
+              {
+                "id": "a1edcf5e-bee9-4d9f-9746-df02d3c858e9",
+                "name": "landlordLiable",
+                "value": "={{ $json.data.account.current.some(c => $('Case details').first().json.landlordNamesNormalised.includes(String(c.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim())) }}",
+                "type": "boolean"
+              },
+              {
+                "id": "eb8ed8d0-30c2-4057-abc0-41cf902f39a7",
+                "name": "rowPersonLiable",
+                "value": "={{ $json.data.account.current.some(c => $('Case details').first().json.settings.nameMatch === 'surnameOnly' ? String(c.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').pop() === String($('Case details').first().json.case.tenantName ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').pop() : String(c.party ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Case details').first().json.case.tenantName ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()) }}",
+                "type": "boolean"
+              },
+              {
+                "id": "3d520459-90ea-4b9c-b638-91929419f8db",
+                "name": "hasStartDate",
+                "value": "={{ $json.data.account.current.length > 0 && $json.data.account.current.every(c => !!c.start) }}",
+                "type": "boolean"
+              },
+              {
+                "id": "7090a225-400e-467b-818a-4ee02e853087",
+                "name": "startDateMatches",
+                "value": "={{ $json.data.account.current.length > 0 && $json.data.account.current.every(c => c.start === $('Case details').first().json.rowDate || ($('Case details').first().json.kind === 'moveOut' && c.start === $('Case details').first().json.landlordStartDate)) }}",
+                "type": "boolean"
+              },
+              {
+                "id": "acfb3fc3-13ef-4ee5-b52e-9d0008249ba7",
+                "name": "confirmLeaverIsLiable",
+                "value": "={{ $('Case details').first().json.settings.confirmLeaverIsLiable !== false }}",
+                "type": "boolean"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "6826c60d-2668-4b19-975b-f8201daf6d58",
+        "name": "Check 4: moving in?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          4420,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "bde9eabe-cdb5-4b35-b360-64db4aa5a96e",
+                "leftValue": "={{ $json.isMoveIn }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "91cfbbee-d00d-4497-8359-ec92ed50dfed",
+        "name": "Check 4: landlord liable? (moving in)",
+        "notes": "Move-in: the landlord should be liable for the empty property.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          4680,
+          -190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d61e04e5-9f71-4cf2-ba70-d8c93e2da3a8",
+                "leftValue": "={{ $json.landlordLiable }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "0412169e-290f-49b3-b645-d2930a877c08",
+        "name": "Check 4: landlord liable? (moving out)",
+        "notes": "Move-out: the landlord should not be liable yet.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          4680,
+          190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "725e0cf8-3dd7-4ffb-943b-84ec027f77ee",
+                "leftValue": "={{ $json.landlordLiable }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "b4de875f-316f-4ea9-bc46-ff791a4119cc",
+        "name": "Check 4: leaver is one of the liable people?",
+        "notes": "Added safeguard, not in UiPath: stops the automation ending the wrong person's liability. Switched off by confirmLeaverIsLiable = false.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          4940,
+          190
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9e9f6f05-8647-4e4d-89f8-de8026748143",
+                "leftValue": "={{ $json.rowPersonLiable || !$json.confirmLeaverIsLiable }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "9fc95224-bdd1-4539-b9dc-03696134675d",
+        "name": "Reason: LEAVER_NOT_LIABLE",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5200,
+          380
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7ad3c1bf-9fbe-42ec-a88f-84a3bc708e50",
+                "name": "reasonCode",
+                "value": "LEAVER_NOT_LIABLE",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "b61ea60e-5605-4110-815e-8e95b296373c",
+        "name": "Check 4: RBIS has a start date?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          4940,
+          570
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "8dbc1743-3986-4f12-8dee-6c8760397059",
+                "leftValue": "={{ $json.hasStartDate }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "4a7eb7a8-73bb-4187-90e0-eee1defb5d72",
+        "name": "Reason: NO_START_DATE",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5200,
+          760
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b4bc300c-d27f-4fad-ad6f-c6f91e9d56fd",
+                "name": "reasonCode",
+                "value": "NO_START_DATE",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "392dfe0f-b3e7-4c4f-bd60-df3b143c9b74",
+        "name": "Check 4: RBIS start date equals the row's date?",
+        "notes": "Equal: RBIS already shows this change. Different: RBIS and the spreadsheet disagree.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          5200,
+          570
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9174a2e5-3c4f-47a1-9f67-ae6d8518d350",
+                "leftValue": "={{ $json.startDateMatches }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "bf6ba2fb-64d1-41aa-bece-01134122904d",
+        "name": "Reason: ACCOUNT_ALREADY_PROCESSED",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5460,
+          570
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "6d5365d1-a84c-48d4-b84e-07ac21784eb7",
+                "name": "reasonCode",
+                "value": "ACCOUNT_ALREADY_PROCESSED",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "1c34ec67-b8bd-4d21-b135-63b94d8edb8e",
+        "name": "Reason: CHECK_DATES",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5460,
+          760
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "1911f751-8959-49ff-885d-1f9a30efb2e2",
+                "name": "reasonCode",
+                "value": "CHECK_DATES",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "d9a06f5a-ecf3-49d8-a8e5-3044c0e6d3dc",
+        "name": "Add the person to an existing tenancy?",
+        "notes": "The flowchart's unconnected branch, off by default (addPersonToExistingTenancy). A move-in already in RBIS from the same date, from the required source system, whose person is not yet liable: add the person (addLiableParty, createDetail, setContactDetails). Otherwise the case is referred as ACCOUNT_ALREADY_PROCESSED.",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          5720,
+          570
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "006e81eb-8afe-465e-a15d-0bdf0e923b47",
+                "leftValue": "={{ $('Case details').first().json.settings.addPersonToExistingTenancy === true && $('Case details').first().json.kind === 'moveIn' && String($('Case details').first().json.settings.requiredSourceSystem ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() !== '' && String($('Case details').first().json.case.sourceSystem ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() === String($('Case details').first().json.settings.requiredSourceSystem ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() && !$('Check 4: who is liable in RBIS now?').first().json.rowPersonLiable }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "17638244-638c-42a6-bda1-33f6c7ad3ecf",
+        "name": "Path: add the person to the existing tenancy",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5980,
+          380
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ planMode: 'addPerson', stepsDone: [], account: $('Check 4: who is liable in RBIS now?').first().json.account }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "bcd1702b-a506-453a-8884-f99846a9a7a9",
+        "name": "Check 5: ask RBIS if the liability can be ended",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5200,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ operation: 'canTerminate', rbisBaseUrl: $('Case details').first().json.settings.rbisBaseUrl, ref: $('Case details').first().json.case.accountRef, params: {} }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "8119fd47-54df-46ad-8f42-2163732de5f7",
+        "name": "Check 5: termination options (RBIS adapter)",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5460,
+          0
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('Case details').first().json.settings.adapterWorkflowId }}"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "7576a5c3-6bc5-4c43-9f46-592a04724572",
+        "name": "Check 5: liability can be ended?",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          5720,
+          0
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "c184e2bf-9d16-4489-89a1-410083d868e6",
+                      "leftValue": "={{ $json.ok !== true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "RBIS error"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cf6d9c5d-e371-4c5e-939a-3ca1f95a798e",
+                      "leftValue": "={{ $json.data?.canTerminate !== true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "No"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "Yes"
+          }
+        }
+      },
+      {
+        "id": "47ab3b2a-8cbf-43f5-95dc-86a1a839746c",
+        "name": "Reason: NO_OPTION_TO_TERMINATE",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5980,
+          190
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "6fcd3a31-a25e-4d90-89a4-09f5986d45eb",
+                "name": "reasonCode",
+                "value": "NO_OPTION_TO_TERMINATE",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "4078ead9-1184-441f-8f1f-0afd049876c5",
+        "name": "Path: full update",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          5980,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ planMode: 'full', stepsDone: [], account: $('Check 4: who is liable in RBIS now?').first().json.account }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "8e24a6f6-8624-4ae9-b85e-e6dd32f03f93",
+        "name": "Plan the RBIS steps",
+        "notes": "Why Code: builds a list of RBIS calls whose length depends on the case (one addLiableParty and one setContactDetails per person on the tenancy), removes the calls already in stepsDone, and gives each remaining call the stepsDone list to record once it succeeds. Done natively this needs Split Out, several Set and Filter nodes and an Aggregate. Paths: moved in = endLiability (landlord), addLiableParty per person, createDetail, setContactDetails per person with details; moved out = endLiability (tenants), addLiableParty (landlord), setForwardingAddress if known; add a person = addLiableParty, createDetail, setContactDetails.",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "onError": "continueErrorOutput",
+        "position": [
+          6240,
+          0
+        ],
+        "parameters": {
+          "jsCode": "// Plan the RBIS steps: the fixed list of adapter calls for this case's update path,\n// minus the calls already recorded in stepsDone. One item per call still to make.\nconst ctx = $('Case details').first().json;\nconst input = $input.first().json;\nconst c = ctx.case;\nconst s = ctx.settings;\nconst norm = (x) => String(x ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\nconst done = Array.isArray(input.stepsDone) ? input.stepsDone : [];\n\n// The people this row puts on the account: its own person, then (lead rows) each joint tenant.\nconst clean = (p) => ({ name: String(p.name ?? '').trim(), email: String(p.email ?? '').trim(), phone: String(p.phone ?? '').trim() });\nconst lead = clean({ name: c.tenantName, email: c.contactEmail, phone: c.contactPhone });\nconst joint = s.jointTenantHandling === 'referLaterRows' ? [] : (Array.isArray(ctx.jointTenants) ? ctx.jointTenants : []).map(clean);\nconst people = [lead, ...joint];\nconst withContacts = people.filter((p) => p.email || p.phone);\n\n// Which path. A resumed move-in that never ended the landlord's liability was adding a person to an existing tenancy.\nlet path = input.planMode === 'addPerson' ? 'addPerson' : ctx.kind;\nif (input.planMode === 'resume' && ctx.kind === 'moveIn' && !done.includes('endLiability')) path = 'addPerson';\nif (!['moveIn', 'moveOut', 'addPerson'].includes(path)) {\n  throw new Error(`No update path for change reason \"${c.changeReason}\"`);\n}\n\n// Who RBIS will end: the pretend RBIS ends every current liability, so name them all.\nconst current = Array.isArray(input.account?.current) ? input.account.current.map((x) => x.party) : null;\n\nconst steps = [];\nconst addTenants = () => people.forEach((p) => steps.push({\n  stepId: `addLiableParty:${norm(p.name)}`, operation: 'addLiableParty', params: { name: p.name, type: 'tenant', startDate: c.startDate },\n}));\nconst createDetail = () => steps.push({\n  stepId: 'createDetail', operation: 'createDetail', params: { startDate: c.startDate, tenants: people.map((p) => p.name) },\n});\nconst setContacts = () => withContacts.forEach((p) => steps.push({\n  stepId: `setContactDetails:${norm(p.name)}`, operation: 'setContactDetails', params: { name: p.name, email: p.email, phone: p.phone },\n}));\n\nlet outcome;\nlet followUpReason = '';\nif (path === 'moveIn' || path === 'addPerson') {\n  if (path === 'moveIn') {\n    steps.push({ stepId: 'endLiability', operation: 'endLiability', params: { endDate: ctx.landlordEndDate, parties: current ?? (s.landlordNames ?? []) } });\n  }\n  addTenants();\n  createDetail();\n  setContacts();\n  outcome = 'liability started';\n  if (withContacts.length === 0) followUpReason = 'NO_CONTACT_DETAILS';\n} else {\n  const landlord = (s.landlordNames ?? [])[0];\n  if (!landlord) throw new Error('settings.landlordNames is empty, so the landlord cannot be made liable again');\n  const forwardingAddress = String(c.forwardingAddress ?? '').trim();\n  steps.push({ stepId: 'endLiability', operation: 'endLiability', params: { endDate: c.endDate, parties: current ?? people.map((p) => p.name) } });\n  steps.push({ stepId: `addLiableParty:${norm(landlord)}`, operation: 'addLiableParty', params: { name: landlord, type: 'landlord', startDate: ctx.landlordStartDate } });\n  if (forwardingAddress) steps.push({ stepId: 'setForwardingAddress', operation: 'setForwardingAddress', params: { address: forwardingAddress } });\n  outcome = forwardingAddress ? 'liability ended, address saved' : 'liability ended';\n}\n\nconst remaining = steps.filter((st) => !done.includes(st.stepId));\nconst base = {\n  caseId: ctx.caseId, rbisBaseUrl: s.rbisBaseUrl, ref: c.accountRef, path, outcome, followUpReason,\n  stepsPlanned: steps.map((st) => st.stepId),\n};\nif (remaining.length === 0) return [{ json: { ...base, nothingLeft: true } }];\n\nlet soFar = [...done];\nreturn remaining.map((st) => {\n  const stepsDoneBefore = soFar;\n  soFar = [...soFar, st.stepId];\n  return { json: { ...base, nothingLeft: false, ...st, stepsDoneBefore, stepsDoneAfter: soFar } };\n});\n"
+        }
+      },
+      {
+        "id": "976d4418-5787-40ef-ba52-bd53306e8aa4",
+        "name": "Any RBIS steps left?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          6500,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "63f6cc49-8b1c-42df-b99c-46e514552eb8",
+                "leftValue": "={{ $json.nothingLeft !== true }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "87f61167-a1e9-40f4-b7b9-95b087a41fb6",
+        "name": "Loop over RBIS steps",
+        "notes": "One RBIS call at a time, in order. A call that fails leaves the loop, so later calls are not made.",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          6760,
+          0
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "8302ac79-2aed-4415-a365-502df6970f89",
+        "name": "Current RBIS step",
+        "notes": "Names the step being worked on, so later nodes can refer to it.",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          7020,
+          190
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "a675bac0-c750-43c5-a2f0-7e496b215974",
+        "name": "Build the adapter request",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          7280,
+          190
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ operation: $json.operation, rbisBaseUrl: $json.rbisBaseUrl, ref: $json.ref, params: $json.params }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "7dfd86c8-e3d0-49c2-ac57-3cdbac504ea3",
+        "name": "Call the RBIS adapter",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          7540,
+          190
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('Case details').first().json.settings.adapterWorkflowId }}"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "380d743f-883c-4021-86cb-014682839fc3",
+        "name": "RBIS step done?",
+        "notes": "Done includes 'already done': the change was already in RBIS.",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          7800,
+          190
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "e2da5aeb-ef65-4639-ac59-95d7548585b0",
+                      "leftValue": "={{ $json.ok === true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Done"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "6196a0f5-7ed0-4bc3-9a2a-ff9659b76af0",
+                      "leftValue": "={{ $json.error?.transient === true }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "RBIS unavailable"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "RBIS refused"
+          }
+        }
+      },
+      {
+        "id": "66d42caf-65b1-423a-a92c-9e6940b949dd",
+        "name": "Record the step",
+        "notes": "Recorded straight away, so a retry never repeats a call that worked.",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          8060,
+          0
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "stepsDone": "={{ JSON.stringify($('Current RBIS step').first().json.stepsDoneAfter) }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "stepsDone",
+                "displayName": "stepsDone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "9eab45b4-6836-410b-9972-48f7f1d51f7f",
+        "name": "Reason: RBIS refused the step",
+        "notes": "RBIS refused a person: UNABLE_TO_ADD_PARTY. RBIS would not end the liability: NO_OPTION_TO_TERMINATE, or CHECK_DATES if the end date is before the liability's start. Any other refusal is unexpected and the case is marked failed.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "onError": "continueErrorOutput",
+        "position": [
+          8060,
+          380
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8f968fb0-2e2b-42af-af5f-df45bf2e4f0c",
+                "name": "reasonCode",
+                "value": "={{ $('Current RBIS step').first().json.operation === 'addLiableParty' && $json.error?.httpStatus ? 'UNABLE_TO_ADD_PARTY' : $('Current RBIS step').first().json.operation === 'endLiability' && $json.error?.code === 'TERMINATION_NOT_ALLOWED' ? 'NO_OPTION_TO_TERMINATE' : $('Current RBIS step').first().json.operation === 'endLiability' && $json.error?.code === 'END_BEFORE_START' ? 'CHECK_DATES' : '' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "06c2685f-81e4-483d-b2f8-31673cdb0871",
+        "name": "Refusal goes to staff?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "onError": "continueErrorOutput",
+        "position": [
+          8320,
+          380
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cb80401a-7d0a-489c-82bd-29ee5ffac2d2",
+                "leftValue": "={{ $json.reasonCode !== '' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        }
+      },
+      {
+        "id": "9f3b30e9-00b1-411e-b6ed-d4c59e29b421",
+        "name": "Mark case updated",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          7800,
+          -380
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "updated",
+              "reasonCode": "={{ $('Plan the RBIS steps').first().json.followUpReason }}",
+              "reasonText": "={{ ({\"DATES_INVALID\":\"The dates on the spreadsheet row are wrong or missing\",\"DEATH_REFERRED\":\"The tenancy ended because the tenant died; these are passed to staff\",\"CHANGE_REASON_NOT_VALID\":\"The reason for the change is not one the automation handles\",\"SAME_TENANCY_AS_EARLIER_ROW\":\"Covered by an earlier row for the same tenancy\",\"EARLIER_ROW_NOT_COMPLETED\":\"The earlier row for this tenancy was not completed, so this person was not added\",\"NO_ACCOUNT_REF\":\"The row has no account reference\",\"ADDRESS_NOT_FOUND\":\"The account could not be found in RBIS\",\"NO_START_DATE\":\"RBIS has no start date to compare against\",\"CHECK_DATES\":\"The dates in RBIS do not match the spreadsheet\",\"ACCOUNT_ALREADY_PROCESSED\":\"RBIS already shows this change\",\"LEAVER_NOT_LIABLE\":\"The person leaving is not the liable person in RBIS\",\"NO_OPTION_TO_TERMINATE\":\"RBIS does not allow the current liability to be ended\",\"UNABLE_TO_ADD_PARTY\":\"A person could not be added to the account\",\"NO_CONTACT_DETAILS\":\"Liability started, but there were no contact details to record\",\"RBIS_ERROR\":\"RBIS did not respond or returned an error\",\"PROCESSING_STOPPED\":\"Processing stopped unexpectedly and the tries ran out\"})[$('Plan the RBIS steps').first().json.followUpReason] ?? '' }}",
+              "outcome": "={{ $('Plan the RBIS steps').first().json.outcome }}",
+              "urgent": false,
+              "errorDetail": ""
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonCode",
+                "displayName": "reasonCode",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonText",
+                "displayName": "reasonText",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "outcome",
+                "displayName": "outcome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "urgent",
+                "displayName": "urgent",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "boolean",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "errorDetail",
+                "displayName": "errorDetail",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "56a81369-ba05-479a-869f-4e9e5061bfa8",
+        "name": "Prepare the referral",
+        "notes": "Every referral passes through here, whatever check or step stopped the case.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "executeOnce": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          8580,
+          760
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "40946d4c-42b6-4ed5-9669-d13ba2940c6b",
+                "name": "reasonCode",
+                "value": "={{ $json.reasonCode }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "e04773b8-f0a0-482b-90ff-5e2be1f8475a",
+        "name": "Read the case before referring",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          8840,
+          760
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "returnAll": false,
+          "limit": 1
+        }
+      },
+      {
+        "id": "d642f325-027f-46c9-aba7-62ac06fc46d9",
+        "name": "Refer case",
+        "notes": "urgent: RBIS was already partly changed (stepsDone is not empty).",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          9100,
+          760
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "referred",
+              "reasonCode": "={{ $('Prepare the referral').first().json.reasonCode }}",
+              "reasonText": "={{ ({\"DATES_INVALID\":\"The dates on the spreadsheet row are wrong or missing\",\"DEATH_REFERRED\":\"The tenancy ended because the tenant died; these are passed to staff\",\"CHANGE_REASON_NOT_VALID\":\"The reason for the change is not one the automation handles\",\"SAME_TENANCY_AS_EARLIER_ROW\":\"Covered by an earlier row for the same tenancy\",\"EARLIER_ROW_NOT_COMPLETED\":\"The earlier row for this tenancy was not completed, so this person was not added\",\"NO_ACCOUNT_REF\":\"The row has no account reference\",\"ADDRESS_NOT_FOUND\":\"The account could not be found in RBIS\",\"NO_START_DATE\":\"RBIS has no start date to compare against\",\"CHECK_DATES\":\"The dates in RBIS do not match the spreadsheet\",\"ACCOUNT_ALREADY_PROCESSED\":\"RBIS already shows this change\",\"LEAVER_NOT_LIABLE\":\"The person leaving is not the liable person in RBIS\",\"NO_OPTION_TO_TERMINATE\":\"RBIS does not allow the current liability to be ended\",\"UNABLE_TO_ADD_PARTY\":\"A person could not be added to the account\",\"NO_CONTACT_DETAILS\":\"Liability started, but there were no contact details to record\",\"RBIS_ERROR\":\"RBIS did not respond or returned an error\",\"PROCESSING_STOPPED\":\"Processing stopped unexpectedly and the tries ran out\"})[$('Prepare the referral').first().json.reasonCode] ?? '' }}",
+              "outcome": "",
+              "urgent": "={{ JSON.parse($json.stepsDone || '[]').length > 0 }}",
+              "errorDetail": ""
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonCode",
+                "displayName": "reasonCode",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonText",
+                "displayName": "reasonText",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "outcome",
+                "displayName": "outcome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "urgent",
+                "displayName": "urgent",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "boolean",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "errorDetail",
+                "displayName": "errorDetail",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "e88c7deb-f23a-4c9d-b8d3-0f23b3837145",
+        "name": "Describe the error",
+        "notes": "Every technical failure passes through here: RBIS unavailable, an unexpected RBIS answer, or an error in any step of this workflow.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "executeOnce": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          8580,
+          1330
+        ],
+        "parameters": {
+          "mode": "manual",
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b80114b5-54d1-4139-b7e1-04ac894b0880",
+                "name": "errorDetail",
+                "value": "={{ ($json.error && typeof $json.error === 'object' && $json.error.code ? ['RBIS', $json.operation, $json.error.code, $json.error.httpStatus ? 'HTTP ' + $json.error.httpStatus : '', $json.error.message].filter(x => x).join(' | ') : 'Unexpected error: ' + ((typeof $json.error === 'string' ? $json.error : [$json.error?.message, $json.error?.description].filter(x => x).join(': ')) || JSON.stringify($json).slice(0, 300))).slice(0, 1000) }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "682033af-1af2-4f23-bb5e-b840fa808328",
+        "name": "Read the case before marking it failed",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueRegularOutput",
+        "position": [
+          8840,
+          1330
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "returnAll": false,
+          "limit": 1
+        }
+      },
+      {
+        "id": "16115bbe-f2a3-42ce-8d6d-c57abfa86b4a",
+        "name": "Mark case failed",
+        "notes": "stepsDone is kept, so the automatic retry carries on where this try stopped. urgent: no tries left and RBIS partly changed.",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          9100,
+          1330
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('When called by the Dispatcher').first().json.caseId }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "failed",
+              "reasonCode": "RBIS_ERROR",
+              "reasonText": "RBIS did not respond or returned an error",
+              "outcome": "",
+              "urgent": "={{ Number($json.attempts) >= Number($('When called by the Dispatcher').first().json.settings.maxAttempts ?? 3) && JSON.parse($json.stepsDone || '[]').length > 0 }}",
+              "errorDetail": "={{ $('Describe the error').first().json.errorDetail }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonCode",
+                "displayName": "reasonCode",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "reasonText",
+                "displayName": "reasonText",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "outcome",
+                "displayName": "outcome",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "urgent",
+                "displayName": "urgent",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "boolean",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "errorDetail",
+                "displayName": "errorDetail",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "e7d22038-b98e-4e8e-8c1e-0e84ce2db200",
+        "name": "Return the result",
+        "notes": "Output for the Dispatcher's counts, taken from the case row as just written.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "executeOnce": true,
+        "onError": "continueErrorOutput",
+        "position": [
+          9620,
+          0
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ caseId: $('When called by the Dispatcher').first().json.caseId, caseKey: $json.caseKey ?? '', claimed: true, status: $json.status ?? 'failed', reasonCode: $json.reasonCode ?? '', outcome: $json.outcome ?? '', urgent: $json.urgent === true }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      },
+      {
+        "id": "97832827-a6b2-490d-b8fc-81b720ae54e5",
+        "name": "Return: result could not be recorded",
+        "notes": "Last resort: the result could not even be written to the Cases table. The output still says failed, so the Performer never fails as a whole.",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "executeOnce": true,
+        "position": [
+          9620,
+          1520
+        ],
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ JSON.stringify({ caseId: $('When called by the Dispatcher').first().json.caseId ?? null, caseKey: '', claimed: true, status: 'failed', reasonCode: 'RBIS_ERROR', outcome: '', urgent: false }) }}",
+          "includeOtherFields": false,
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "When called by the Dispatcher": {
+        "main": [
+          [
+            {
+              "node": "Claim the case",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claim the case": {
+        "main": [
+          [
+            {
+              "node": "Claimed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claimed?": {
+        "main": [
+          [
+            {
+              "node": "Read the claimed case",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Read the case as it is now",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read the case as it is now": {
+        "main": [
+          [
+            {
+              "node": "Return: not claimed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read the claimed case": {
+        "main": [
+          [
+            {
+              "node": "Case row and settings usable?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Case row and settings usable?": {
+        "main": [
+          [
+            {
+              "node": "Case details",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Error: case row or settings unusable",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error: case row or settings unusable": {
+        "main": [
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Case details": {
+        "main": [
+          [
+            {
+              "node": "Resume: RBIS steps already recorded?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resume: RBIS steps already recorded?": {
+        "main": [
+          [
+            {
+              "node": "Path: carry on from the recorded steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 1: dates real and in order?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Path: carry on from the recorded steps": {
+        "main": [
+          [
+            {
+              "node": "Plan the RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 1: dates real and in order?": {
+        "main": [
+          [
+            {
+              "node": "Check 1: a death?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: DATES_INVALID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 1: a death?": {
+        "main": [
+          [
+            {
+              "node": "Check 1: deaths processed as move-outs?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 1: change reason allowed?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 1: deaths processed as move-outs?": {
+        "main": [
+          [
+            {
+              "node": "Check 2: joint row?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: DEATH_REFERRED",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 1: change reason allowed?": {
+        "main": [
+          [
+            {
+              "node": "Check 2: joint row?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: CHANGE_REASON_NOT_VALID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 2: joint row?": {
+        "main": [
+          [
+            {
+              "node": "Check 2: find the lead row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 3: account reference given?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 2: find the lead row": {
+        "main": [
+          [
+            {
+              "node": "Check 2: what did the lead row do?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 2: what did the lead row do?": {
+        "main": [
+          [
+            {
+              "node": "Reason: EARLIER_ROW_NOT_COMPLETED",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark case duplicate",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: EARLIER_ROW_NOT_COMPLETED",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Release the case for a later run",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 3: account reference given?": {
+        "main": [
+          [
+            {
+              "node": "Check 3: ask RBIS for the account",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: NO_ACCOUNT_REF",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 3: ask RBIS for the account": {
+        "main": [
+          [
+            {
+              "node": "Check 3: find the account (RBIS adapter)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 3: find the account (RBIS adapter)": {
+        "main": [
+          [
+            {
+              "node": "Check 3: account found?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 3: account found?": {
+        "main": [
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: ADDRESS_NOT_FOUND",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Retry: first RBIS change already made by an earlier try?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Retry: first RBIS change already made by an earlier try?": {
+        "main": [
+          [
+            {
+              "node": "Retry: record the first change as done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 4: who is liable in RBIS now?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Retry: record the first change as done": {
+        "main": [
+          [
+            {
+              "node": "Path: carry on after the earlier try's first change",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Path: carry on after the earlier try's first change": {
+        "main": [
+          [
+            {
+              "node": "Plan the RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: who is liable in RBIS now?": {
+        "main": [
+          [
+            {
+              "node": "Check 4: moving in?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: moving in?": {
+        "main": [
+          [
+            {
+              "node": "Check 4: landlord liable? (moving in)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 4: landlord liable? (moving out)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: landlord liable? (moving in)": {
+        "main": [
+          [
+            {
+              "node": "Check 5: ask RBIS if the liability can be ended",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 4: RBIS has a start date?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: landlord liable? (moving out)": {
+        "main": [
+          [
+            {
+              "node": "Check 4: RBIS has a start date?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check 4: leaver is one of the liable people?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: leaver is one of the liable people?": {
+        "main": [
+          [
+            {
+              "node": "Check 5: ask RBIS if the liability can be ended",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: LEAVER_NOT_LIABLE",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: RBIS has a start date?": {
+        "main": [
+          [
+            {
+              "node": "Check 4: RBIS start date equals the row's date?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: NO_START_DATE",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 4: RBIS start date equals the row's date?": {
+        "main": [
+          [
+            {
+              "node": "Reason: ACCOUNT_ALREADY_PROCESSED",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: CHECK_DATES",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: ACCOUNT_ALREADY_PROCESSED": {
+        "main": [
+          [
+            {
+              "node": "Add the person to an existing tenancy?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add the person to an existing tenancy?": {
+        "main": [
+          [
+            {
+              "node": "Path: add the person to the existing tenancy",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Path: add the person to the existing tenancy": {
+        "main": [
+          [
+            {
+              "node": "Plan the RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 5: ask RBIS if the liability can be ended": {
+        "main": [
+          [
+            {
+              "node": "Check 5: termination options (RBIS adapter)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 5: termination options (RBIS adapter)": {
+        "main": [
+          [
+            {
+              "node": "Check 5: liability can be ended?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check 5: liability can be ended?": {
+        "main": [
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: NO_OPTION_TO_TERMINATE",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Path: full update",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Path: full update": {
+        "main": [
+          [
+            {
+              "node": "Plan the RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Plan the RBIS steps": {
+        "main": [
+          [
+            {
+              "node": "Any RBIS steps left?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any RBIS steps left?": {
+        "main": [
+          [
+            {
+              "node": "Loop over RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark case updated",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop over RBIS steps": {
+        "main": [
+          [
+            {
+              "node": "Mark case updated",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Current RBIS step",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Current RBIS step": {
+        "main": [
+          [
+            {
+              "node": "Build the adapter request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build the adapter request": {
+        "main": [
+          [
+            {
+              "node": "Call the RBIS adapter",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call the RBIS adapter": {
+        "main": [
+          [
+            {
+              "node": "RBIS step done?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "RBIS step done?": {
+        "main": [
+          [
+            {
+              "node": "Record the step",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Reason: RBIS refused the step",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Record the step": {
+        "main": [
+          [
+            {
+              "node": "Loop over RBIS steps",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: RBIS refused the step": {
+        "main": [
+          [
+            {
+              "node": "Refusal goes to staff?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Refusal goes to staff?": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: DATES_INVALID": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: DEATH_REFERRED": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: CHANGE_REASON_NOT_VALID": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: EARLIER_ROW_NOT_COMPLETED": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: NO_ACCOUNT_REF": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: ADDRESS_NOT_FOUND": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: LEAVER_NOT_LIABLE": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: NO_START_DATE": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: CHECK_DATES": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reason: NO_OPTION_TO_TERMINATE": {
+        "main": [
+          [
+            {
+              "node": "Prepare the referral",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare the referral": {
+        "main": [
+          [
+            {
+              "node": "Read the case before referring",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read the case before referring": {
+        "main": [
+          [
+            {
+              "node": "Refer case",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Describe the error": {
+        "main": [
+          [
+            {
+              "node": "Read the case before marking it failed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return: result could not be recorded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read the case before marking it failed": {
+        "main": [
+          [
+            {
+              "node": "Mark case failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark case failed": {
+        "main": [
+          [
+            {
+              "node": "Return the result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return: result could not be recorded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Refer case": {
+        "main": [
+          [
+            {
+              "node": "Return the result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark case updated": {
+        "main": [
+          [
+            {
+              "node": "Return the result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark case duplicate": {
+        "main": [
+          [
+            {
+              "node": "Return the result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Release the case for a later run": {
+        "main": [
+          [
+            {
+              "node": "Return the result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Describe the error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Return the result": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Return: result could not be recorded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "timezone": "Europe/London",
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": null,
+    "versionId": "3dce7427-d548-4138-8412-4230ca61e8bc",
+    "activeVersionId": "3dce7427-d548-4138-8412-4230ca61e8bc",
+    "versionCounter": 4,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
