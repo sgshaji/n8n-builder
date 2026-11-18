@@ -29,6 +29,9 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 - Pretend RBIS: `mock-rbis/server.mjs` (plain Node.js, no packages) runs as the `mock-rbis` service at http://localhost:8088; workflows reach it at `http://mock-rbis:8080`. Accounts come from `test-data/rbis-accounts.json`. Run its checks with `node --test mock-rbis/` after any change, then `docker compose restart mock-rbis`.
 - In Git Bash, a command passed to `docker compose exec` must not contain absolute container paths (they are rewritten to Windows paths). Use relative paths or `sh -c '...'`.
 - Deleting an active n8n workflow fails: deactivate it first.
+- A workflow called by another (Execute Sub-workflow) runs **only its published version**: publish it, and after every edit check the published version is current (`n8n_get_workflow` mode `active`).
+- Workflow and table IDs can come from expressions, e.g. `{"__rl": true, "mode": "id", "value": "={{ $json.settings.casesTableId }}"}`. Proven for Execute Sub-workflow and Data table nodes.
+- The handovers between workflows (settings, tables, keys, Performer and adapter input/output) are fixed in `docs/design/interfaces.md`.
 - Inside n8n, `data/` is `/files` (the only folder workflows may touch) and `workflows/` is `/workflows`.
 - Local File Trigger and Execute Command are re-enabled via `NODES_EXCLUDE=[]` for local use only.
 - MCP servers (`.mcp.json`): `n8n-mcp` (community, Docker, uses `N8N_API_KEY`) and `n8n-instance` (n8n built-in, uses `N8N_MCP_TOKEN` via a stdio-to-HTTP forwarding script). Both read secrets from `.env` through `scripts/`. Guide: `docs/setup/02-connect-mcp-servers.md`.
