@@ -1,7 +1,7 @@
 # HARSLL in n8n: design
 
-**Status:** Revision 3, draft for approval · 19 November 2026
-**Phase:** 3 of 5. Nothing is built until this design is approved.
+**Status:** Revision 3, **approved** 19 November 2026
+**Phase:** design (3 of 5) complete. The build (Phase 4) follows this document.
 **Read first:** [Business overview](../business/HARSLL-business-overview.md) · [Current UiPath process](../process/HARSLL-uipath-process.md)
 
 ## Summary
@@ -173,9 +173,9 @@ flowchart TD
 | Load settings | **Execute Sub-workflow** → Settings | Once per run |
 | List files | **Execute Command** | One fixed command with **no file names in it**. It lists `.xlsx` files unchanged for a minute and skips names starting with `~$`. Checked: this works in the n8n container |
 | File name safe? | **IF** | Only letters, numbers, spaces and `_ - . ( )` are allowed |
-| Read file, extract rows | **Read/Write Files from Disk**, **Extract from File** (XLSX) | Header row on. A file that cannot be read is tried on up to `maxFileReadAttempts` runs before it is rejected |
+| Read file, extract rows | **Read/Write Files from Disk**, **Extract from File** (XLSX) | Header row on, **Include Empty Cells on** so an empty column is not mistaken for a missing one. A file that cannot be read is tried on up to `maxFileReadAttempts` runs before it is rejected |
 | Check columns | **IF** | Against `requiredColumns`. A wrong layout is rejected at once |
-| Tidy rows | **Edit Fields (Set)** | Trim text; accept real Excel dates, Excel date numbers and `dd/MM/yyyy` text; store dates as `yyyy-MM-dd` text so time zones cannot shift them |
+| Tidy rows | **Edit Fields (Set)** | Trim text; accept real Excel dates (which arrive as date-time text), Excel date numbers and `dd/MM/yyyy` text; store dates as `yyyy-MM-dd` text so time zones cannot shift them |
 | Link rows of the same tenancy | **Code** | *Why Code:* needs all rows at once to group them. See [Rows for the same tenancy](#rows-for-the-same-tenancy) |
 | Case key lookup, insert, reopen | **Data table** | |
 | Move file | **Execute Command** | `mv` with the file name in single quotes. Only reached for names that passed the safety check, so no name can inject a command |
@@ -635,13 +635,13 @@ All tests use made-up data in `test-data/`. Each scenario names the flowchart pa
 
 ## Build order (Phase 4)
 
-1. **Four short trials**, before anything else:
+1. **Four short trials**, before anything else. **Done: all four passed.** See [Phase 4 trials: results](phase-4-trials.md).
    - the file trigger with Docker on Windows in a OneDrive folder,
    - how Extract from File returns Excel dates,
    - listing settled files and moving a file with a safe name,
    - the claim and the lock: when two updates race for the same row, only one wins, and the node reports which.
 
-   If the trigger is unreliable, the timer alone is used, at a shorter interval. If the table cannot guarantee the claim, the design falls back to n8n's own limit of one run at a time.
+   The fallbacks planned for a failed trial (timer only; n8n's own limit of one run at a time) are not needed.
 2. Test data: pretend RBIS accounts and the scenario list.
 3. Pretend RBIS service, with its own checks.
 4. Settings workflow and the three tables.

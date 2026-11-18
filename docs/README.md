@@ -8,7 +8,8 @@ Start with the business overview, then go deeper as needed.
 | [Current UiPath process](process/HARSLL-uipath-process.md) | IT and process specialists | How today's Dispatcher and Performer robots work, step by step, and every reason a case stops |
 | [Source documents](source/README.md) | Anyone checking the originals | The flowcharts this work is based on (kept local, not in Git) |
 | [Run n8n locally with Docker](setup/01-run-n8n-locally.md) | Anyone working on the workflows | First-time setup, everyday commands, settings, import and export, upgrades, troubleshooting |
-| [HARSLL in n8n: design](design/HARSLL-n8n-design.md) | IT, and stakeholders approving the build | The four workflows, tables, checks, pretend RBIS, settings and assumptions, test plan. **Revision 3, draft for approval** |
+| [HARSLL in n8n: design](design/HARSLL-n8n-design.md) | IT, and stakeholders approving the build | The four workflows, tables, checks, pretend RBIS, settings and assumptions, test plan. **Revision 3, approved** |
+| [Phase 4 trials: results](design/phase-4-trials.md) | IT | The four checks run before building, and what each proved |
 | [Connect the n8n MCP servers](setup/02-connect-mcp-servers.md) | Anyone using Claude Code on this repo | The two MCP servers, how secrets stay out of Git, setup, checks, troubleshooting |
 
 ## Coming in later phases
