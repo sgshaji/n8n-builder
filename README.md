@@ -11,7 +11,7 @@ HARSLL keeps council tax accounts in step with council tenancy changes: when a t
 | 0 | Repository setup | ✅ Done |
 | 1 | Run n8n locally with Docker | ✅ Done |
 | 2 | Connect the n8n MCP servers to Claude Code | ✅ Done |
-| 3 | Design the n8n workflows (for approval) | ⏳ Next |
+| 3 | Design the n8n workflows (for approval) | 📝 Awaiting approval: [design](docs/design/HARSLL-n8n-design.md) |
 | 4 | Build and test, against a pretend RBIS | Not started |
 | 5 | Move to the real environment | Not started |
 
@@ -42,6 +42,7 @@ n8n-builder/
 ├── data/                  Spreadsheets in and out (contents ignored by Git)
 ├── docs/                  All documentation (start at docs/README.md)
 │   ├── business/          Business overview, plain English
+│   ├── design/            How HARSLL is rebuilt in n8n
 │   ├── process/           How the current UiPath robots work
 │   ├── setup/             Step-by-step setup guides
 │   └── source/            Original flowcharts (local only, not committed)
