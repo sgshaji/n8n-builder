@@ -9,7 +9,7 @@ Do [Run n8n locally with Docker](01-run-n8n-locally.md) first. It takes about 10
 | Server | Name in Claude Code | What it is good at | How it connects |
 | --- | --- | --- | --- |
 | **n8n-mcp** (community, [czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp)) | `n8n-mcp` | Knows every n8n node and its settings, checks workflows **before** they are saved, searches templates, and manages workflows through the n8n API | Runs in Docker, uses your **n8n API key** |
-| **n8n built-in MCP** | `n8n-instance` | n8n's own server. Builds, edits and runs workflows inside n8n, using n8n's own view of them | Talks to n8n directly, uses your **instance MCP token** |
+| **n8n built-in MCP** | `n8n-instance` | n8n's own server. Builds, edits, tests and runs workflows, and manages Data Tables (61 tools in n8n 2.48) | A small local script forwards to n8n, using your **instance MCP token** |
 
 They overlap a little, and that is fine: `n8n-mcp` is the main tool for designing and checking, while the built-in server is n8n's own route in.
 
@@ -19,15 +19,16 @@ They overlap a little, and that is fine: `n8n-mcp` is the main tool for designin
 flowchart LR
     CC[Claude Code] -->|reads| M[.mcp.json<br/>no secrets, in Git]
     M -->|starts| S1[scripts/n8n-mcp.mjs]
-    M -->|asks for header| S2[scripts/n8n-instance-mcp-headers.mjs]
+    M -->|starts| S2[scripts/n8n-instance-mcp.mjs]
     S1 -->|reads key| E[.env<br/>secrets, NOT in Git]
     S2 -->|reads token| E
     S1 -->|Docker| A[n8n-mcp container] -->|API key| N[n8n]
-    S2 -->|Bearer token| N
+    S2 -->|forwards with token| N
 ```
 
 - [`.mcp.json`](../../.mcp.json) is committed and shared. It contains **no secrets**, only which scripts to run.
-- The two scripts in [`scripts/`](../../scripts/) read the key and token from your `.env` when Claude Code connects.
+- The two scripts in [`scripts/`](../../scripts/) read the key and token from your `.env` when Claude Code starts them.
+- `n8n-instance` uses a forwarding script rather than Claude Code's `headersHelper` option. A `headersHelper` only runs once Claude Code has marked the folder as trusted, which the VS Code extension does not always ask for; the script works either way.
 - `.env` is ignored by Git, so your key and token never leave your machine.
 
 ## Step 1: Create the n8n API key (for `n8n-mcp`)
@@ -74,13 +75,14 @@ Ask Claude Code:
 
 It should report status **ok**.
 
-To test the command-line part on its own, without Claude Code:
+If a server fails to start, run its script on its own to see the error message. It waits for input; press Ctrl+C to stop it.
 
 ```bash
-node scripts/n8n-instance-mcp-headers.mjs
+node scripts/n8n-instance-mcp.mjs
+node scripts/n8n-mcp.mjs
 ```
 
-This prints `{"Authorization":"Bearer …"}` if the token is set, or a clear message saying what is missing. **Do not share its output.** It contains your token.
+A missing key or token, or n8n not running, is reported in plain words. Neither script ever prints the key or token.
 
 ## Settings explained
 
@@ -99,8 +101,9 @@ This prints `{"Authorization":"Bearer …"}` if the token is set, or a clear mes
 | `/mcp` shows `n8n-mcp` as failed | Check n8n is running (`docker compose ps`). The script needs the container `n8n-builder-n8n-1` to exist |
 | `N8N_API_KEY is missing or empty in .env` | Do step 1, then restart Claude Code |
 | `N8N_MCP_TOKEN is missing or empty in .env` | Do step 2, then restart Claude Code |
-| `n8n-instance` shows 404 or not found | **Enable MCP access** is off. Do step 2 |
-| `n8n-instance` shows 401 | The token is wrong or was replaced. Generate a new one (step 2) and update `.env` |
+| `n8n-instance` reports HTTP 404 | MCP is off in n8n. Set **MCP status** to **Enabled** (step 2) |
+| `n8n-instance` reports HTTP 401 | The token is wrong or was replaced. Generate a new one (step 2) and update `.env` |
+| `n8n-instance` shows **Needs Auth** | An old setup is cached. Check `.mcp.json` matches the repo, then reload VS Code |
 | `n8n-mcp` health check: "SSRF protection" | The script was changed to use a non-localhost address. Restore it from Git |
 | An API key has expired | Create a new one (step 1) and update `.env` |
 | Servers missing from `/mcp` | Claude Code was not restarted, or the servers were not approved. To be asked again, run `claude mcp reset-project-choices`, then restart |

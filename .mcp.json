@@ -5,9 +5,8 @@
       "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/n8n-mcp.mjs"]
     },
     "n8n-instance": {
-      "type": "http",
-      "url": "http://localhost:5678/mcp-server/http",
-      "headersHelper": "node scripts/n8n-instance-mcp-headers.mjs"
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/n8n-instance-mcp.mjs"]
     }
   }
 }
