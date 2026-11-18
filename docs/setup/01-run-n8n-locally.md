@@ -8,8 +8,9 @@ This guide sets up a local n8n for building and testing the HARSLL workflows. It
 | --- | --- | --- |
 | **n8n** | http://localhost:5678 | The workflow editor, where the HARSLL workflows are built and run |
 | **Mailpit** | http://localhost:8025 | A test mailbox. It catches every email n8n sends, so nothing reaches a real person |
+| **Pretend RBIS** | http://localhost:8088 | A stand-in for the real council tax system, with made-up accounts. See [mock-rbis/README.md](../../mock-rbis/README.md) |
 
-Both are reachable **only from your own machine**.
+All three are reachable **only from your own machine**.
 
 | Folder in the repo | Inside n8n | Purpose |
 | --- | --- | --- |
@@ -82,7 +83,7 @@ mkdir -p data/input data/archive
 docker compose up -d --wait
 ```
 
-The first start downloads the images (they need about 2 GB of disk space) and can take a few minutes. When it finishes you should see both containers as **Healthy**.
+The first start downloads the images (they need about 2 GB of disk space) and can take a few minutes. When it finishes you should see all three containers as **Healthy**.
 
 ### 4. Create your n8n owner account
 
@@ -119,7 +120,8 @@ All settings are in [`compose.yaml`](../../compose.yaml) and `.env`.
 | `NODES_EXCLUDE` | `[]` | n8n 2.x turns off the **Local File Trigger** and **Execute Command** nodes by default. HARSLL needs both: one to start when a spreadsheet arrives, one to move it to the archive. **Local development only; review before production** |
 | `N8N_SMTP_*` | Mailpit | Any email n8n sends itself goes to the test mailbox |
 | `N8N_DIAGNOSTICS_ENABLED` | `false` | No usage data is sent to n8n |
-| Ports | `127.0.0.1` only | n8n and Mailpit cannot be reached from other machines on the network |
+| `MOCK_RBIS_PORT` | `8088` | Port for the pretend RBIS on your machine. Workflows always use `http://mock-rbis:8080` |
+| Ports | `127.0.0.1` only | n8n, Mailpit and the pretend RBIS cannot be reached from other machines on the network |
 
 Workflows that send email, such as the Dispatcher summary, use an n8n **SMTP credential** pointing at host `mailpit`, port `1025`, with no SSL and no login. This is set up when the workflows are built (Phase 4).
 
@@ -171,7 +173,8 @@ Then create the owner account again (step 4).
 | --- | --- |
 | `failed to connect to the docker API` | Start Docker Desktop and wait for "Engine running" |
 | `Set N8N_ENCRYPTION_KEY in .env` | You have no `.env`, or the key is empty. Redo step 1 |
-| `port is already allocated` | Something else uses port 5678 or 8025. Change `N8N_PORT` or `MAILPIT_UI_PORT` in `.env`, then start again |
+| `port is already allocated` | Something else uses port 5678, 8025 or 8088. Change `N8N_PORT`, `MAILPIT_UI_PORT` or `MOCK_RBIS_PORT` in `.env`, then start again |
+| Pretend RBIS gives unexpected answers after a test | Its data has been changed by earlier runs. Reset it: `curl -X POST http://localhost:8088/reset` |
 | n8n says it cannot decrypt credentials | The encryption key changed. Put the old key back in `.env`, or start from scratch |
 | A file dropped in `data/input` does not start the workflow | In the **Local File Trigger** node, turn on **Use Polling**. On Windows, file events do not reach Docker reliably without it |
 | Log says `Failed to start Python task runner` | Harmless. HARSLL uses JavaScript only |

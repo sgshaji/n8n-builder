@@ -12,7 +12,7 @@ HARSLL keeps council tax accounts in step with council tenancy changes: when a t
 | 1 | Run n8n locally with Docker | ✅ Done |
 | 2 | Connect the n8n MCP servers to Claude Code | ✅ Done |
 | 3 | Design the n8n workflows | ✅ Done: [design](docs/design/HARSLL-n8n-design.md), revision 3 approved |
-| 4 | Build and test, against a pretend RBIS | ⏳ In progress: trials |
+| 4 | Build and test, against a pretend RBIS | ⏳ In progress: trials passed, pretend RBIS built; workflows next |
 | 5 | Move to the real environment | Not started |
 
 ## How the rebuild works
@@ -28,7 +28,7 @@ flowchart LR
 
 - **Built locally first.** Workflows are developed on a local n8n in Docker and exported to [`workflows/`](workflows/) as JSON. Moving to the real environment is an import plus new connection settings.
 - **Redesigned for n8n, not copied.** The business behaviour (5 checks, 3 outcomes, caution first) stays the same; the structure suits n8n.
-- **A pretend RBIS** stands in for the real council tax system until we know how it can be reached (API, database or screens only).
+- **A [pretend RBIS](mock-rbis/README.md)** stands in for the real council tax system until we know how it can be reached (API, database or screens only).
 
 ## Repository layout
 
@@ -36,7 +36,7 @@ flowchart LR
 n8n-builder/
 ├── README.md              This file
 ├── CLAUDE.md              Working rules for Claude Code sessions in this repo
-├── compose.yaml           Local n8n + test mailbox (Docker)
+├── compose.yaml           Local n8n, test mailbox and pretend RBIS (Docker)
 ├── .env.example           Settings template: copy to .env (ignored by Git)
 ├── .mcp.json              MCP servers for Claude Code (no secrets)
 ├── data/                  Spreadsheets in and out (contents ignored by Git)
@@ -46,11 +46,11 @@ n8n-builder/
 │   ├── process/           How the current UiPath robots work
 │   ├── setup/             Step-by-step setup guides
 │   └── source/            Original flowcharts (local only, not committed)
+├── mock-rbis/             Pretend RBIS: a stand-in for the real council tax system
 ├── scripts/               Helpers that start the MCP servers, reading secrets from .env
+├── test-data/             Made-up accounts and test spreadsheets
 └── workflows/             Exported n8n workflows (JSON)
 ```
-
-Folders for test data and the pretend RBIS are added in later phases.
 
 ## Getting started
 
@@ -73,6 +73,7 @@ To let Claude Code build workflows, follow **[Connect the n8n MCP servers](docs/
 | --- | --- |
 | n8n editor | http://localhost:5678 |
 | Test mailbox (Mailpit) | http://localhost:8025 |
+| Pretend RBIS | http://localhost:8088 |
 
 ## Ground rules
 

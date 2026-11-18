@@ -26,6 +26,9 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 
 - Windows 11 on ARM (arm64), PowerShell and Git Bash. Docker Desktop (WSL 2) runs n8n.
 - Local stack: `compose.yaml` runs n8n (pinned in `.env`, currently 2.48.5) at http://localhost:5678 and Mailpit at http://localhost:8025. Setup guide: `docs/setup/01-run-n8n-locally.md`.
+- Pretend RBIS: `mock-rbis/server.mjs` (plain Node.js, no packages) runs as the `mock-rbis` service at http://localhost:8088; workflows reach it at `http://mock-rbis:8080`. Accounts come from `test-data/rbis-accounts.json`. Run its checks with `node --test mock-rbis/` after any change, then `docker compose restart mock-rbis`.
+- In Git Bash, a command passed to `docker compose exec` must not contain absolute container paths (they are rewritten to Windows paths). Use relative paths or `sh -c '...'`.
+- Deleting an active n8n workflow fails: deactivate it first.
 - Inside n8n, `data/` is `/files` (the only folder workflows may touch) and `workflows/` is `/workflows`.
 - Local File Trigger and Execute Command are re-enabled via `NODES_EXCLUDE=[]` for local use only.
 - MCP servers (`.mcp.json`): `n8n-mcp` (community, Docker, uses `N8N_API_KEY`) and `n8n-instance` (n8n built-in, uses `N8N_MCP_TOKEN` via a stdio-to-HTTP forwarding script). Both read secrets from `.env` through `scripts/`. Guide: `docs/setup/02-connect-mcp-servers.md`.

@@ -12,6 +12,8 @@ Start with the business overview, then go deeper as needed.
 | [Phase 4 trials: results](design/phase-4-trials.md) | IT | The four checks run before building, and what each proved |
 | [Connect the n8n MCP servers](setup/02-connect-mcp-servers.md) | Anyone using Claude Code on this repo | The two MCP servers, how secrets stay out of Git, setup, checks, troubleshooting |
 
+Component guides live next to the code: [pretend RBIS](../mock-rbis/README.md), [test data](../test-data/README.md), [workflows](../workflows/README.md).
+
 ## Coming in later phases
 
 | Document | Phase |

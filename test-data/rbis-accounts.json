@@ -1,0 +1,545 @@
+{
+  "_about": "Made-up accounts for the pretend RBIS. No real people, addresses or account references. Scenario numbers refer to the test plan in docs/design/HARSLL-n8n-design.md. Scenario 13 uses AC999999, which is deliberately absent. Scenario 29 adds AC100029 while the test runs.",
+  "landlordName": "Example Housing Association",
+  "accounts": [
+    {
+      "ref": "AC100001",
+      "address": "1 Example Street",
+      "postcode": "EX1 2AB",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 1. Empty property: move-in with contact details."
+    },
+    {
+      "ref": "AC100002",
+      "address": "2 Example Street",
+      "postcode": "EX1 3AC",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-15",
+          "end": null
+        }
+      ],
+      "note": "Scenario 2. Empty property: two joint tenants move in."
+    },
+    {
+      "ref": "AC100003",
+      "address": "3 Example Street",
+      "postcode": "EX1 4AD",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-08-20",
+          "end": null
+        }
+      ],
+      "note": "Scenario 3. Empty property: move-in, nobody has contact details."
+    },
+    {
+      "ref": "AC100004",
+      "address": "4 Example Street",
+      "postcode": "EX1 5AE",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2025-04-01"
+        },
+        {
+          "party": "Alan Sample",
+          "type": "tenant",
+          "start": "2025-04-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 4. Move-out with a forwarding address."
+    },
+    {
+      "ref": "AC100005",
+      "address": "5 Example Street",
+      "postcode": "EX1 6AF",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2024-06-10"
+        },
+        {
+          "party": "Beth Sample",
+          "type": "tenant",
+          "start": "2024-06-10",
+          "end": null
+        }
+      ],
+      "note": "Scenario 5. Move-out with no forwarding address."
+    },
+    {
+      "ref": "AC100006",
+      "address": "Flat 1, 6 Example Street",
+      "postcode": "EX1 7AG",
+      "isFlat": true,
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2023-02-01"
+        },
+        {
+          "party": "Carl Sample",
+          "type": "tenant",
+          "start": "2023-02-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 6. One tenant leaves and another moves in, in one file."
+    },
+    {
+      "ref": "AC100007",
+      "address": "7 Example Street",
+      "postcode": "EX1 8AH",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2022-05-01"
+        },
+        {
+          "party": "Dora Sample",
+          "type": "tenant",
+          "start": "2022-05-01",
+          "end": null
+        }
+      ],
+      "note": "Scenarios 7, 8, 9. Rows stopped by check 1; RBIS is never reached."
+    },
+    {
+      "ref": "AC100010",
+      "address": "10 Example Street",
+      "postcode": "EX1 2AC",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2015-01-01",
+          "end": "2019-03-01"
+        },
+        {
+          "party": "Eric Sample",
+          "type": "tenant",
+          "start": "2019-03-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 10. Death: referred before RBIS is reached."
+    },
+    {
+      "ref": "AC100011",
+      "address": "11 Example Street",
+      "postcode": "EX1 3AD",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2026-01-01"
+        },
+        {
+          "party": "Fred Sample",
+          "type": "tenant",
+          "start": "2026-01-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 11. Joint move-in where the lead row is referred (CHECK_DATES)."
+    },
+    {
+      "ref": "AC100013",
+      "address": "13 Example Street",
+      "postcode": "EX1 5AF",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 13b. The reference exists but the row's address does not match."
+    },
+    {
+      "ref": "AC100014",
+      "address": "14 Example Street",
+      "postcode": "EX1 6AG",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2026-11-01"
+        },
+        {
+          "party": "Hana Sample",
+          "type": "tenant",
+          "start": "2026-11-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 14. Move-in already in RBIS from the same date."
+    },
+    {
+      "ref": "AC100015",
+      "address": "15 Example Street",
+      "postcode": "EX1 7AH",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2026-10-15"
+        },
+        {
+          "party": "Ivan Sample",
+          "type": "tenant",
+          "start": "2026-10-15",
+          "end": null
+        }
+      ],
+      "note": "Scenario 15. Move-in, but a tenant is already liable from another date."
+    },
+    {
+      "ref": "AC100016",
+      "address": "16 Example Street",
+      "postcode": "EX1 8AA",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2024-01-01"
+        },
+        {
+          "party": "Jill Sample",
+          "type": "tenant",
+          "start": "2024-01-01",
+          "end": "2026-10-31"
+        },
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-10-31",
+          "end": null
+        }
+      ],
+      "note": "Scenario 16. Move-out already in RBIS: landlord liable from the end date."
+    },
+    {
+      "ref": "AC100017",
+      "address": "17 Example Street",
+      "postcode": "EX1 9AB",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2023-07-01"
+        },
+        {
+          "party": "Kim Sample",
+          "type": "tenant",
+          "start": "2023-07-01",
+          "end": "2026-10-20"
+        },
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-10-20",
+          "end": null
+        }
+      ],
+      "note": "Scenario 17. Move-out, but the landlord is already liable from another date."
+    },
+    {
+      "ref": "AC100018",
+      "address": "18 Example Street",
+      "postcode": "EX1 1AC",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": null,
+          "end": null
+        }
+      ],
+      "note": "Scenario 18. Landlord liable with no start date in RBIS."
+    },
+    {
+      "ref": "AC100019",
+      "address": "19 Example Street",
+      "postcode": "EX1 2AD",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2025-01-01"
+        },
+        {
+          "party": "Kate Sample",
+          "type": "tenant",
+          "start": "2025-01-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 19. Move-out row names Liam Sample, who is not the liable person."
+    },
+    {
+      "ref": "AC100020",
+      "address": "Flat 3, 20 Example Street",
+      "postcode": "EX1 3AE",
+      "isFlat": true,
+      "canTerminate": false,
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2021-09-01"
+        },
+        {
+          "party": "Mona Sample",
+          "type": "tenant",
+          "start": "2021-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 20. RBIS does not offer the option to terminate."
+    },
+    {
+      "ref": "AC100021",
+      "address": "21 Example Street",
+      "postcode": "EX1 4AF",
+      "refuseParties": [
+        "Nina Sample"
+      ],
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 21. Joint move-in; RBIS refuses the joint tenant."
+    },
+    {
+      "ref": "AC100022",
+      "address": "22 Example Street",
+      "postcode": "EX1 5AG",
+      "refuseParties": [
+        "Paul Sample"
+      ],
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 22. Move-in; RBIS refuses the lead tenant after the landlord's liability is ended."
+    },
+    {
+      "ref": "AC100023",
+      "address": "23 Example Street",
+      "postcode": "EX1 6AH",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 23. Outage before any RBIS call."
+    },
+    {
+      "ref": "AC100024",
+      "address": "24 Example Street",
+      "postcode": "EX1 7AA",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 24. Outage after the first RBIS call."
+    },
+    {
+      "ref": "AC100025",
+      "address": "25 Example Street",
+      "postcode": "EX1 8AB",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2024-02-01"
+        },
+        {
+          "party": "Quinn Sample",
+          "type": "tenant",
+          "start": "2024-02-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 25. RBIS makes the change but the reply is lost."
+    },
+    {
+      "ref": "AC100026",
+      "address": "26 Example Street",
+      "postcode": "EX1 9AC",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 26. A case that fails on every try."
+    },
+    {
+      "ref": "AC100027",
+      "address": "27 Example Street",
+      "postcode": "EX1 1AD",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2019-01-01",
+          "end": "2022-11-01"
+        },
+        {
+          "party": "Rosa Sample",
+          "type": "tenant",
+          "start": "2022-11-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 27. Move-out fails once; a move-in for the same account waits."
+    },
+    {
+      "ref": "AC100028",
+      "address": "28 Example Street",
+      "postcode": "EX1 2AE",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 28. The same file dropped twice."
+    },
+    {
+      "ref": "AC100034",
+      "address": "34 Example Street",
+      "postcode": "EX1 8AC",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 34. First of two files dropped together."
+    },
+    {
+      "ref": "AC100035",
+      "address": "35 Example Street",
+      "postcode": "EX1 9AD",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenarios 34 and 35. Second file; and two runs started at the same moment."
+    },
+    {
+      "ref": "AC100036",
+      "address": "36 Example Street",
+      "postcode": "EX1 1AE",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 36. File dropped while n8n is stopped."
+    },
+    {
+      "ref": "AC100037",
+      "address": "37 Example Street",
+      "postcode": "EX1 2AF",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 37. Start date written as text dd/MM/yyyy."
+    },
+    {
+      "ref": "AC100038",
+      "address": "38 Example Street",
+      "postcode": "EX1 3AG",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 37. Start date written as a real Excel date."
+    },
+    {
+      "ref": "AC100039",
+      "address": "39 Example Street",
+      "postcode": "EX1 4AH",
+      "liabilities": [
+        {
+          "party": "Example Housing Association",
+          "type": "landlord",
+          "start": "2026-09-01",
+          "end": null
+        }
+      ],
+      "note": "Scenario 37. Start date written as an Excel day number."
+    }
+  ]
+}

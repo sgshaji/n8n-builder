@@ -66,5 +66,27 @@ services:
     ports:
       - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
+  mock-rbis:
+    # A pretend RBIS for building and testing: made-up accounts, no real data.
+    # n8n reaches it at http://mock-rbis:8080. See mock-rbis/README.md.
+    image: node:${MOCK_RBIS_NODE_VERSION:-22-alpine}
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    environment:
+      PORT: 8080
+      ACCOUNTS_FILE: /test-data/rbis-accounts.json
+    volumes:
+      - ./mock-rbis:/app:ro
+      - ./test-data:/test-data:ro
+    ports:
+      - "127.0.0.1:${MOCK_RBIS_PORT:-8088}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
 volumes:
   n8n_data:
