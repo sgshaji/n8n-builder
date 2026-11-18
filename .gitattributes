@@ -1,0 +1,14 @@
+# Normalise line endings so Windows and macOS/Linux contributors stay in sync
+* text=auto eol=lf
+
+# Windows scripts keep CRLF
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary files
+*.docx binary
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.pdf binary

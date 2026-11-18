@@ -1,0 +1,45 @@
+# ------------------------------------------------------------------
+# Secrets and local settings: never commit these
+# ------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local.json
+.mcp.json
+
+# ------------------------------------------------------------------
+# Real or client data: never commit these
+# Only made-up test data in test-data/ may be committed.
+# ------------------------------------------------------------------
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+!test-data/**/*.xlsx
+!test-data/**/*.csv
+
+# Original process documents (may be confidential; kept local only)
+docs/source/*
+!docs/source/README.md
+
+# ------------------------------------------------------------------
+# n8n runtime data: lives in Docker volumes, not in the repo
+# ------------------------------------------------------------------
+.n8n/
+n8n-data/
+local-files/
+data/*
+!data/README.md
+
+# ------------------------------------------------------------------
+# Tooling and OS clutter
+# ------------------------------------------------------------------
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
