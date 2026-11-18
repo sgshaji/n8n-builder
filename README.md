@@ -10,7 +10,7 @@ HARSLL keeps council tax accounts in step with council tenancy changes: when a t
 | --- | --- | --- |
 | 0 | Repository setup | ✅ Done |
 | 1 | Run n8n locally with Docker | ✅ Done |
-| 2 | Connect the n8n MCP servers to Claude Code | ⏳ Next |
+| 2 | Connect the n8n MCP servers to Claude Code | ⏳ In progress |
 | 3 | Design the n8n workflows (for approval) | Not started |
 | 4 | Build and test, against a pretend RBIS | Not started |
 | 5 | Move to the real environment | Not started |
@@ -38,12 +38,14 @@ n8n-builder/
 ├── CLAUDE.md              Working rules for Claude Code sessions in this repo
 ├── compose.yaml           Local n8n + test mailbox (Docker)
 ├── .env.example           Settings template: copy to .env (ignored by Git)
+├── .mcp.json              MCP servers for Claude Code (no secrets)
 ├── data/                  Spreadsheets in and out (contents ignored by Git)
 ├── docs/                  All documentation (start at docs/README.md)
 │   ├── business/          Business overview, plain English
 │   ├── process/           How the current UiPath robots work
 │   ├── setup/             Step-by-step setup guides
 │   └── source/            Original flowcharts (local only, not committed)
+├── scripts/               Helpers that start the MCP servers, reading secrets from .env
 └── workflows/             Exported n8n workflows (JSON)
 ```
 
@@ -63,6 +65,8 @@ Then follow **[Run n8n locally with Docker](docs/setup/01-run-n8n-locally.md)**.
 1. Copy `.env.example` to `.env` and set a random `N8N_ENCRYPTION_KEY`.
 2. Run `docker compose up -d --wait`.
 3. Open http://localhost:5678 and create your owner account.
+
+To let Claude Code build workflows, follow **[Connect the n8n MCP servers](docs/setup/02-connect-mcp-servers.md)**.
 
 | Service | Address |
 | --- | --- |
