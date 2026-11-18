@@ -41,18 +41,19 @@ flowchart LR
 
 ## Step 2: Turn on n8n's built-in MCP server (for `n8n-instance`)
 
-1. Open **Settings → Instance-level MCP** in n8n.
-2. Turn on **Enable MCP access**.
-3. Open **Connect** (under **Connection details**) and choose the **API key** tab.
-4. n8n generates a personal access token and shows a **Configuration JSON**. Copy only the token, the long value after `Bearer ` in the `Authorization` line. **It is shown only once.** Generating a new one cancels the old one.
-5. In `.env`, paste it after `N8N_MCP_TOKEN=`. Save.
+1. Open **Settings → Instance-level MCP** in n8n (under **AI** in the settings menu).
+2. Under **Connection details**, set **MCP status** to **Enabled**.
+3. Next to **Connect your client**, click **Connect**.
+4. In the **Connect a client** dialog, choose the **API key** tab, not "OAuth (recommended)". The API key option lets the token sit in `.env`; ignore the `claude mcp add` command and the config JSON shown in the dialog, because the repo's `.mcp.json` already does that job.
+5. n8n generates a personal access token and shows a **Configuration JSON**. Copy only the token, the long value after `Bearer ` in the `Authorization` line. **It is shown only once.** Generating a new one cancels the old one.
+6. In `.env`, paste it after `N8N_MCP_TOKEN=`. Save.
 
 Then decide which workflows the built-in server may see. Each workflow must be switched on for MCP:
 
-- open the workflow → workflow menu → **Settings** → turn on **Available in MCP**, or
-- on the Instance-level MCP page, turn on **Auto-expose new workflows** so new workflows are included automatically.
+- under **Access**, open **Workflows enabled** to choose workflows, or turn on **Auto-expose new workflows** if offered there, or
+- open the workflow → workflow menu → **Settings** → turn on **Available in MCP**.
 
-For this project, **Auto-expose new workflows** is the simplest choice. It is a local n8n with test data only.
+For this project, exposing all HARSLL workflows is the simplest choice. It is a local n8n with test data only.
 
 ## Step 3: Load the servers in Claude Code
 
