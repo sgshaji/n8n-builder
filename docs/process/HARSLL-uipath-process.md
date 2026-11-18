@@ -107,9 +107,9 @@ flowchart TD
     C2 -- yes --> X2[Stopped: tenancy already processed]
     C2 -- no --> C3[Check 3: Account found?<br/>search by account ref and address]
     C3 -- not found --> X3[Stopped: address not found]
-    C3 -- found --> C4[Check 4: Does RBIS agree?<br/>people and dates match the row]
+    C3 -- found --> C4[Check 4: Account in the expected state?<br/>who is liable now]
     C4 -- mismatch --> X4[Stopped: dates differ or already applied]
-    C4 -- agrees --> C5[Check 5: Will RBIS allow it?<br/>option to end the liability]
+    C4 -- as expected --> C5[Check 5: Will RBIS allow it?<br/>option to end the liability]
     C5 -- no --> X5[Stopped: no option to terminate]
     C5 -- yes --> D{Which change?}
     D -- moved in --> P1[Moved in<br/>make new tenant liable, add joint tenants, add contact details]
@@ -154,17 +154,17 @@ Each check below explains what the robot asks, what it looks at, why the check e
 | **If it fails** | The task stops with **"Address not found"**. This also happens when the row has no account reference at all |
 | **In the flowchart** | "Account Ref Empty?", "Address Search", "Search By Account Ref", "Address found?", and the "Is a Flat?" branch |
 
-#### Check 4 – Does RBIS agree with the spreadsheet?
+#### Check 4 – Is the account in the state the change expects?
 
 | | |
 | --- | --- |
-| **The question** | Do the people and dates already in RBIS fit the change the robot is about to make? |
-| **What it looks at** | The people liable on the RBIS account and the account's start date, compared with the people and dates on the row |
+| **The question** | Is the right party liable in RBIS at the moment, so that the change can be made? |
+| **What it looks at** | Who is liable on the RBIS account now ("Liable Parties Match?"). For a move-in the robot carries on when they match; for a move-out it carries on when they do not. In the other cases it compares the RBIS start date with the row's date, and every result of that comparison is a stop |
 | **Why it matters** | If RBIS already shows the change, it has been done before (perhaps by a person) and must not be done twice. If RBIS shows different dates, a person needs to decide which is right |
 | **If it fails** | The task stops with **"Account already processed"** (RBIS already matches the row), **"Check Dates"** (RBIS dates differ from the row) or **"No Start Date"** (RBIS has no start date to compare) |
 | **In the flowchart** | "Check address and Liable party", "Tenancy Start?", "Liable Parties Match?", "RBIS Start Date Present?", "RBIS Start = Input Start?" and "RBIS Start = Input End?" |
 
-This is the most complicated part of the flowchart, and the description above is our reading of it. The exact rules are listed under Open questions.
+This is the most complicated part of the flowchart. Our reading (inferred): "match" means **the landlord is the liable party now**. On a move-in the landlord's liability is ended and the tenant's starts; on a move-out the tenant's is ended. An earlier version of this document described the check as "people and dates match, so proceed", which was wrong: the date comparisons only decide which stop reason applies. The [n8n design](../design/HARSLL-n8n-design.md#check-4-in-detail) sets this out in full. The exact rule is listed under Open questions.
 
 #### Check 5 – Will RBIS allow the change?
 
@@ -190,13 +190,13 @@ Every path ends with the robot recording the result ("Log Status").
 
 ### Extra checks when someone moves in
 
-The move-in path has a few checks of its own, because it adds people to an account. Any "no" here also stops the task.
+The flowchart has a separate branch that is **not connected to the main flow**, so when it runs is not shown. It appears to add a person, such as a joint tenant, to a tenancy that already exists. An earlier version of this document described it as a set of gates on every move-in, which was wrong.
 
-1. **Has this tenancy start already been done?** If so, it stops with "Tenancy already processed".
-2. **Did the change come from ABRITAS?** If not, it stops. (Exact meaning to confirm.)
-3. **Is it the same tenant as the previous tenancy record?** If not, it stops. (Exact meaning to confirm.)
-4. **Can extra liable parties, such as joint tenants, be added?** If not, it stops.
-5. **Are there contact details to record?** If not, it stops with "Contact details do not exist".
+1. **Has this tenancy already been processed?** Only the "yes" route is drawn.
+2. **Did the change come from ABRITAS?** If not, it stops with "Tenancy already processed".
+3. **Is it the same as the previous tenancy?** If not, it stops.
+4. **Can an additional liable party be added?** If not, it stops. If so, the robot adds the person and creates the detail record.
+5. **Are there contact details to record?** If so, they are added. If not, it stops with "Contact details do not exist", after RBIS has already been changed.
 
 ## Why a task is stopped: quick lookup
 
@@ -226,7 +226,8 @@ This document is based only on two pictures: the Dispatcher steps and the Perfor
 - [ ] Do the changes come from ABRITAS? Which system produces the spreadsheets, and what columns do they have?
 - [ ] Which change reasons are allowed (Check 1)?
 - [ ] What are the exact rules for comparing RBIS with the spreadsheet (Check 4)?
-- [ ] In the move-in checks, what do "ABRITAS?" and "Same as previous tenant?" mean exactly?
+- [ ] When does the unconnected "Tenancy Processed? → ABRITAS? → Same as previous tenancy?" branch run, and what do those questions mean exactly?
+- [ ] Is the landlord the liable party in RBIS between tenancies? Does HARSLL refer to Housing Association / Registered Social Landlord?
 - [ ] Does the robot update RBIS by clicking through its screens, or through an API or database?
 - [ ] Who looks at stopped tasks, and where are they reported?
 - [ ] How often does it run, and how many rows does a spreadsheet usually have?

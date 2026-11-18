@@ -91,7 +91,7 @@ Before changing any account, HARSLL applies five business rules in order. **All 
 | 1 | **The tenancy change is complete and of a type the automation handles** | Stops wrong or missing dates reaching a bill, and stops unfamiliar types of change being handled the wrong way |
 | 2 | **The change has not already been made** | Stops a resident being billed twice or a duplicate account being created |
 | 3 | **The correct council tax account has been found** | Stops the automation changing someone else's account by mistake |
-| 4 | **The council tax account agrees with the tenancy change** | If the account already shows the change, or shows different dates, a person decides which record is right |
+| 4 | **The council tax account is in the state the change expects** | If the account already shows the change, or shows different dates, a person decides which record is right |
 | 5 | **The account can be changed** | If the council tax system will not let the current liability be closed, there is usually a reason a person needs to understand first |
 
 New tenancies have two extra rules, because they add people to an account:
@@ -141,6 +141,7 @@ The process owner needs to confirm the points below before this document can be 
 | 5 | **Which types of tenancy change are accepted** | Defines exactly what is automated and what stays manual |
 | 6 | **The exact rule for comparing the two records** (safety check 4) | The most complex rule; it decides when an account is changed or referred |
 | 7 | **That RBIS is the council tax system and ABRITAS is the housing system** the changes come from | The systems are inferred from the process files |
+| 9 | **Whether the landlord is liable for a property between tenancies**, and whether HARSLL refers to housing association or registered social landlord tenancies | Safety check 4 is built on this reading. If so, "council tenancy" in this document should read "social landlord tenancy" |
 | 8 | **How the automation connects to the council tax system:** through its screens, or through a direct link | Affects how reliable the process is, and which tools could run it in future |
 
 ## Key terms
