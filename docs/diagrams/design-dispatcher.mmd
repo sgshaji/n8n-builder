@@ -1,0 +1,35 @@
+flowchart TD
+    T1[File added to input folder] --> WT[Wait one minute<br/>so the file is fully copied]
+    WT --> LK
+    T2[Timer, every 15 minutes] --> LK
+    LK{Can this run<br/>take the lock?} -- no --> STOP[End: the running pass<br/>or the next timer handles it]
+    LK -- yes --> S[Load settings]
+
+    S --> LS[List .xlsx files unchanged for a minute,<br/>ignoring Excel temporary files]
+    LS --> NM{File name safe?}
+    NM -- no --> RE1[Leave file,<br/>email once: rename it]
+    NM -- yes --> X{Can the file be read?}
+    X -- no, tries left --> RT[Leave file for the next run]
+    X -- no, third try --> RJ[Move to rejected,<br/>email the reason]
+    X -- yes --> V{Required columns present<br/>and at least one row?}
+    V -- no --> RJ
+    V -- yes --> N[Tidy rows, build case keys,<br/>link rows of the same tenancy]
+    N --> C{Case key already<br/>in the Cases table?}
+    C -- no --> I[Insert case: new]
+    C -- yes, referred --> RO[Reopen in this batch: new]
+    C -- yes, other status --> SK[Leave as it is]
+    I --> MV[Record the batch,<br/>move file to archive]
+    RO --> MV
+    SK --> MV
+
+    MV --> ST[Close stuck cases<br/>that have no tries left]
+    RE1 --> ST
+    RT --> ST
+    RJ --> ST
+    ST --> PR[Take unfinished cases in date order,<br/>move-outs before move-ins]
+    PR --> HD{Earlier case for the same<br/>account still unfinished?}
+    HD -- yes --> HOLD[Leave for a later run]
+    HD -- no --> PF[Run the Performer,<br/>then refresh the lock]
+    PF --> BT[For each batch now finished:<br/>write worklist file, send summary]
+    HOLD --> BT
+    BT --> UL[Release the lock]

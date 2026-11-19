@@ -87,7 +87,7 @@ async function main() {
   }
 
   const env = readEnv();
-  if (!env.N8N_API_KEY) throw new Error("N8N_API_KEY is missing or empty in .env. See docs/setup/02-connect-mcp-servers.md, step 1.");
+  if (!env.N8N_API_KEY) throw new Error("N8N_API_KEY is missing or empty in .env. See docs/setup/01-run-n8n-locally.md, step 5.");
   const profile = { ...PROFILES.production, checkEmails: false };
   const c = makeClients(profile, env.N8N_API_KEY);
   const ctx = { profile, c, log: () => {} };

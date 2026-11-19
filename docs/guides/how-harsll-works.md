@@ -6,18 +6,9 @@ HARSLL reads spreadsheets of tenancy changes and updates council tax accounts in
 
 ## At a glance
 
-```mermaid
-flowchart LR
-    F[Spreadsheet arrives<br/>in the input folder] --> D
-    T[Every 15 minutes] --> D
-    D[<b>Dispatcher</b><br/>runs the whole job]
-    D -- once per run --> S[<b>Settings</b><br/>every adjustable value]
-    D -- once per file --> DT[<b>Dispatcher: take in a file</b><br/>file → cases]
-    D -- once per case --> P[<b>Performer</b><br/>5 safety checks,<br/>then update or refer]
-    P -- once per RBIS step --> A[<b>Performer: RBIS adapter</b><br/>the only route to RBIS]
-    A --> R[(RBIS)]
-    D -- once per batch --> DR[<b>Dispatcher: report a batch</b><br/>summary email<br/>and staff worklist]
-```
+![At a glance](../diagrams/how-harsll-works-at-a-glance.png)
+
+<!-- Diagram source: ../diagrams/how-harsll-works-at-a-glance.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Workflow | What it's for | Runs | Changes RBIS? |
 | --- | --- | --- | --- |

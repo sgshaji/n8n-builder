@@ -45,3 +45,6 @@ desktop.ini
 
 # Browser automation output (screenshots from local checks)
 .playwright-mcp/
+
+# Built install kits (scripts/make-install-kit.mjs)
+dist/

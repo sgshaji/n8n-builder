@@ -1,0 +1,12 @@
+stateDiagram-v2
+    direction LR
+    [*] --> new: row recorded
+    new --> in_progress: Performer claims it
+    in_progress --> updated: all 5 checks pass, RBIS changed
+    in_progress --> referred: a check fails, RBIS untouched
+    in_progress --> duplicate: joint tenant covered by the first row
+    in_progress --> failed: technical problem
+    failed --> in_progress: retried automatically, up to 3 tries
+    referred --> new: corrected row sent again
+    updated --> [*]
+    duplicate --> [*]

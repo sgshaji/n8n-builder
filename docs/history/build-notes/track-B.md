@@ -12,30 +12,15 @@
 | **HARSLL – Performer (stand-in, track B)** | `V6d1AbXAlOPwo9Uw` | Published | `workflows/harsll-performer-stand-in-track-b.json` |
 | HARSLL – Settings (track B, dev) | `lI18cfcKFPSv2heB` | Published. Changed: `performerWorkflowId` = `V6d1AbXAlOPwo9Uw`; `summaryEmailTo` = `harsll-team-trackb@example.test` (see departure 13) | not exported (deleted at reconcile) |
 
-Both workflows: `executionOrder: v1`, `timezone: Europe/London`, run-history settings at their defaults, "Available in MCP" on. Validated with the n8n-mcp validator before every save (0 errors; the only warnings are the intended "executeOnce is enabled" notices). After every save the published version was confirmed current (`versionId` = `activeVersionId`).
+Both workflows: `executionOrder: v1`, `timezone: Europe/London`, run-history settings at their defaults, "Available in MCP" on. Validated before every save (0 errors; the only warnings are the intended "executeOnce is enabled" notices). After every save the published version was confirmed current (`versionId` = `activeVersionId`).
 
 ### Dispatcher, node by node
 
 80 nodes. Every Data table node takes its table ID by expression from settings; the Performer is called by `settings.performerWorkflowId`.
 
-```mermaid
-flowchart LR
-    T1[File added to input folder] --> LS[Load settings]
-    T2[Every 15 minutes] --> LS
-    T3[Run now webhook] --> LS
-    LS --> SC{Settings complete?}
-    SC -- no --> STOP[Stop: settings incomplete]
-    SC -- yes --> NF{Started by a new file?}
-    NF -- yes --> W[Wait fileSettleSeconds] --> L
-    NF -- no --> L{Take the lock}
-    L -- not got --> E[End]
-    L -- got --> INT[Intake loop, one file at a time]
-    INT --> IF[Intake finished]
-    IF --> B1[1. Close stuck cases]
-    IF --> B2[2. Process cases in order, with holds]
-    IF --> B3[3. Report finished batches]
-    IF --> B4[4. Release the lock]
-```
+![Dispatcher, node by node](../../diagrams/history-track-b-dispatcher-node-by-node.png)
+
+<!-- Diagram source: ../../diagrams/history-track-b-dispatcher-node-by-node.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 The four branches after "Intake finished" run one after another, top to bottom (n8n's v1 execution order runs one branch to the end before starting the next, in canvas order). The same rule makes the intake of a good file record cases before it records the batch and archives the file. Both orders were confirmed in the execution data.
 
@@ -142,7 +127,7 @@ Each is the most cautious reading found; none changes a shared document.
 
 1. **Settings are loaded before the lock and before the settle wait.** The design's diagram waits, takes the lock, then loads settings. But the lock table's ID and `fileSettleSeconds` are settings, so they must be loaded first. Loading settings changes nothing, so this is safe.
 2. **Settings check (added).** After loading, a check fails the run loudly if any needed setting is missing or empty (table IDs, `performerWorkflowId`, folders, email addresses, `requiredColumns`, the five numbers). Without it, n8n turns an expression error into `null` silently (finding 4 from track A). This also means the production Dispatcher will **stop with a clear error until `performerWorkflowId` is filled in**.
-3. **Tidy rows is a Code node, not Edit Fields (Set).** Three date forms with validation and rounding need several statements; n8n-mcp's rule is to use Code for that.
+3. **Tidy rows is a Code node, not Edit Fields (Set).** Three date forms with validation and rounding need several statements; the build rule is to use Code for that.
 4. **The summary is built in a Code node, not Summarize.** Conditional lines, plain-English wording and the worklist rows from all of a batch's cases at once. The email still holds counts only, using the Dispatcher's own fixed wording (never the Performer's `reasonText`).
 5. **Holds are decided just before each case,** against the table as it is then (Code node). The design does not say when; deciding up front would make a move-in wait a whole timer interval even after its move-out succeeded in the same pass.
 6. **A row repeated inside one file** (same case key) is recorded once. That is the design's case-key rule applied within the file (the first row's case is `new`, so the repeat is "left alone"). Counted in the summary's "left as they were" line.

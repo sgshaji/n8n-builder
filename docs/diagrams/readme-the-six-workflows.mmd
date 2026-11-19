@@ -1,0 +1,14 @@
+flowchart TB
+    IN[/"A spreadsheet arrives<br/>in the input folder"/] --> D
+    T(["Every 15 minutes"]) --> D
+
+    subgraph N8N["Inside n8n"]
+        D["<b>Dispatcher</b><br/>runs the whole job,<br/>one run at a time"]
+        D -->|"1 · once per run"| S["<b>Settings</b><br/>every adjustable value"]
+        D -->|"2 · each file"| TF["<b>Dispatcher:<br/>take in a file</b><br/>rows → cases"]
+        D -->|"3 · each case"| P["<b>Performer</b><br/>5 safety checks,<br/>update or refer"]
+        D -->|"4 · each finished file"| RB["<b>Dispatcher:<br/>report a batch</b><br/>worklist and email"]
+        P -->|"each RBIS step"| A["<b>Performer:<br/>RBIS adapter</b><br/>looks before it changes"]
+    end
+
+    A <--> R[("<b>RBIS</b><br/>pretend, for now")]

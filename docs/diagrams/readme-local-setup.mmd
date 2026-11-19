@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph PC["Your computer"]
+        REPO["<b>This repository</b><br/>workflows · scripts · test data"]
+        DATA[/"<b>data/</b> folder<br/>input · archive · rejected · reports"/]
+        subgraph DOCKER["Docker Desktop: docker compose up"]
+            N8N["<b>n8n</b><br/>localhost:5678"]
+            MP["<b>Test mailbox</b><br/>localhost:8025"]
+            MR["<b>Pretend RBIS</b><br/>localhost:8088"]
+        end
+    end
+    REPO -->|"set-up script installs<br/>HARSLL through the n8n API"| N8N
+    DATA <-->|"seen by n8n as /files"| N8N
+    N8N -->|"every email"| MP
+    N8N -->|"every RBIS read and change"| MR

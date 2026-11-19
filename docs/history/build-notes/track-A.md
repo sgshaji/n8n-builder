@@ -13,7 +13,7 @@
 | **Track A – test harness** (test only) | `Q2EM7lajNcwWV5qJ` | Yes | `tests/performer/track-a-test-harness.json` (removed; in Git history) | 3 |
 
 - Both HARSLL workflows: `executionOrder: v1`, `timezone: Europe/London`, **Available in MCP** on, run-history settings left at their defaults (the reconcile stage sets them).
-- Both were checked with the n8n-mcp validator (`n8n_validate_workflow`) after every change: no errors. The Performer has 16 warnings, all the same note that "Execute Once" is on, which is deliberate (each case has one item).
+- Both were validated after every change: no errors. The Performer has 16 warnings, all the same note that "Execute Once" is on, which is deliberate (each case has one item).
 - After each change both were deactivated and activated again; the published version was confirmed to equal the draft (`activeVersionId = versionId`, same node count).
 - The exports were made with `n8n export:workflow`, then the `shared` block (the n8n owner's name and email) was removed. No credentials are used.
 - One Code node in total: **Plan the RBIS steps** in the Performer, with a `Why Code:` note.
@@ -22,25 +22,9 @@
 
 Input `{ operation, rbisBaseUrl, ref, params }`; output always exactly `{ ok, operation, ref, alreadyDone, data, error }`. Every operation reads first; every write looks before it writes.
 
-```mermaid
-flowchart LR
-    T[When called by the Performer] --> TR[Tidy the request] --> V{Request valid?}
-    V -- no --> RF[Answer: request refused]
-    V -- yes --> R[Read the account from RBIS]
-    R -- no answer --> UR[Answer: RBIS could not be reached]
-    R --> RA{Read answered?}
-    RA -- not 200 --> RFL[Answer: read failed]
-    RA -- 200 --> RD{RBIS answer readable?}
-    RD -- no --> NU[Answer: RBIS answer not understood]
-    RD -- yes --> W{Which operation?}
-    W -- reads --> AR[Answer: findAccount / getAccount / canTerminate]
-    W -- writes --> AD{op: change already in RBIS?}
-    AD -- yes --> AL[Answer: already done]
-    AD -- no --> WR[Write to RBIS]
-    WR -- no answer --> UR
-    WR --> WRR[Answer: write result]
-    RF & UR & RFL & NU & AR & AL & WRR --> OUT[Adapter answer]
-```
+![HARSLL – RBIS adapter](../../diagrams/history-track-a-harsll-rbis-adapter.png)
+
+<!-- Diagram source: ../../diagrams/history-track-a-harsll-rbis-adapter.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Node | Type | What it does |
 | --- | --- | --- |
@@ -68,32 +52,9 @@ flowchart LR
 
 Input `{ caseId, expectedStatus, expectedAttempts, settings }`; output always one item `{ caseId, caseKey, claimed, status, reasonCode, outcome, urgent }`, taken from the case row as written.
 
-```mermaid
-flowchart TD
-    IN[When called by the Dispatcher] --> CL[Claim the case] --> C{Claimed?}
-    C -- no --> NC[Read the case as it is now] --> RNC[Return: not claimed]
-    C -- yes --> RC[Read the claimed case] --> OK{Case row and settings usable?}
-    OK -- no --> ERR
-    OK -- yes --> CD[Case details] --> RS{Resume: RBIS steps already recorded?}
-    RS -- yes --> PLAN
-    RS -- no --> C1[Check 1: dates / death / reason] --> C2[Check 2: joint row?]
-    C2 -- joint --> LR[Check 2: what did the lead row do?]
-    LR -- updated --> DUP[Mark case duplicate]
-    LR -- not completed --> REF
-    LR -- still unfinished --> REL[Release the case for a later run]
-    C2 -- no --> C3[Check 3: reference, find the account]
-    C3 --> RT{Retry: first RBIS change already made by an earlier try?}
-    RT -- yes --> PLAN
-    RT -- no --> C4[Check 4: the diagram, one IF per question] --> C5[Check 5: liability can be ended?]
-    C4 -- ACCOUNT_ALREADY_PROCESSED, setting on --> PLAN
-    C5 -- yes --> PLAN[Plan the RBIS steps]
-    PLAN --> LOOP[Loop over RBIS steps: call the adapter, record the step]
-    LOOP -- all done --> UPD[Mark case updated]
-    LOOP -- refused --> REF[Prepare the referral, Refer case]
-    LOOP -- RBIS unavailable or unexpected --> ERR[Describe the error, Mark case failed]
-    C1 & C3 & C4 & C5 -- check fails --> REF
-    UPD & REF & ERR & DUP & REL --> OUT[Return the result]
-```
+![HARSLL – Performer](../../diagrams/history-track-a-harsll-performer.png)
+
+<!-- Diagram source: ../../diagrams/history-track-a-harsll-performer.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Part | Nodes | Notes |
 | --- | --- | --- |

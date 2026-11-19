@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> new: Dispatcher records the case
+    new --> in_progress: Performer claims it
+    in_progress --> updated: checks pass, RBIS changed
+    in_progress --> referred: a check fails, or RBIS refuses a step
+    in_progress --> duplicate: joint row, lead row updated RBIS
+    in_progress --> failed: technical error
+    failed --> in_progress: automatic retry, while tries remain
+    referred --> new: the row is sent again
+    updated --> [*]
+    duplicate --> [*]

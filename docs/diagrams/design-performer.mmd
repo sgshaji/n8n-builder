@@ -1,0 +1,26 @@
+flowchart TD
+    IN[Case and settings] --> CL{Claim the case and<br/>count the try: succeeded?}
+    CL -- no --> SKIP[End: another run has it]
+    CL -- yes --> RS{RBIS steps already<br/>recorded for this case?}
+    RS -- yes --> RES[Carry out the<br/>remaining RBIS steps]
+    RS -- no --> C1{Check 1<br/>Row usable?}
+    C1 -- no --> REF[Refer case with reason]
+    C1 -- yes --> C2{Check 2<br/>Joint row of a tenancy<br/>in this file?}
+    C2 -- yes --> JR{Did the lead row<br/>update RBIS?}
+    JR -- yes --> DUP[Mark case: duplicate]
+    JR -- no --> REF
+    C2 -- no --> C3{Check 3<br/>Account found?}
+    C3 -- no --> REF
+    C3 -- yes --> C4{Check 4<br/>Account in the<br/>expected state?}
+    C4 -- no --> REF
+    C4 -- yes --> C5{Check 5<br/>Can the current<br/>liability be ended?}
+    C5 -- no --> REF
+    C5 -- yes --> W{Which change?}
+    W -- moved in --> MI[End landlord's liability,<br/>make tenants liable,<br/>create detail, add contacts]
+    W -- moved out, address known --> MO1[End tenants' liability,<br/>landlord liable again,<br/>save forwarding address]
+    W -- moved out, no address --> MO2[End tenants' liability,<br/>landlord liable again]
+    RES --> UP
+    MI --> UP[Mark case: updated]
+    MO1 --> UP
+    MO2 --> UP
+    X[Any RBIS error] -.-> FL[Mark case: failed,<br/>keep the steps already done]

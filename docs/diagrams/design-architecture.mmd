@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph Folders["Shared folder: data/"]
+        IN[input/]
+        AR[archive/]
+        RJ[rejected/]
+        RP[reports/]
+    end
+
+    subgraph N8N["n8n"]
+        SET[HARSLL – Settings]
+        D[HARSLL – Dispatcher]
+        DT[HARSLL – Dispatcher:<br/>take in a file]
+        DR[HARSLL – Dispatcher:<br/>report a batch]
+        P[HARSLL – Performer]
+        A[HARSLL – Performer:<br/>RBIS adapter]
+        T[(Cases table)]
+        B[(Batches and lock tables)]
+    end
+
+    IN -->|file arrives, or timer| D
+    D -->|loads once per run| SET
+    D -->|takes the lock| B
+    D -->|each settled file| DT
+    DT -->|records cases| T
+    DT -->|records file| B
+    DT -->|moves file| AR
+    DT -->|bad file| RJ
+    D -->|each unfinished case| P
+    P -->|claims and updates case| T
+    P -->|every RBIS step| A
+    A -->|HTTP| R[Pretend RBIS<br/>Docker service]
+    D -->|each batch waiting for its summary| DR
+    DR -->|worklist| RP
+    DR -->|summary, counts only| M[Mailpit<br/>test mailbox]

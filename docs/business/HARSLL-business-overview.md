@@ -1,7 +1,6 @@
 # HARSLL: keeping council tax accounts in step with tenancy changes
 
 Business overview · 19 November 2026
-Shared version: [Business overview tab](https://claude.ai/artifact/Kjx7dd8njphvDfwTq833cU#7d961d07-adad) (an earlier copy; this file is the current one).
 Technical detail: [HARSLL-uipath-process.md](../process/HARSLL-uipath-process.md).
 
 HARSLL is an automated process that updates council tax accounts when a council tenancy starts or ends. The aim is that the right person is billed from the right date, without staff entering each change by hand. It changes an account only when five safety checks pass. Anything it is unsure about is passed to staff.
@@ -54,22 +53,9 @@ The automation only acts on the tenancy changes it is given. It does not decide 
 
 ## How it works
 
-```mermaid
-flowchart TD
-    subgraph P1["Part 1 · Dispatcher: prepares the work; never changes an account"]
-        direction LR
-        A1[Changes received<br/>spreadsheet of moves] --> A2[Cases created<br/>one per change] --> A3[Files archived<br/>not read twice] --> A4[Summary emailed<br/>to the team]
-    end
-    A2 --> Q[(Cases wait in a to-do list)]
-    subgraph P2["Part 2 · Performer: checks each case, then updates the account or refers it"]
-        B1[Takes a case<br/>one at a time] --> B2[5 safety checks<br/>applied in order]
-        B2 -- all pass --> B3[Account updated]
-        B2 -- a check fails --> B4[Referred to staff<br/>account left as it was]
-        B3 -- next case --> B1
-        B4 -- next case --> B1
-    end
-    Q --> B1
-```
+![How it works](../diagrams/business-overview-how-it-works.png)
+
+<!-- Diagram source: ../diagrams/business-overview-how-it-works.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 HARSLL has **two automated parts**. The first prepares cases and puts them on a to-do list, and the second works through that list.
 

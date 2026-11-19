@@ -2,7 +2,6 @@
 
 Last updated: 19 November 2026.
 Based on two files: `RBIS_HARSLL_Dispatcher (2).jpg` and `HARSLL Process - Flowcharts (1).docx`.
-Shared version: [HARSLL UiPath Process – Purpose and Flow Overview](https://claude.ai/artifact/Kjx7dd8njphvDfwTq833cU).
 
 ## In one minute
 
@@ -56,22 +55,9 @@ The source files never spell out the name, and it is not the name of a public pr
 
 ## The big picture: how the two robots work together
 
-```mermaid
-flowchart TD
-    subgraph DISP["Dispatcher (runs once for each batch of files)"]
-        direction LR
-        A1[1. Read files<br/>from input folder] --> A2[2. Add tasks<br/>one per row] --> A3[3. Archive files<br/>so not read again] --> A4[4. Email summary<br/>to the team]
-    end
-    A2 --> Q[(Queue - to-do list<br/>tasks wait here)]
-    subgraph PERF["Performer (repeats for every task in the queue)"]
-        B1[5. Take a task<br/>next in the queue] --> B2[6. Run 5 checks]
-        B2 -- all pass --> B3[7. Update RBIS<br/>account changed]
-        B2 -- a check fails --> B4[Stopped item<br/>RBIS left as it was]
-        B3 -- next task --> B1
-        B4 -- next task --> B1
-    end
-    Q --> B1
-```
+![The big picture: how the two robots work together](../diagrams/uipath-process-big-picture.png)
+
+<!-- Diagram source: ../diagrams/uipath-process-big-picture.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 The two robots never talk to each other directly. The **queue** sits between them: the Dispatcher puts tasks into it, and the Performer takes them out one at a time. This lets the two run separately. File archiving belongs to the Dispatcher; stopped items belong to the Performer.
 
@@ -100,25 +86,9 @@ The Dispatcher only prepares the work. **It never changes anything in RBIS.**
 
 The Performer handles **one task at a time**. Before it changes anything in RBIS, it asks **five questions** in a fixed order. It makes the change only if all five answers are right. If any answer is wrong, it stops that task, writes down the reason, and moves on to the next task.
 
-```mermaid
-flowchart TD
-    C1[Check 1: Is the row usable?<br/>valid dates and change reason] -- fails --> X1[Stopped: dates or change reason invalid]
-    C1 -- passes --> C2[Check 2: Already done?<br/>same address handled before?]
-    C2 -- yes --> X2[Stopped: tenancy already processed]
-    C2 -- no --> C3[Check 3: Account found?<br/>search by account ref and address]
-    C3 -- not found --> X3[Stopped: address not found]
-    C3 -- found --> C4[Check 4: Account in the expected state?<br/>who is liable now]
-    C4 -- mismatch --> X4[Stopped: dates differ or already applied]
-    C4 -- as expected --> C5[Check 5: Will RBIS allow it?<br/>option to end the liability]
-    C5 -- no --> X5[Stopped: no option to terminate]
-    C5 -- yes --> D{Which change?}
-    D -- moved in --> P1[Moved in<br/>make new tenant liable, add joint tenants, add contact details]
-    D -- moved out, new address known --> P2[Moved out, new address<br/>end their liability, save forwarding address]
-    D -- moved out, no new address --> P3[Moved out, no address<br/>end their liability]
-    P1 --> L[Record the result]
-    P2 --> L
-    P3 --> L
-```
+![Part 2 – Performer: checks first, then updates](../diagrams/uipath-process-performer.png)
+
+<!-- Diagram source: ../diagrams/uipath-process-performer.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 ### The 5 checks, one by one
 

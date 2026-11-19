@@ -7,6 +7,7 @@ Pick the row that matches what you want to do. Business and user guides are in p
 | Document | For | What it covers |
 | --- | --- | --- |
 | [Business overview](business/HARSLL-business-overview.md) | Business stakeholders | Why HARSLL exists, what it does, the five safety checks, what goes to staff, and the decisions still needed |
+| [One-page summary](business/HARSLL-one-page-summary.md) | Colleagues and stakeholders | What was built, the demo, the assumptions made, what needs clarifying, and next steps, on one page |
 | [How HARSLL works](guides/how-harsll-works.md) | Anyone, including the process owner, IT support and new developers | The six workflows: what each is for, when it runs, what it does step by step, and what it changes. No n8n knowledge needed |
 | [Current UiPath process](process/HARSLL-uipath-process.md) | IT and process specialists | How today's two UiPath robots work, and every reason a case stops |
 
@@ -21,9 +22,8 @@ Pick the row that matches what you want to do. Business and user guides are in p
 
 | Document | For | What it covers |
 | --- | --- | --- |
-| [1. Run n8n locally with Docker](setup/01-run-n8n-locally.md) | Anyone working on HARSLL on their own computer | Installing the local stack, setting HARSLL up in it, everyday commands, upgrades, troubleshooting |
-| [2. Connect the n8n MCP servers](setup/02-connect-mcp-servers.md) | Anyone using Claude Code on this repo | The two MCP servers, keeping secrets out of Git, setup, troubleshooting |
-| [3. Move HARSLL to another environment](setup/03-move-to-another-environment.md) | Whoever installs HARSLL on another n8n, such as BCC's | What the environment needs, keys and secrets, the set-up script, what to configure by hand, testing, going live, updates |
+| [Set up HARSLL on your computer](setup/01-run-n8n-locally.md) | Anyone who wants HARSLL running on their own Windows or Mac computer | Installing the tools, getting the code, setting HARSLL up, seeing it work, everyday commands, updates, troubleshooting |
+| [Move HARSLL to another environment](setup/03-move-to-another-environment.md) | Whoever installs HARSLL on another n8n, such as BCC's | What the environment needs, keys and secrets, the set-up script, what to configure by hand, testing, going live, updates |
 
 ## Change HARSLL
 
@@ -47,6 +47,5 @@ Component guides live next to the code: [pretend RBIS](../mock-rbis/README.md), 
 
 - **Business documents and guides** use plain English, with no system jargon. Technical detail goes in the setup, design and testing documents.
 - **Anything inferred is labelled** as assumed or to be confirmed, and listed as an open question in the design.
-- **Diagrams** are written in [Mermaid](https://mermaid.js.org/) so they render on GitHub and in the VS Code preview.
+- **Diagrams** are images drawn from [Mermaid](https://mermaid.js.org/) sources kept in [`diagrams/`](diagrams/README.md), so they display the same everywhere. To change one, edit its source and redraw it.
 - **Docs change with the work.** When a workflow changes, its documentation changes in the same commit.
-- A shared, commentable copy of an earlier business overview lives in Claude Docs. This repository is the source of truth.

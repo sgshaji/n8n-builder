@@ -1,0 +1,14 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 480
+---
+flowchart TB
+    C(["<b>One case</b> · one row of the spreadsheet"]) --> K1
+    K1["<b>Check 1</b> · the row is complete, its dates are real,<br/>and it is a change HARSLL handles"] -->|pass| K2
+    K2["<b>Check 2</b> · it hasn't already been done"] -->|pass| K3
+    K3["<b>Check 3</b> · the right account is found:<br/>reference <b>and</b> address match"] -->|pass| K4
+    K4["<b>Check 4</b> · RBIS shows what the change expects:<br/>the landlord liable before a move-in,<br/>the leaver liable before a move-out"] -->|pass| K5
+    K5["<b>Check 5</b> · RBIS allows the current liability to end"] -->|pass| U(["<b>Update RBIS</b> · one change at a time, looking first each time"])
+    K2 -->|"joint tenant already added<br/>by an earlier row"| DUP(["<b>Duplicate</b><br/>nothing more to do"])
+    K1 & K2 & K3 & K4 & K5 -->|fail| REF(["<b>Refer to staff</b><br/>with the reason · RBIS untouched"])

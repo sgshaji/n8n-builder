@@ -1,0 +1,17 @@
+flowchart TD
+    C1[Check 1: Is the row usable?<br/>valid dates and change reason] -- fails --> X1[Stopped: dates or change reason invalid]
+    C1 -- passes --> C2[Check 2: Already done?<br/>same address handled before?]
+    C2 -- yes --> X2[Stopped: tenancy already processed]
+    C2 -- no --> C3[Check 3: Account found?<br/>search by account ref and address]
+    C3 -- not found --> X3[Stopped: address not found]
+    C3 -- found --> C4[Check 4: Account in the expected state?<br/>who is liable now]
+    C4 -- mismatch --> X4[Stopped: dates differ or already applied]
+    C4 -- as expected --> C5[Check 5: Will RBIS allow it?<br/>option to end the liability]
+    C5 -- no --> X5[Stopped: no option to terminate]
+    C5 -- yes --> D{Which change?}
+    D -- moved in --> P1[Moved in<br/>make new tenant liable, add joint tenants, add contact details]
+    D -- moved out, new address known --> P2[Moved out, new address<br/>end their liability, save forwarding address]
+    D -- moved out, no new address --> P3[Moved out, no address<br/>end their liability]
+    P1 --> L[Record the result]
+    P2 --> L
+    P3 --> L

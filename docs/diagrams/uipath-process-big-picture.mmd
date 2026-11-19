@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph DISP["Dispatcher (runs once for each batch of files)"]
+        direction LR
+        A1[1. Read files<br/>from input folder] --> A2[2. Add tasks<br/>one per row] --> A3[3. Archive files<br/>so not read again] --> A4[4. Email summary<br/>to the team]
+    end
+    A2 --> Q[(Queue - to-do list<br/>tasks wait here)]
+    subgraph PERF["Performer (repeats for every task in the queue)"]
+        B1[5. Take a task<br/>next in the queue] --> B2[6. Run 5 checks]
+        B2 -- all pass --> B3[7. Update RBIS<br/>account changed]
+        B2 -- a check fails --> B4[Stopped item<br/>RBIS left as it was]
+        B3 -- next task --> B1
+        B4 -- next task --> B1
+    end
+    Q --> B1

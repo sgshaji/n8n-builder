@@ -1,0 +1,24 @@
+flowchart TD
+    IN[When called by the Dispatcher] --> CL[Claim the case] --> C{Claimed?}
+    C -- no --> NC[Read the case as it is now] --> RNC[Return: not claimed]
+    C -- yes --> RC[Read the claimed case] --> OK{Case row and settings usable?}
+    OK -- no --> ERR
+    OK -- yes --> CD[Case details] --> RS{Resume: RBIS steps already recorded?}
+    RS -- yes --> PLAN
+    RS -- no --> C1[Check 1: dates / death / reason] --> C2[Check 2: joint row?]
+    C2 -- joint --> LR[Check 2: what did the lead row do?]
+    LR -- updated --> DUP[Mark case duplicate]
+    LR -- not completed --> REF
+    LR -- still unfinished --> REL[Release the case for a later run]
+    C2 -- no --> C3[Check 3: reference, find the account]
+    C3 --> RT{Retry: first RBIS change already made by an earlier try?}
+    RT -- yes --> PLAN
+    RT -- no --> C4[Check 4: the diagram, one IF per question] --> C5[Check 5: liability can be ended?]
+    C4 -- ACCOUNT_ALREADY_PROCESSED, setting on --> PLAN
+    C5 -- yes --> PLAN[Plan the RBIS steps]
+    PLAN --> LOOP[Loop over RBIS steps: call the adapter, record the step]
+    LOOP -- all done --> UPD[Mark case updated]
+    LOOP -- refused --> REF[Prepare the referral, Refer case]
+    LOOP -- RBIS unavailable or unexpected --> ERR[Describe the error, Mark case failed]
+    C1 & C3 & C4 & C5 -- check fails --> REF
+    UPD & REF & ERR & DUP & REL --> OUT[Return the result]

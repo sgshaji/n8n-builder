@@ -15,7 +15,7 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 
 ## Conventions
 
-- **Docs live in the repo** as Markdown under `docs/`, with Mermaid diagrams. Update the relevant doc in the same change as the workflow.
+- **Docs live in the repo** as Markdown under `docs/`. Diagrams: Mermaid source in `docs/diagrams/*.mmd`, shown as PNG, never inline Mermaid (GitHub often fails to display it). See `docs/diagrams/README.md`; the unit tests enforce it. Update the relevant doc in the same change as the workflow.
 - **Business docs use plain English**, with no system jargon. Technical detail goes in `docs/process/` or the design docs.
 - **Label inferences.** If something is assumed rather than confirmed, say so and add it to the open questions.
 - **Unknown business rules become settings** with a sensible default, recorded as an assumption, not hard-coded logic.
@@ -30,6 +30,7 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 - In Git Bash, a command passed to `docker compose exec` must not contain absolute container paths (they are rewritten to Windows paths). Use relative paths or `sh -c '...'`.
 - Install or update HARSLL in any n8n with `node scripts/setup-harsll.mjs` (locally `--create-mailpit-credential`; `--dry-run` first). It writes all table and workflow IDs into Settings; never hand-copy IDs. Guide: `docs/setup/03-move-to-another-environment.md`.
 - See it work: `node scripts/try-sample.mjs` (wipes local test data; 10 made-up rows; ~70 s).
+- Hand-over zip: `node scripts/make-install-kit.mjs` builds `dist/harsll-install-kit-<date>-<commit>.zip` from the last commit (git archive; refuses secrets). Commit first: uncommitted changes are left out.
 - Through the public API, saving (PUT) an already-published workflow republishes it at once in 2.48.5; `POST /workflows/{id}/publish` publishes. Always confirm `versionId === activeVersionId`.
 - Deleting an n8n workflow through the API needs it deactivated, then archived (`POST /workflows/{id}/archive`), then deleted.
 - Restarting n8n (including test scenario 36) cuts off the `n8n-mcp` server: reconnect it with `/mcp`. Meanwhile, use the n8n public API (key in `.env`) or `n8n-instance`.

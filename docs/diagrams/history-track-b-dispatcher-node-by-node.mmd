@@ -1,0 +1,16 @@
+flowchart LR
+    T1[File added to input folder] --> LS[Load settings]
+    T2[Every 15 minutes] --> LS
+    T3[Run now webhook] --> LS
+    LS --> SC{Settings complete?}
+    SC -- no --> STOP[Stop: settings incomplete]
+    SC -- yes --> NF{Started by a new file?}
+    NF -- yes --> W[Wait fileSettleSeconds] --> L
+    NF -- no --> L{Take the lock}
+    L -- not got --> E[End]
+    L -- got --> INT[Intake loop, one file at a time]
+    INT --> IF[Intake finished]
+    IF --> B1[1. Close stuck cases]
+    IF --> B2[2. Process cases in order, with holds]
+    IF --> B3[3. Report finished batches]
+    IF --> B4[4. Release the lock]

@@ -15,16 +15,9 @@ They overlap a little, and that is fine: `n8n-mcp` is the main tool for designin
 
 ## How secrets are kept safe
 
-```mermaid
-flowchart LR
-    CC[Claude Code] -->|reads| M[.mcp.json<br/>no secrets, in Git]
-    M -->|starts| S1[scripts/n8n-mcp.mjs]
-    M -->|starts| S2[scripts/n8n-instance-mcp.mjs]
-    S1 -->|reads key| E[.env<br/>secrets, NOT in Git]
-    S2 -->|reads token| E
-    S1 -->|Docker| A[n8n-mcp container] -->|API key| N[n8n]
-    S2 -->|forwards with token| N
-```
+![How secrets are kept safe](../diagrams/setup-mcp-how-secrets-are-kept-safe.png)
+
+<!-- Diagram source: ../diagrams/setup-mcp-how-secrets-are-kept-safe.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 - [`.mcp.json`](../../.mcp.json) is committed and shared. It contains **no secrets**, only which scripts to run.
 - The two scripts in [`scripts/`](../../scripts/) read the key and token from your `.env` when Claude Code starts them.

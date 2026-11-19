@@ -6,16 +6,9 @@
 
 The script was proved on a separate, freshly installed n8n 2.48.5. It installed HARSLL, processed a 31-row test spreadsheet end to end, and a second run changed nothing.
 
-```mermaid
-flowchart LR
-    A["1. Administrator<br/>prepares n8n"] --> B["2. API key<br/>in an env file"]
-    B --> C["3. Email login<br/>in n8n"]
-    C --> D["4. Settings file<br/>for this environment"]
-    D --> E["5. Dry run"]
-    E --> F["6. Install,<br/>Dispatcher off"]
-    F --> G["7. Check and test"]
-    G --> H["8. Go live"]
-```
+![The steps to move HARSLL to another environment](../diagrams/setup-move-steps.png)
+
+<!-- Diagram source: ../diagrams/setup-move-steps.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 ## What moves, and how
 
@@ -41,7 +34,6 @@ Every secret stays out of Git and out of this repository's committed files. Here
 | **n8n API key** | Lets the set-up script install HARSLL | An env file on the machine running the script, such as `.env.bcc-test`. Ignored by Git | Created in the target n8n: **Settings → n8n API**, by its owner or an admin | Give it an expiry. Revoke it when the install is done, and create a new one for the next update. The script never accepts it on the command line and never prints it |
 | **Email login** | Sending the summary and rejection emails | An n8n **credential** of type SMTP, encrypted inside n8n | Whoever manages the council's mail accounts, typed straight into n8n | Never put it in a file. Use a dedicated, send-only mailbox if possible |
 | **RBIS login** | Reading and changing RBIS | An n8n credential, when the real RBIS adapter is built | RBIS administrators | Not needed yet |
-| **n8n MCP token** | Lets Claude Code use n8n's built-in MCP server | Your local `.env` | — | Local development only. Not needed in other environments |
 
 Your local `.env` is never copied anywhere. It holds the local encryption key and local API keys only.
 
@@ -64,13 +56,28 @@ For reference, the local settings that meet these are in [`compose.yaml`](../../
 
 ### What you need on your own machine
 
-- A copy of this repository, at the commit you want to install. Use a tagged release once there is one.
+- **Either** a copy of this repository, at the commit you want to install, **or** the install kit built from it (below).
 - **Node.js 20 or later.** Check with `node --version`.
 - Nothing else: the script uses no extra packages.
 
+### The install kit
+
+For an installer who shouldn't need the whole repository, build one zip:
+
+```bash
+node scripts/make-install-kit.mjs            # from the last commit
+node scripts/make-install-kit.mjs --ref v1.0 # from a tag or an earlier commit
+```
+
+It writes `dist/harsll-install-kit-<date>-<commit>.zip` (`dist/` is ignored by Git). The kit holds the six workflows, the set-up script, the settings template, all of `docs/`, and the pretend RBIS with its made-up accounts and the sample spreadsheet, in the repository's own layout, plus an `INSTALL.md` that summarises this guide. Every step below works the same from the unzipped kit folder.
+
+The kit is built with `git archive` from a commit, so only committed files can go in. Before building, the script also refuses any env file, filled-in key or password, token, n8n owner block or original process document. Uncommitted changes are left out; the script says so.
+
+n8n cannot import the zip itself, and importing the workflow files one by one in the editor leaves them unconnected. The set-up script is what installs it.
+
 ## Step 1: put the API key in an env file
 
-Create a file in the repository folder named after the environment, for example `.env.bcc-test`. Any file starting `.env.` is ignored by Git.
+Create a file in the repository (or kit) folder named after the environment, for example `.env.bcc-test`. Any file starting `.env.` is ignored by Git.
 
 ```ini
 # Target n8n for the HARSLL set-up script. Never commit this file.
@@ -103,7 +110,7 @@ Give only the values that differ from the defaults in [`workflows/harsll-setting
 
 ## Step 4: dry run
 
-From the repository folder:
+From the repository (or kit) folder:
 
 ```bash
 node scripts/setup-harsll.mjs --env-file .env.bcc-test --settings config/bcc-test.local.json \

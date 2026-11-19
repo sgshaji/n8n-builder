@@ -116,42 +116,9 @@ If this reading is wrong, check 4 and the update steps change; the rest of the d
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    subgraph Folders["Shared folder: data/"]
-        IN[input/]
-        AR[archive/]
-        RJ[rejected/]
-        RP[reports/]
-    end
+![Architecture](../diagrams/design-architecture.png)
 
-    subgraph N8N["n8n"]
-        SET[HARSLL – Settings]
-        D[HARSLL – Dispatcher]
-        DT[HARSLL – Dispatcher:<br/>take in a file]
-        DR[HARSLL – Dispatcher:<br/>report a batch]
-        P[HARSLL – Performer]
-        A[HARSLL – Performer:<br/>RBIS adapter]
-        T[(Cases table)]
-        B[(Batches and lock tables)]
-    end
-
-    IN -->|file arrives, or timer| D
-    D -->|loads once per run| SET
-    D -->|takes the lock| B
-    D -->|each settled file| DT
-    DT -->|records cases| T
-    DT -->|records file| B
-    DT -->|moves file| AR
-    DT -->|bad file| RJ
-    D -->|each unfinished case| P
-    P -->|claims and updates case| T
-    P -->|every RBIS step| A
-    A -->|HTTP| R[Pretend RBIS<br/>Docker service]
-    D -->|each batch waiting for its summary| DR
-    DR -->|worklist| RP
-    DR -->|summary, counts only| M[Mailpit<br/>test mailbox]
-```
+<!-- Diagram source: ../diagrams/design-architecture.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 ### The six workflows
 
@@ -172,43 +139,9 @@ Dispatcher and Performer match the two UiPath robots. Settings replaces UiPath's
 
 The Dispatcher has two parts. **Intake** turns files into cases. **Processing** works through unfinished cases. Both run on every start, whichever trigger fired. The steps for one file are in **HARSLL – Dispatcher: take in a file**, and writing the worklist and summary for one batch is in **HARSLL – Dispatcher: report a batch**. The chart below shows the whole job.
 
-```mermaid
-flowchart TD
-    T1[File added to input folder] --> WT[Wait one minute<br/>so the file is fully copied]
-    WT --> LK
-    T2[Timer, every 15 minutes] --> LK
-    LK{Can this run<br/>take the lock?} -- no --> STOP[End: the running pass<br/>or the next timer handles it]
-    LK -- yes --> S[Load settings]
+![Dispatcher](../diagrams/design-dispatcher.png)
 
-    S --> LS[List .xlsx files unchanged for a minute,<br/>ignoring Excel temporary files]
-    LS --> NM{File name safe?}
-    NM -- no --> RE1[Leave file,<br/>email once: rename it]
-    NM -- yes --> X{Can the file be read?}
-    X -- no, tries left --> RT[Leave file for the next run]
-    X -- no, third try --> RJ[Move to rejected,<br/>email the reason]
-    X -- yes --> V{Required columns present<br/>and at least one row?}
-    V -- no --> RJ
-    V -- yes --> N[Tidy rows, build case keys,<br/>link rows of the same tenancy]
-    N --> C{Case key already<br/>in the Cases table?}
-    C -- no --> I[Insert case: new]
-    C -- yes, referred --> RO[Reopen in this batch: new]
-    C -- yes, other status --> SK[Leave as it is]
-    I --> MV[Record the batch,<br/>move file to archive]
-    RO --> MV
-    SK --> MV
-
-    MV --> ST[Close stuck cases<br/>that have no tries left]
-    RE1 --> ST
-    RT --> ST
-    RJ --> ST
-    ST --> PR[Take unfinished cases in date order,<br/>move-outs before move-ins]
-    PR --> HD{Earlier case for the same<br/>account still unfinished?}
-    HD -- yes --> HOLD[Leave for a later run]
-    HD -- no --> PF[Run the Performer,<br/>then refresh the lock]
-    PF --> BT[For each batch now finished:<br/>write worklist file, send summary]
-    HOLD --> BT
-    BT --> UL[Release the lock]
-```
+<!-- Diagram source: ../diagrams/design-dispatcher.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Step | n8n node | Notes |
 | --- | --- | --- |
@@ -272,34 +205,9 @@ A run that cannot take the lock ends at once. Its file is picked up by the runni
 
 The Performer receives one case and the settings. Every stop goes through one **Refer case** step, so all referrals are recorded the same way.
 
-```mermaid
-flowchart TD
-    IN[Case and settings] --> CL{Claim the case and<br/>count the try: succeeded?}
-    CL -- no --> SKIP[End: another run has it]
-    CL -- yes --> RS{RBIS steps already<br/>recorded for this case?}
-    RS -- yes --> RES[Carry out the<br/>remaining RBIS steps]
-    RS -- no --> C1{Check 1<br/>Row usable?}
-    C1 -- no --> REF[Refer case with reason]
-    C1 -- yes --> C2{Check 2<br/>Joint row of a tenancy<br/>in this file?}
-    C2 -- yes --> JR{Did the lead row<br/>update RBIS?}
-    JR -- yes --> DUP[Mark case: duplicate]
-    JR -- no --> REF
-    C2 -- no --> C3{Check 3<br/>Account found?}
-    C3 -- no --> REF
-    C3 -- yes --> C4{Check 4<br/>Account in the<br/>expected state?}
-    C4 -- no --> REF
-    C4 -- yes --> C5{Check 5<br/>Can the current<br/>liability be ended?}
-    C5 -- no --> REF
-    C5 -- yes --> W{Which change?}
-    W -- moved in --> MI[End landlord's liability,<br/>make tenants liable,<br/>create detail, add contacts]
-    W -- moved out, address known --> MO1[End tenants' liability,<br/>landlord liable again,<br/>save forwarding address]
-    W -- moved out, no address --> MO2[End tenants' liability,<br/>landlord liable again]
-    RES --> UP
-    MI --> UP[Mark case: updated]
-    MO1 --> UP
-    MO2 --> UP
-    X[Any RBIS error] -.-> FL[Mark case: failed,<br/>keep the steps already done]
-```
+![Performer](../diagrams/design-performer.png)
+
+<!-- Diagram source: ../diagrams/design-performer.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 **The claim.** One update changes the case to `in_progress`, adds one to `attempts` and sets `lastAttemptAt`, but only if the case's status and `attempts` are still what the Dispatcher saw. If nothing was updated, another run has the case and this one stops. Because the try is counted here, every start counts, including resumes and crashes.
 
@@ -328,22 +236,9 @@ UiPath stops every later row with "Tenancy already processed", whatever happened
 
 The Performer asks the adapter who is liable on the account now, and from what date. `landlordLiable` is true when that party's name is in the `landlordNames` setting.
 
-```mermaid
-flowchart TD
-    A[Who is liable in RBIS now?] --> T{Which change?}
-    T -- move-in --> L1{Landlord liable?}
-    L1 -- yes --> OK[Pass]
-    L1 -- no --> D1
-    T -- move-out --> L2{Landlord liable?}
-    L2 -- no --> LV{Leaver is one of the<br/>liable people?}
-    LV -- yes --> OK
-    LV -- no --> R0[LEAVER_NOT_LIABLE]
-    L2 -- yes --> D1{RBIS has a start date<br/>for the current liability?}
-    D1 -- no --> R1[NO_START_DATE]
-    D1 -- yes --> D2{That start date equals the row's<br/>start date for a move-in,<br/>end date for a move-out?}
-    D2 -- yes --> R2[ACCOUNT_ALREADY_PROCESSED]
-    D2 -- no --> R3[CHECK_DATES]
-```
+![Check 4 in detail](../diagrams/design-check-4-in-detail.png)
+
+<!-- Diagram source: ../diagrams/design-check-4-in-detail.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Situation | Result | Meaning |
 | --- | --- | --- |
@@ -471,19 +366,9 @@ One row.
 
 ### Statuses
 
-```mermaid
-stateDiagram-v2
-    [*] --> new: Dispatcher records the case
-    new --> in_progress: Performer claims it
-    in_progress --> updated: checks pass, RBIS changed
-    in_progress --> referred: a check fails, or RBIS refuses a step
-    in_progress --> duplicate: joint row, lead row updated RBIS
-    in_progress --> failed: technical error
-    failed --> in_progress: automatic retry, while tries remain
-    referred --> new: the row is sent again
-    updated --> [*]
-    duplicate --> [*]
-```
+![Statuses](../diagrams/design-statuses.png)
+
+<!-- Diagram source: ../diagrams/design-statuses.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Status | Meaning | Who acts |
 | --- | --- | --- |
@@ -698,7 +583,7 @@ All tests use made-up data in `test-data/`. Each scenario names the flowchart pa
 8. Test runner, so the full suite runs with one command.
 9. Export workflows, update the docs, write the testing guide.
 
-Every workflow is checked with the n8n-mcp validator before it is saved.
+Every workflow is validated before it is saved.
 
 ## For your approval
 

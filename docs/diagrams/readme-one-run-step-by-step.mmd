@@ -1,0 +1,13 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 520
+---
+flowchart TB
+    A(["A spreadsheet arrives, or the 15-minute timer fires"]) --> B
+    B["<b>1 · Start</b><br/>wait a minute so a new file is fully copied<br/>load Settings · take the lock so only one run works at a time"]
+    B --> C["<b>2 · Take in each file</b> · <i>Dispatcher: take in a file</i><br/>check the layout · record one case per new row<br/>archive the file, or reject it and email staff"]
+    C --> D["<b>3a · Close stuck cases</b><br/>a case interrupted with all 3 tries used is closed as failed and reported"]
+    D --> E["<b>3b · Run each waiting case</b> · <i>Performer</i><br/>oldest first, move-outs before move-ins<br/>5 safety checks, then update RBIS or refer to staff"]
+    E --> F["<b>3c · Report each finished spreadsheet</b> · <i>Dispatcher: report a batch</i><br/>worklist of cases for staff · counts-only summary email"]
+    F --> G(["<b>3d · Release the lock</b>"])

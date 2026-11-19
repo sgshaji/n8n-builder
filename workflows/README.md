@@ -53,4 +53,4 @@ The Performer has no such places.
 - **No secrets in exports.** Credentials are stored in n8n and referenced by name. Check a diff before committing.
 - **No real data in exports.** Pinned test data must be made up.
 
-How to import and export workflows is covered in [Run n8n locally with Docker](../docs/setup/01-run-n8n-locally.md#importing-and-exporting-workflows).
+How to import and export workflows is covered in [Set up HARSLL on your computer](../docs/setup/01-run-n8n-locally.md#importing-and-exporting-workflows).

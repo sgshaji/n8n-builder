@@ -1,0 +1,17 @@
+flowchart LR
+    T[When called by the Performer] --> TR[Tidy the request] --> V{Request valid?}
+    V -- no --> RF[Answer: request refused]
+    V -- yes --> R[Read the account from RBIS]
+    R -- no answer --> UR[Answer: RBIS could not be reached]
+    R --> RA{Read answered?}
+    RA -- not 200 --> RFL[Answer: read failed]
+    RA -- 200 --> RD{RBIS answer readable?}
+    RD -- no --> NU[Answer: RBIS answer not understood]
+    RD -- yes --> W{Which operation?}
+    W -- reads --> AR[Answer: findAccount / getAccount / canTerminate]
+    W -- writes --> AD{op: change already in RBIS?}
+    AD -- yes --> AL[Answer: already done]
+    AD -- no --> WR[Write to RBIS]
+    WR -- no answer --> UR
+    WR --> WRR[Answer: write result]
+    RF & UR & RFL & NU & AR & AL & WRR --> OUT[Adapter answer]

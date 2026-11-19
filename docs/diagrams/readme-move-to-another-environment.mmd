@@ -1,0 +1,14 @@
+---
+config:
+  flowchart:
+    wrappingWidth: 560
+---
+flowchart TB
+    A["<b>1 · The administrator prepares the target n8n</b><br/>allows the two file nodes · four folders · time zone · mail login · an API key"]
+    B["<b>2 · Put HARSLL on the installer's computer</b><br/>git clone at the version to install, or unzip the install kit · Node.js 20 or later"]
+    C["<b>3 · Describe the environment</b><br/>env file: the n8n address and API key · settings file: folders, emails, RBIS address"]
+    D["<b>4 · Dry run</b><br/>the set-up script checks everything and shows its plan; nothing changes"]
+    E["<b>5 · Install</b><br/>3 tables and 6 workflows created · Settings filled in · all published except the Dispatcher"]
+    F["<b>6 · Check and test</b><br/>a test spreadsheet against a test RBIS, never the live one"]
+    G(["<b>7 · Go live</b> · publish the Dispatcher · revoke the API key"])
+    A --> B --> C --> D --> E --> F --> G

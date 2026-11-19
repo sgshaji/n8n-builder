@@ -1,0 +1,7 @@
+flowchart LR
+    H["<b>Housing team</b><br/>records tenancies<br/>starting and ending"] --> X[/"Spreadsheet of<br/>tenancy changes"/]
+    X --> HS["<b>HARSLL</b><br/>in n8n<br/><br/>5 safety checks<br/>on every change"]
+    HS -->|"all checks pass"| R[("<b>RBIS</b><br/>council tax<br/>account updated")]
+    HS -->|"anything uncertain"| W[/"<b>Worklist</b><br/>case and reason"/]
+    HS -->|"every spreadsheet"| E[/"<b>Summary email</b><br/>counts only"/]
+    W --> S["<b>Staff</b><br/>check and finish<br/>by hand"]

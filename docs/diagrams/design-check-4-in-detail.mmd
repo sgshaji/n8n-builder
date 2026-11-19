@@ -1,0 +1,14 @@
+flowchart TD
+    A[Who is liable in RBIS now?] --> T{Which change?}
+    T -- move-in --> L1{Landlord liable?}
+    L1 -- yes --> OK[Pass]
+    L1 -- no --> D1
+    T -- move-out --> L2{Landlord liable?}
+    L2 -- no --> LV{Leaver is one of the<br/>liable people?}
+    LV -- yes --> OK
+    LV -- no --> R0[LEAVER_NOT_LIABLE]
+    L2 -- yes --> D1{RBIS has a start date<br/>for the current liability?}
+    D1 -- no --> R1[NO_START_DATE]
+    D1 -- yes --> D2{That start date equals the row's<br/>start date for a move-in,<br/>end date for a move-out?}
+    D2 -- yes --> R2[ACCOUNT_ALREADY_PROCESSED]
+    D2 -- no --> R3[CHECK_DATES]

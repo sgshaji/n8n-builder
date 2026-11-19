@@ -1,0 +1,112 @@
+<mxfile host="app.diagrams.net" agent="n8n-builder" version="24.0.0">
+  <diagram id="harsll-six-workflows" name="The six workflows">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="&lt;b&gt;HARSLL: the six workflows&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontColor=#1F3A5F;" vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="600" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sheet" value="A spreadsheet arrives&lt;br&gt;in the input folder" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;size=0.18;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=1.5;fontSize=12;fontColor=#3E2723;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="80" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="timer" value="Every 15 minutes" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=1.5;fontSize=12;fontColor=#3E2723;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="88" width="180" height="54" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n8n" value="&lt;b&gt;n8n&lt;/b&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FAFAFC;strokeColor=#EA4B71;strokeWidth=2;dashed=1;dashPattern=8 4;verticalAlign=top;align=left;spacingLeft=14;spacingTop=6;fontSize=16;fontColor=#EA4B71;" vertex="1" parent="1">
+          <mxGeometry x="50" y="190" width="1060" height="490" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dispatcher" value="&lt;b style=&quot;font-size:15px&quot;&gt;Dispatcher&lt;/b&gt;&lt;br&gt;runs the whole job,&lt;br&gt;one run at a time" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#1F3A5F;strokeColor=none;fontColor=#FFFFFF;fontSize=12;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="230" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="settings" value="&lt;b style=&quot;font-size:14px&quot;&gt;Settings&lt;/b&gt;&lt;br&gt;every adjustable value" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#616161;strokeWidth=1.5;fontSize=12;fontColor=#212121;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="85" y="390" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="takein" value="&lt;b style=&quot;font-size:14px&quot;&gt;Dispatcher: take in a file&lt;/b&gt;&lt;br&gt;spreadsheet → cases" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;fontSize=12;fontColor=#0D2A4A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="345" y="390" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="performer" value="&lt;b style=&quot;font-size:14px&quot;&gt;Performer&lt;/b&gt;&lt;br&gt;5 safety checks,&lt;br&gt;then update or refer" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=12;fontColor=#1B3A1D;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="605" y="390" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="report" value="&lt;b style=&quot;font-size:14px&quot;&gt;Dispatcher: report a batch&lt;/b&gt;&lt;br&gt;summary and worklist" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;fontSize=12;fontColor=#0D2A4A;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="865" y="390" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="adapter" value="&lt;b style=&quot;font-size:14px&quot;&gt;Performer: RBIS adapter&lt;/b&gt;&lt;br&gt;the only route to RBIS" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;strokeWidth=1.5;fontSize=12;fontColor=#311B3F;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="605" y="550" width="210" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rbis" value="&lt;b&gt;RBIS&lt;/b&gt;&lt;br&gt;(pretend, for now)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#ECEFF1;strokeColor=#455A64;strokeWidth=1.5;fontSize=12;fontColor=#263238;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="730" width="120" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="email" value="Summary email&lt;br&gt;(counts only)" style="shape=parallelogram;perimeter=parallelogramPerimeter;fixedSize=1;size=16;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=1.5;fontSize=12;fontColor=#3E2723;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="750" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="worklist" value="Worklist for staff" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;size=0.18;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=1.5;fontSize=12;fontColor=#3E2723;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="745" width="170" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-sheet" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;entryX=0.25;entryY=0;exitX=0.5;exitY=0.9;exitDx=0;exitDy=0;" edge="1" parent="1" source="sheet" target="dispatcher">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-timer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;entryX=0.75;entryY=0;exitX=0.5;exitY=1;" edge="1" parent="1" source="timer" target="dispatcher">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="1. once per run" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.2;exitY=1;entryX=0.5;entryY=0;fontSize=11;fontColor=#37474F;labelBackgroundColor=#FAFAFC;" edge="1" parent="1" source="dispatcher" target="settings">
+          <mxGeometry x="0.75" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="2. each file" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.4;exitY=1;entryX=0.5;entryY=0;fontSize=11;fontColor=#37474F;labelBackgroundColor=#FAFAFC;" edge="1" parent="1" source="dispatcher" target="takein">
+          <mxGeometry x="0.6" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="3. each case" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.6;exitY=1;entryX=0.5;entryY=0;fontSize=11;fontColor=#37474F;labelBackgroundColor=#FAFAFC;" edge="1" parent="1" source="dispatcher" target="performer">
+          <mxGeometry x="0.6" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="4. each finished batch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.8;exitY=1;entryX=0.5;entryY=0;fontSize=11;fontColor=#37474F;labelBackgroundColor=#FAFAFC;" edge="1" parent="1" source="dispatcher" target="report">
+          <mxGeometry x="0.75" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e5" value="each RBIS step" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=11;fontColor=#37474F;labelBackgroundColor=#FAFAFC;" edge="1" parent="1" source="performer" target="adapter">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="reads and updates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6A1B9A;strokeWidth=2;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;fontColor=#6A1B9A;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="adapter" target="rbis">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="report" target="email">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#455A64;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="report" target="worklist">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="key" value="&lt;b&gt;Key&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#37474F;" vertex="1" parent="1">
+          <mxGeometry x="60" y="720" width="100" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="k1" value="" style="rounded=1;arcSize=20;html=1;fillColor=#FFF3E0;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="60" y="752" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="k1t" value="What goes in and comes out" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#37474F;" vertex="1" parent="1">
+          <mxGeometry x="94" y="748" width="220" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="k2" value="" style="rounded=1;arcSize=20;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="782" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="k2t" value="A workflow in n8n (colour by job)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#37474F;" vertex="1" parent="1">
+          <mxGeometry x="94" y="778" width="220" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="k3" value="" style="rounded=1;arcSize=20;html=1;fillColor=#ECEFF1;strokeColor=#455A64;" vertex="1" parent="1">
+          <mxGeometry x="60" y="812" width="26" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="k3t" value="Another system" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#37474F;" vertex="1" parent="1">
+          <mxGeometry x="94" y="808" width="220" height="24" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

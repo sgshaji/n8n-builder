@@ -1,0 +1,7 @@
+flowchart LR
+    R[Reset: pretend RBIS,<br/>tables, folders, mailbox] --> S[Set up: failures<br/>on purpose, accounts]
+    S --> D[Drop the group's<br/>spreadsheets]
+    D --> W[Wait for the<br/>Dispatcher to finish]
+    W --> N[Run now, if the group<br/>needs retries]
+    N --> C[Compare: cases, RBIS changes,<br/>folders, emails, worklist]
+    C --> P[PASS or FAIL<br/>per scenario]

@@ -18,7 +18,7 @@
 | Code nodes | Only where the design allows or no native node fits. Notes start with `Why Code:` |
 | Node names | Plain English, saying what the step does: "Check 1: row usable?", "Refer case", not "IF1" |
 | Workflow settings | `executionOrder: v1`, `timezone: Europe/London`, `saveDataSuccessExecution: none`, `saveDataErrorExecution: all`, `saveManualExecutions: false`, `saveExecutionProgress: false` |
-| Validation | Validate every workflow with the n8n-mcp validator before saving, and fix errors |
+| Validation | Validate every workflow before saving, and fix errors |
 | **Silent expression errors** | In n8n 2.48.5 an expression that hits an ordinary JavaScript error (bad JSON, a property of `null`) does **not** stop the node: the value becomes `null`. Never rely on an expression failing to stop a dangerous path. Parse JSON only in Code nodes (they do stop), and check other values explicitly, with the cautious branch as the fallback |
 
 ## Settings

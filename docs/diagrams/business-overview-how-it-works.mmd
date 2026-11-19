@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph P1["Part 1 · Dispatcher: prepares the work; never changes an account"]
+        direction LR
+        A1[Changes received<br/>spreadsheet of moves] --> A2[Cases created<br/>one per change] --> A3[Files archived<br/>not read twice] --> A4[Summary emailed<br/>to the team]
+    end
+    A2 --> Q[(Cases wait in a to-do list)]
+    subgraph P2["Part 2 · Performer: checks each case, then updates the account or refers it"]
+        B1[Takes a case<br/>one at a time] --> B2[5 safety checks<br/>applied in order]
+        B2 -- all pass --> B3[Account updated]
+        B2 -- a check fails --> B4[Referred to staff<br/>account left as it was]
+        B3 -- next case --> B1
+        B4 -- next case --> B1
+    end
+    Q --> B1

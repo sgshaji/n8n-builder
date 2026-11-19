@@ -962,7 +962,7 @@ async function main() {
   if (opts.dispatcherName !== undefined) profile.dispatcherName = opts.dispatcherName;
   const env = readEnv();
   if (!env.N8N_API_KEY) {
-    console.error("N8N_API_KEY is missing or empty in .env. See docs/setup/02-connect-mcp-servers.md.");
+    console.error("N8N_API_KEY is missing or empty in .env. See docs/setup/01-run-n8n-locally.md, step 5.");
     process.exit(2);
   }
   const ctx = {

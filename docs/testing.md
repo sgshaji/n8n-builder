@@ -26,15 +26,9 @@ After a run, the tests compare the expected and the actual results in five place
 
 The scenarios run in **groups**. Most scenarios share one main spreadsheet, because each uses its own account and cannot disturb the others. Scenarios that need their own timing have a group of their own: retries after a failure, files dropped twice, a file still being copied, two runs at the same moment, and n8n being stopped.
 
-```mermaid
-flowchart LR
-    R[Reset: pretend RBIS,<br/>tables, folders, mailbox] --> S[Set up: failures<br/>on purpose, accounts]
-    S --> D[Drop the group's<br/>spreadsheets]
-    D --> W[Wait for the<br/>Dispatcher to finish]
-    W --> N[Run now, if the group<br/>needs retries]
-    N --> C[Compare: cases, RBIS changes,<br/>folders, emails, worklist]
-    C --> P[PASS or FAIL<br/>per scenario]
-```
+![What the tests cover](diagrams/testing-what-the-tests-cover.png)
+
+<!-- Diagram source: diagrams/testing-what-the-tests-cover.mmd. Edit it, then redraw the image: see docs/diagrams/README.md -->
 
 | Group | Scenarios | What it tests |
 | --- | --- | --- |
@@ -86,8 +80,6 @@ Everything is plain Node.js with no extra packages.
 **`--only`** runs the whole group a scenario belongs to, because the scenarios of a group share their files, but it reports only the scenarios you asked for. `--only 2` therefore takes as long as the main group.
 
 **Scenario 36** stops the n8n container, drops a file, and starts n8n again. The Dispatcher's 15-minute timer then has to find the file. It runs only with `--include-slow`, and only with the production profile, because stopping n8n interrupts anyone else using it.
-
-**After scenario 36, reconnect the n8n-mcp server** in Claude Code (`/mcp`, then reconnect `n8n-mcp`). It shares n8n's network, so an n8n restart cuts it off.
 
 ### Other options
 
