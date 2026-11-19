@@ -39,6 +39,7 @@ The three build tracks met situations this design did not cover, or covered loos
 | B14 | **Another run takes over the lock** (after it went stale) | This run stops and does not report | Track B |
 | B15 | **A header-only, zero-byte or text file named `.xlsx`** | Rejected at once as "no rows". Only a damaged spreadsheet is "unreadable" and retried | Track B |
 | B16 | **Starting a run for tests** | A third Dispatcher trigger, **Run now** (`POST /webhook/harsll-run-now`), for local testing. Review before production | Interfaces |
+| B17 | **The Performer and Dispatcher were hard to read in the editor** | Laid out in labelled boxes, one per check or stage. Pass-through steps gather the error lines (**Errors: …**) and loop lines (**Next file / case / batch**) so each reaches its target as one line. No behaviour changed; all scenarios re-run. See [reading the workflows](../../workflows/README.md#reading-the-workflows-in-the-editor) | After the build |
 
 **Found during the build, not yet settled.** These are listed in [Open questions](#open-questions).
 

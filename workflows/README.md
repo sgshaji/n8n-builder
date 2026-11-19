@@ -17,6 +17,27 @@ The IDs are those of the original local n8n. On another machine, importing gives
 
 **Publish all four after importing.** A workflow called by another runs only its published version.
 
+## Reading the workflows in the editor
+
+The Dispatcher and Performer are large (90 and 86 steps, including notes), so both are laid out to read left to right, in labelled boxes:
+
+| Workflow | Boxes | Rows inside the boxes |
+| --- | --- | --- |
+| **Performer** | Start, Check 1 … Check 5, Update RBIS, Finish | **Top:** other paths (resume, joint rows, retries). **Middle:** the main path when everything passes. **Lower ("Reason: …"):** a check failed, so the case goes to staff. **Bottom ("Errors: …"):** something went wrong |
+| **Dispatcher** | 1. Start, 2. Take in each file, 3a–3d after intake (close stuck cases, run the Performer on each case, report each batch, release the lock) | Each box reads left to right |
+
+Some steps exist only to keep the lines tidy. They do nothing to the data:
+
+- **Errors: start, Errors: check 1 …** (Performer): each box's error lines meet here, then go to **Describe the error** as one line.
+- **Next file, Next case, Next batch** (Dispatcher): each loop's "go round again" lines meet here, then return to the loop as one line.
+
+**Moving steps can change behaviour.** When one step feeds several branches, n8n runs them **top to bottom by their position on the canvas**. Two places in the Dispatcher depend on this, so they must keep their vertical order:
+
+- after **Link rows of the same tenancy**: record new cases, then reopen earlier cases, then record the batch and archive the file;
+- after **Intake finished**: close stuck cases, then run the cases, then report, then **release the lock last**.
+
+The Performer has no such places.
+
 ## Conventions
 
 - **One file per workflow**, named after the workflow in kebab-case.

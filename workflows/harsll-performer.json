@@ -1,11 +1,6 @@
 {
-  "updatedAt": "2026-11-18T22:27:50.046Z",
-  "createdAt": "2026-11-18T21:04:11.755Z",
   "id": "Bxb1mMwb4TOFuP8j",
   "name": "HARSLL – Performer",
-  "description": null,
-  "active": true,
-  "isArchived": false,
   "nodes": [
     {
       "id": "48741c04-12f1-4eb5-9396-52311536efa9",
@@ -151,7 +146,7 @@
       "onError": "continueRegularOutput",
       "position": [
         780,
-        -570
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -184,7 +179,7 @@
       "executeOnce": true,
       "position": [
         1040,
-        -570
+        -320
       ],
       "parameters": {
         "mode": "raw",
@@ -251,8 +246,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        780,
-        380
+        1040,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -287,8 +282,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        1040,
-        570
+        1300,
+        640
       ],
       "parameters": {
         "mode": "manual",
@@ -314,7 +309,7 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        1040,
+        1300,
         0
       ],
       "parameters": {
@@ -383,7 +378,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        1300,
+        1560,
         0
       ],
       "parameters": {
@@ -419,8 +414,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        1560,
-        -760
+        1820,
+        -320
       ],
       "parameters": {
         "mode": "raw",
@@ -437,7 +432,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        1560,
+        2340,
         0
       ],
       "parameters": {
@@ -473,8 +468,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        1820,
-        380
+        2600,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -500,7 +495,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        1820,
+        2600,
         0
       ],
       "parameters": {
@@ -537,8 +532,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        2080,
-        -190
+        2860,
+        -320
       ],
       "parameters": {
         "conditions": {
@@ -573,8 +568,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        2340,
-        -380
+        3120,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -600,8 +595,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        2080,
-        190
+        2860,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -636,8 +631,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        2340,
-        380
+        3120,
+        600
       ],
       "parameters": {
         "mode": "manual",
@@ -663,7 +658,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        2600,
+        3900,
         0
       ],
       "parameters": {
@@ -701,8 +696,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        2860,
-        -380
+        4160,
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -734,8 +729,8 @@
       "typeVersion": 3.2,
       "onError": "continueErrorOutput",
       "position": [
-        3120,
-        -380
+        4420,
+        -320
       ],
       "parameters": {
         "rules": {
@@ -831,8 +826,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        3380,
-        -570
+        4680,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -859,8 +854,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        3380,
-        -380
+        4680,
+        -490
       ],
       "parameters": {
         "resource": "row",
@@ -969,8 +964,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        3380,
-        -190
+        4680,
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -1032,7 +1027,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        2860,
+        5460,
         0
       ],
       "parameters": {
@@ -1068,8 +1063,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        3120,
-        190
+        5720,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -1094,7 +1089,7 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        3120,
+        5720,
         0
       ],
       "parameters": {
@@ -1111,7 +1106,7 @@
       "typeVersion": 1.4,
       "onError": "continueErrorOutput",
       "position": [
-        3380,
+        5980,
         0
       ],
       "parameters": {
@@ -1143,7 +1138,7 @@
       "typeVersion": 3.2,
       "onError": "continueErrorOutput",
       "position": [
-        3640,
+        6240,
         0
       ],
       "parameters": {
@@ -1215,8 +1210,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        3900,
-        190
+        6500,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -1242,7 +1237,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        3900,
+        6500,
         0
       ],
       "parameters": {
@@ -1279,8 +1274,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        4160,
-        -380
+        6760,
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -1331,8 +1326,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        4420,
-        -380
+        7020,
+        -320
       ],
       "parameters": {
         "mode": "raw",
@@ -1349,7 +1344,7 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        4160,
+        7540,
         0
       ],
       "parameters": {
@@ -1411,7 +1406,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        4420,
+        7800,
         0
       ],
       "parameters": {
@@ -1448,8 +1443,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        4680,
-        -190
+        8060,
+        -320
       ],
       "parameters": {
         "conditions": {
@@ -1485,8 +1480,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        4680,
-        190
+        8060,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -1522,8 +1517,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        4940,
-        190
+        8320,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -1558,8 +1553,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5200,
-        380
+        8580,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -1584,8 +1579,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        4940,
-        570
+        8320,
+        220
       ],
       "parameters": {
         "conditions": {
@@ -1620,8 +1615,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5200,
-        760
+        8580,
+        600
       ],
       "parameters": {
         "mode": "manual",
@@ -1647,8 +1642,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        5200,
-        570
+        8580,
+        220
       ],
       "parameters": {
         "conditions": {
@@ -1683,8 +1678,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5460,
-        570
+        8840,
+        220
       ],
       "parameters": {
         "mode": "manual",
@@ -1709,8 +1704,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5460,
-        760
+        8840,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -1736,8 +1731,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        5720,
-        570
+        9100,
+        220
       ],
       "parameters": {
         "conditions": {
@@ -1772,8 +1767,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5980,
-        380
+        9360,
+        220
       ],
       "parameters": {
         "mode": "raw",
@@ -1789,7 +1784,7 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5200,
+        9880,
         0
       ],
       "parameters": {
@@ -1806,7 +1801,7 @@
       "typeVersion": 1.4,
       "onError": "continueErrorOutput",
       "position": [
-        5460,
+        10140,
         0
       ],
       "parameters": {
@@ -1837,7 +1832,7 @@
       "typeVersion": 3.2,
       "onError": "continueErrorOutput",
       "position": [
-        5720,
+        10400,
         0
       ],
       "parameters": {
@@ -1909,8 +1904,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5980,
-        190
+        10660,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -1935,7 +1930,7 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        5980,
+        10660,
         0
       ],
       "parameters": {
@@ -1953,7 +1948,7 @@
       "typeVersion": 2,
       "onError": "continueErrorOutput",
       "position": [
-        6240,
+        11440,
         0
       ],
       "parameters": {
@@ -1967,7 +1962,7 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        6500,
+        11700,
         0
       ],
       "parameters": {
@@ -2003,7 +1998,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        6760,
+        11960,
         0
       ],
       "parameters": {
@@ -2018,8 +2013,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        7020,
-        190
+        12220,
+        0
       ],
       "parameters": {}
     },
@@ -2030,8 +2025,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        7280,
-        190
+        12480,
+        0
       ],
       "parameters": {
         "mode": "raw",
@@ -2047,8 +2042,8 @@
       "typeVersion": 1.4,
       "onError": "continueErrorOutput",
       "position": [
-        7540,
-        190
+        12740,
+        0
       ],
       "parameters": {
         "source": "database",
@@ -2079,8 +2074,8 @@
       "typeVersion": 3.2,
       "onError": "continueErrorOutput",
       "position": [
-        7800,
-        190
+        13000,
+        0
       ],
       "parameters": {
         "rules": {
@@ -2153,8 +2148,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        8060,
-        0
+        13260,
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -2206,8 +2201,8 @@
       "typeVersion": 3.4,
       "onError": "continueErrorOutput",
       "position": [
-        8060,
-        380
+        13260,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -2232,8 +2227,8 @@
       "typeVersion": 2.2,
       "onError": "continueErrorOutput",
       "position": [
-        8320,
-        380
+        13520,
+        440
       ],
       "parameters": {
         "conditions": {
@@ -2270,8 +2265,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        7800,
-        -380
+        12220,
+        -320
       ],
       "parameters": {
         "resource": "row",
@@ -2379,8 +2374,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        8580,
-        760
+        14300,
+        440
       ],
       "parameters": {
         "mode": "manual",
@@ -2407,8 +2402,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        8840,
-        760
+        14560,
+        440
       ],
       "parameters": {
         "resource": "row",
@@ -2442,8 +2437,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        9100,
-        760
+        14820,
+        440
       ],
       "parameters": {
         "resource": "row",
@@ -2551,8 +2546,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        8580,
-        1330
+        14300,
+        860
       ],
       "parameters": {
         "mode": "manual",
@@ -2579,8 +2574,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        8840,
-        1330
+        14560,
+        860
       ],
       "parameters": {
         "resource": "row",
@@ -2614,8 +2609,8 @@
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
       "position": [
-        9100,
-        1330
+        14820,
+        860
       ],
       "parameters": {
         "resource": "row",
@@ -2723,7 +2718,7 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        9620,
+        15340,
         0
       ],
       "parameters": {
@@ -2741,14 +2736,242 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        9620,
-        1520
+        15340,
+        1060
       ],
       "parameters": {
         "mode": "raw",
         "jsonOutput": "={{ JSON.stringify({ caseId: $('When called by the Dispatcher').first().json.caseId ?? null, caseKey: '', claimed: true, status: 'failed', reasonCode: 'RBIS_ERROR', outcome: '', urgent: false }) }}",
         "includeOtherFields": false,
         "options": {}
+      }
+    },
+    {
+      "id": "05f8c66a-03f3-42c7-bf07-6b5e0e41647a",
+      "name": "Errors: start",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8f0a58c7-e984-43bd-9337-abbd9b574e20",
+      "name": "Errors: check 1",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3380,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fb5e96cb-730f-4d55-bff2-5cc8eac1117d",
+      "name": "Errors: check 2",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4940,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4364c2da-7c7e-401d-989e-a99d2ec45989",
+      "name": "Errors: check 3",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7020,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ad263dab-783a-4913-8609-ca1834a998e2",
+      "name": "Errors: check 4",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        9360,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ba6927cc-1614-416e-a3c3-96cda26ddea5",
+      "name": "Errors: check 5",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        10920,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "67883d5e-ecce-41db-8b7d-3d5de154c9ce",
+      "name": "Errors: update RBIS",
+      "notes": "Collects this section's error lines so they reach \"Describe the error\" as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        13780,
+        860
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "33b69551-6420-45ee-b383-d1168061cda8",
+      "name": "Note: Start: claim the case",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -740
+      ],
+      "parameters": {
+        "content": "## Start: claim the case\nClaims the case so no other run works on it, reads it, and checks the row and settings can be used. A case already part-done in RBIS carries on from its recorded steps.",
+        "width": 2060,
+        "height": 1800,
+        "color": 7
+      }
+    },
+    {
+      "id": "d3cb96b6-a1d3-45ea-8e5d-23b0b21170d3",
+      "name": "Note: Check 1: is the change complete and allowed?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2270,
+        -740
+      ],
+      "parameters": {
+        "content": "## Check 1: is the change complete and allowed?\nDates must be real and in order. Deaths go to staff unless the setting says to treat them as move-outs. The change reason must be one HARSLL handles.",
+        "width": 1280,
+        "height": 1800,
+        "color": 4
+      }
+    },
+    {
+      "id": "84454dec-d6ac-4859-91f8-e6af2fd224be",
+      "name": "Note: Check 2: has it already been done?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3830,
+        -740
+      ],
+      "parameters": {
+        "content": "## Check 2: has it already been done?\nFor joint tenants only the lead row changes RBIS. A second row follows what the lead row did: duplicate, wait for a later run, or refer.",
+        "width": 1280,
+        "height": 1800,
+        "color": 4
+      }
+    },
+    {
+      "id": "05a24576-9a73-4179-9366-0859761f73fc",
+      "name": "Note: Check 3: can the account be found?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5390,
+        -740
+      ],
+      "parameters": {
+        "content": "## Check 3: can the account be found?\nAsks RBIS for the account. On a retry, notices if an earlier try already made the first change, and carries on from there.",
+        "width": 1800,
+        "height": 1800,
+        "color": 4
+      }
+    },
+    {
+      "id": "07a769c9-63e8-49d1-b6de-907dfbb7dd95",
+      "name": "Note: Check 4: do RBIS and the housing record agree?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        7470,
+        -740
+      ],
+      "parameters": {
+        "content": "## Check 4: do RBIS and the housing record agree?\nWho is liable now? Moving in expects the landlord; moving out expects the leaver. A matching start date means the account was already updated.",
+        "width": 2060,
+        "height": 1800,
+        "color": 4
+      }
+    },
+    {
+      "id": "c625114a-3920-42f7-8eb3-90fcf9908363",
+      "name": "Note: Check 5: will RBIS allow the change?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        9810,
+        -740
+      ],
+      "parameters": {
+        "content": "## Check 5: will RBIS allow the change?\nAsks RBIS whether the liability can be ended. If it can, the full update is planned.",
+        "width": 1280,
+        "height": 1800,
+        "color": 4
+      }
+    },
+    {
+      "id": "23561202-a843-40b3-8ff0-eec0a4a862b6",
+      "name": "Note: Update RBIS, one step at a time",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        11370,
+        -740
+      ],
+      "parameters": {
+        "content": "## Update RBIS, one step at a time\nPlans the RBIS steps, then makes them one by one through the RBIS adapter, recording each step so a retry never repeats one.",
+        "width": 2580,
+        "height": 1800,
+        "color": 6
+      }
+    },
+    {
+      "id": "0eb52ce7-cc8e-4d28-901e-152a6e4fae1a",
+      "name": "Note: Finish: record the outcome",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        14230,
+        -740
+      ],
+      "parameters": {
+        "content": "## Finish: record the outcome\nUpdated, referred to staff, or failed. Every path ends by returning one result to the Dispatcher.",
+        "width": 1280,
+        "height": 1960,
+        "color": 5
+      }
+    },
+    {
+      "id": "65b2ee7c-fdad-45b7-b89d-9f31e9ec8a94",
+      "name": "Note: how to read this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -1070
+      ],
+      "parameters": {
+        "width": 1400,
+        "height": 290,
+        "color": 1,
+        "content": "## HARSLL – Performer: one case, five checks\nRuns once per case, called by the Dispatcher. Reads left to right.\n\n- **Top row:** other paths (resume, joint rows, retries)\n- **Middle row:** the main path when everything passes\n- **Lower row (Reason: …):** a check failed, so the case goes to staff\n- **Bottom row (Errors: …):** something went wrong; each section's errors are collected and the case is marked failed"
       }
     }
   ],
@@ -2815,7 +3038,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2840,7 +3063,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2851,14 +3074,14 @@
       "main": [
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2876,7 +3099,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2901,7 +3124,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2919,7 +3142,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: start",
             "type": "main",
             "index": 0
           }
@@ -2944,7 +3167,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -2969,7 +3192,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -2994,7 +3217,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -3019,7 +3242,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -3044,7 +3267,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -3062,7 +3285,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -3101,7 +3324,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -3126,7 +3349,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3144,7 +3367,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3162,7 +3385,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3173,7 +3396,7 @@
       "main": [
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3194,7 +3417,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3219,7 +3442,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3237,7 +3460,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3255,7 +3478,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3273,7 +3496,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3298,7 +3521,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3323,7 +3546,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3348,7 +3571,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3373,7 +3596,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3398,7 +3621,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3423,7 +3646,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3441,7 +3664,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3466,7 +3689,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3484,7 +3707,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3502,7 +3725,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -3520,7 +3743,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -3531,7 +3754,7 @@
       "main": [
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -3552,7 +3775,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -3570,7 +3793,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -3588,7 +3811,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3613,7 +3836,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3660,7 +3883,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3678,7 +3901,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3696,7 +3919,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3710,7 +3933,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3728,7 +3951,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3746,7 +3969,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3764,14 +3987,14 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -3789,7 +4012,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -3807,7 +4030,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -3825,7 +4048,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 1",
             "type": "main",
             "index": 0
           }
@@ -3843,7 +4066,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -3861,7 +4084,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3879,7 +4102,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 3",
             "type": "main",
             "index": 0
           }
@@ -3897,7 +4120,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3915,7 +4138,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3933,7 +4156,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 4",
             "type": "main",
             "index": 0
           }
@@ -3951,7 +4174,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 5",
             "type": "main",
             "index": 0
           }
@@ -4070,7 +4293,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: update RBIS",
             "type": "main",
             "index": 0
           }
@@ -4088,7 +4311,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -4106,7 +4329,7 @@
         ],
         [
           {
-            "node": "Describe the error",
+            "node": "Errors: check 2",
             "type": "main",
             "index": 0
           }
@@ -4124,6 +4347,83 @@
           }
         ]
       ]
+    },
+    "Errors: start": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: check 1": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: check 2": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: check 3": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: check 4": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: check 5": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Errors: update RBIS": {
+      "main": [
+        [
+          {
+            "node": "Describe the error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -4135,18 +4435,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "none"
   },
-  "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": null,
-  "versionId": "3dce7427-d548-4138-8412-4230ca61e8bc",
-  "activeVersionId": "3dce7427-d548-4138-8412-4230ca61e8bc",
-  "versionCounter": 5,
-  "triggerCount": 0,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "versionMetadata": {
-    "name": null,
-    "description": null
-  }
+  "versionId": "aee0e2e5-4440-4a63-853c-fca1c3440377"
 }

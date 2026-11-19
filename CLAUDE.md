@@ -34,6 +34,7 @@ Rebuilding the HARSLL process (two UiPath robots: Dispatcher and Performer) as n
 - Tests: `node --test scripts/ mock-rbis/` (unit), then `node scripts/run-tests.mjs` (all 37 scenarios end to end, ~11 min; `--include-slow` adds scenario 36). Guide: `docs/testing.md`. Never change an expected result just to match a workflow: settle it from the design.
 - A workflow called by another (Execute Sub-workflow) runs **only its published version**: publish it, and after every edit check the published version is current (`n8n_get_workflow` mode `active`).
 - Workflow and table IDs can come from expressions, e.g. `{"__rl": true, "mode": "id", "value": "={{ $json.settings.casesTableId }}"}`. Proven for Execute Sub-workflow and Data table nodes.
+- n8n runs sibling branches top to bottom by canvas position, so moving nodes can change behaviour. Keep the Dispatcher's two fan-outs in order and keep the layout conventions (see `workflows/README.md`).
 - The handovers between workflows (settings, tables, keys, Performer and adapter input/output) are fixed in `docs/design/interfaces.md`.
 - Inside n8n, `data/` is `/files` (the only folder workflows may touch) and `workflows/` is `/workflows`.
 - Local File Trigger and Execute Command are re-enabled via `NODES_EXCLUDE=[]` for local use only.

@@ -1,11 +1,6 @@
 {
-  "updatedAt": "2026-11-18T22:27:50.375Z",
-  "createdAt": "2026-11-18T21:05:19.186Z",
   "id": "ixS5Wg5EN0IZwAjX",
   "name": "HARSLL – Dispatcher",
-  "description": null,
-  "active": true,
-  "isArchived": false,
   "nodes": [
     {
       "id": "d2d17062-29af-4576-a24e-9f9570ee89d7",
@@ -15,7 +10,7 @@
       "typeVersion": 1,
       "position": [
         0,
-        0
+        -200
       ],
       "parameters": {
         "triggerOn": "folder",
@@ -37,7 +32,7 @@
       "typeVersion": 1.2,
       "position": [
         0,
-        200
+        0
       ],
       "parameters": {
         "rule": {
@@ -59,7 +54,7 @@
       "typeVersion": 2.2,
       "position": [
         0,
-        400
+        200
       ],
       "parameters": {
         "httpMethod": "POST",
@@ -87,7 +82,7 @@
       "executeOnce": true,
       "position": [
         260,
-        200
+        0
       ],
       "parameters": {
         "source": "database",
@@ -117,8 +112,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        390,
-        200
+        520,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -151,8 +146,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        520,
-        400
+        780,
+        200
       ],
       "parameters": {
         "errorType": "errorMessage",
@@ -165,8 +160,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        650,
-        200
+        780,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -200,8 +195,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        780,
-        60
+        1040,
+        -200
       ],
       "parameters": {
         "resume": "timeInterval",
@@ -219,8 +214,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        1040,
-        200
+        1300,
+        0
       ],
       "parameters": {
         "resource": "row",
@@ -289,8 +284,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1300,
-        200
+        1560,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -324,8 +319,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1560,
-        420
+        1820,
+        200
       ],
       "parameters": {}
     },
@@ -339,8 +334,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        1560,
-        200
+        1820,
+        0
       ],
       "parameters": {
         "command": "=cd '{{ $('Load settings').first().json.settings.inputFolder }}' && find . -maxdepth 1 -type f -name '*.xlsx' ! -name '~$*' -mmin +0 -print0"
@@ -353,8 +348,8 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        1820,
-        200
+        2080,
+        0
       ],
       "parameters": {
         "mode": "raw",
@@ -368,8 +363,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2080,
-        200
+        2340,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -402,8 +397,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        2340,
-        100
+        2600,
+        0
       ],
       "parameters": {
         "fieldToSplitOut": "fileNames",
@@ -419,8 +414,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2600,
-        100
+        2860,
+        0
       ],
       "parameters": {
         "batchSize": 1,
@@ -434,7 +429,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2860,
+        3120,
         -600
       ],
       "parameters": {
@@ -450,7 +445,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3120,
+        3380,
         -600
       ],
       "parameters": {
@@ -487,8 +482,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        3380,
-        -1000
+        3640,
+        -900
       ],
       "parameters": {
         "resource": "row",
@@ -522,8 +517,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3640,
-        -1000
+        3900,
+        -900
       ],
       "parameters": {
         "conditions": {
@@ -559,8 +554,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        3900,
-        -1100
+        4160,
+        -900
       ],
       "parameters": {
         "resource": "email",
@@ -590,8 +585,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        4160,
-        -1150
+        4420,
+        -900
       ],
       "parameters": {
         "resource": "row",
@@ -689,8 +684,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        3380,
-        -400
+        3640,
+        -600
       ],
       "parameters": {
         "resource": "row",
@@ -728,8 +723,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        3640,
-        -400
+        3900,
+        -600
       ],
       "parameters": {
         "operation": "read",
@@ -749,8 +744,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        3900,
-        -400
+        4160,
+        -600
       ],
       "parameters": {
         "operation": "xlsx",
@@ -768,8 +763,8 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        4160,
-        -400
+        4420,
+        -600
       ],
       "parameters": {
         "mode": "raw",
@@ -783,8 +778,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4420,
-        -400
+        4680,
+        -600
       ],
       "parameters": {
         "conditions": {
@@ -818,8 +813,8 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        4680,
-        -750
+        4940,
+        -250
       ],
       "parameters": {
         "mode": "raw",
@@ -833,8 +828,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4940,
-        -750
+        5200,
+        -250
       ],
       "parameters": {
         "conditions": {
@@ -871,8 +866,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        5200,
-        -850
+        5460,
+        -100
       ],
       "parameters": {
         "resource": "row",
@@ -982,8 +977,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4680,
-        -300
+        4940,
+        -600
       ],
       "parameters": {
         "conditions": {
@@ -1017,8 +1012,8 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        4940,
-        -550
+        5200,
+        -400
       ],
       "parameters": {
         "mode": "raw",
@@ -1034,7 +1029,7 @@
       "executeOnce": true,
       "position": [
         5460,
-        -650
+        -250
       ],
       "parameters": {
         "mode": "raw",
@@ -1052,7 +1047,7 @@
       "onError": "continueErrorOutput",
       "position": [
         5720,
-        -650
+        -250
       ],
       "parameters": {
         "command": "=mv '{{ $('Load settings').first().json.settings.inputFolder }}/{{ $('Note file details').first().json.fileName }}' '{{ $('Load settings').first().json.settings.rejectedFolder }}/{{ $('Note the rejection').first().json.batchId }}'"
@@ -1068,7 +1063,7 @@
       "onError": "continueRegularOutput",
       "position": [
         5980,
-        -700
+        -250
       ],
       "parameters": {
         "resource": "row",
@@ -1183,7 +1178,7 @@
       "onError": "continueRegularOutput",
       "position": [
         6240,
-        -700
+        -250
       ],
       "parameters": {
         "resource": "email",
@@ -1211,8 +1206,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4940,
-        -200
+        5200,
+        -600
       ],
       "parameters": {
         "jsCode": "// Why Code: each date can arrive in three forms (date-time text that may be 1 ms early, dd/MM/yyyy text, or an Excel day number) and must be checked as a real date, keeping the original text when it is not one. Set-node expressions would need multi-statement logic for this.\nconst s = $('Load settings').first().json.settings;\nconst file = $('Note file details').first().json;\n\nconst norm = (x) => String(x ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\nconst text = (x) => (x === null || x === undefined ? '' : String(x).trim());\n\n// A real calendar date as yyyy-MM-dd, or null if the parts do not make one (31/02 is not a date).\nfunction realDate(y, m, d) {\n  const dt = DateTime.fromObject({ year: y, month: m, day: d }, { zone: 'utc' });\n  return dt.isValid && dt.year === y && dt.month === m && dt.day === d ? dt.toFormat('yyyy-MM-dd') : null;\n}\n\nfunction tidyDate(v) {\n  if (v === null || v === undefined) return '';\n  if (typeof v === 'number') {\n    // Excel day number: days since 30 Dec 1899. Round to the nearest second, then take the date.\n    if (!Number.isFinite(v) || v < 1 || v >= 2958466) return String(v);\n    const ms = Date.UTC(1899, 11, 30) + Math.round(v * 86400) * 1000;\n    return DateTime.fromMillis(ms, { zone: 'utc' }).toFormat('yyyy-MM-dd');\n  }\n  const t = String(v).trim();\n  if (t === '') return '';\n  let m;\n  // Date-time text, as Extract from File returns real Excel dates (sometimes 1 ms early).\n  if (/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})?$/.test(t)) {\n    const dt = DateTime.fromISO(t, { zone: 'utc' });\n    if (!dt.isValid) return t;\n    return DateTime.fromMillis(Math.round(dt.toMillis() / 1000) * 1000, { zone: 'utc' }).toFormat('yyyy-MM-dd');\n  }\n  // dd/MM/yyyy text (UK order)\n  if ((m = t.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/))) return realDate(+m[3], +m[2], +m[1]) ?? t;\n  // yyyy-MM-dd text\n  if ((m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/))) return realDate(+m[1], +m[2], +m[3]) ?? t;\n  // Anything else is kept as written, so check 1 can refer it.\n  return t;\n}\n\nreturn $('Extract the rows').all().map((item, index) => {\n  const r = item.json;\n  const changeReason = text(r.ChangeReason).toUpperCase();\n  const accountRef = text(r.AccountRef).toUpperCase();\n  const address = text(r.Address);\n  const tenantName = text(r.TenantName);\n  const startDate = tidyDate(r.StartDate);\n  const endDate = tidyDate(r.EndDate);\n  const relevantDate = changeReason === 'TENANCY_START' ? startDate : endDate;\n  return {\n    json: {\n      caseKey: [changeReason, accountRef, norm(address), norm(tenantName), relevantDate].join('|'),\n      tenancyKey: [changeReason, accountRef, norm(address), relevantDate].join('|'),\n      batchId: file.batchId,\n      rowNumber: index + 2,\n      changeReason,\n      accountRef,\n      address,\n      postcode: text(r.Postcode),\n      isFlat: /^flat/i.test(address), // interfaces.md: starts with \"Flat\", ignoring case\n      tenantName,\n      startDate,\n      endDate,\n      relevantDate,\n      forwardingAddress: text(r.ForwardingAddress),\n      contactEmail: text(r.ContactEmail),\n      contactPhone: text(r.ContactPhone),\n      sourceSystem: text(r.SourceSystem),\n    },\n  };\n});\n"
@@ -1225,8 +1220,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5200,
-        -200
+        5460,
+        -600
       ],
       "parameters": {
         "jsCode": "// Why Code: rows of one tenancy are linked wherever they are in the file, which needs all of the file's rows at once (design: \"Rows for the same tenancy\").\nconst rows = $input.all().map((i) => i.json);\n\n// A row whose case key already appeared earlier in this file is the same change for the same\n// person. The design's case-key rule leaves a row alone when its key is already recorded, so\n// the repeat is not recorded a second time.\nconst seen = new Set();\nconst kept = [];\nfor (const r of rows) {\n  if (seen.has(r.caseKey)) continue;\n  seen.add(r.caseKey);\n  kept.push(r);\n}\n\n// Group by tenancy key; the first row of each group is the lead row.\nconst groups = new Map();\nfor (const r of kept) {\n  if (!groups.has(r.tenancyKey)) groups.set(r.tenancyKey, []);\n  groups.get(r.tenancyKey).push(r);\n}\n\nreturn kept.map((r) => {\n  const group = groups.get(r.tenancyKey);\n  const lead = group[0];\n  const isLeadRow = lead === r;\n  return {\n    json: {\n      ...r,\n      isLeadRow,\n      jointTenants: isLeadRow\n        ? JSON.stringify(group.slice(1).map((o) => ({ name: o.tenantName, email: o.contactEmail, phone: o.contactPhone })))\n        : '[]',\n      coveredByCaseKey: isLeadRow ? '' : lead.caseKey,\n    },\n  };\n});\n"
@@ -1239,8 +1234,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        5460,
-        -320
+        5720,
+        -750
       ],
       "parameters": {
         "resource": "row",
@@ -1268,8 +1263,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        5720,
-        -320
+        5980,
+        -750
       ],
       "parameters": {
         "resource": "row",
@@ -1629,8 +1624,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        5460,
-        -160
+        5720,
+        -600
       ],
       "parameters": {
         "resource": "row",
@@ -1659,8 +1654,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        5720,
-        -160
+        5980,
+        -600
       ],
       "parameters": {
         "conditions": {
@@ -1693,8 +1688,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5980,
-        -160
+        6240,
+        -600
       ],
       "parameters": {
         "mode": "raw",
@@ -1708,8 +1703,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6110,
-        -60
+        6500,
+        -600
       ],
       "parameters": {
         "conditions": {
@@ -1742,8 +1737,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        6240,
-        60
+        6760,
+        -450
       ],
       "parameters": {
         "errorType": "errorMessage",
@@ -1757,8 +1752,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        6240,
-        -160
+        6760,
+        -600
       ],
       "parameters": {
         "resource": "row",
@@ -2125,8 +2120,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        5460,
-        0
+        5720,
+        -450
       ],
       "parameters": {
         "resource": "row",
@@ -2240,8 +2235,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        5720,
-        0
+        5980,
+        -450
       ],
       "parameters": {
         "command": "=mv '{{ $('Load settings').first().json.settings.inputFolder }}/{{ $('Note file details').first().json.fileName }}' '{{ $('Load settings').first().json.settings.archiveFolder }}/{{ $('Note file details').first().json.batchId }}'"
@@ -2254,7 +2249,7 @@
       "typeVersion": 1,
       "executeOnce": true,
       "position": [
-        2860,
+        3120,
         500
       ],
       "parameters": {}
@@ -2268,8 +2263,8 @@
       "executeOnce": true,
       "onError": "continueRegularOutput",
       "position": [
-        3120,
-        400
+        3380,
+        330
       ],
       "parameters": {
         "resource": "row",
@@ -2309,8 +2304,8 @@
       "typeVersion": 1.1,
       "onError": "continueRegularOutput",
       "position": [
-        3380,
-        400
+        3640,
+        330
       ],
       "parameters": {
         "resource": "row",
@@ -2416,8 +2411,8 @@
       "typeVersion": 1.1,
       "executeOnce": true,
       "position": [
-        3120,
-        700
+        3380,
+        680
       ],
       "parameters": {
         "resource": "row",
@@ -2457,8 +2452,8 @@
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.2,
       "position": [
-        3380,
-        700
+        3640,
+        680
       ],
       "parameters": {
         "conditions": {
@@ -2491,8 +2486,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3640,
-        700
+        3900,
+        680
       ],
       "parameters": {
         "mode": "manual",
@@ -2517,8 +2512,8 @@
       "type": "n8n-nodes-base.sort",
       "typeVersion": 1,
       "position": [
-        3900,
-        700
+        4160,
+        680
       ],
       "parameters": {
         "type": "simple",
@@ -2551,8 +2546,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        4160,
-        700
+        4420,
+        680
       ],
       "parameters": {
         "batchSize": 1,
@@ -2565,8 +2560,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4420,
-        800
+        4680,
+        680
       ],
       "parameters": {
         "mode": "raw",
@@ -2583,8 +2578,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        4680,
-        800
+        4940,
+        680
       ],
       "parameters": {
         "resource": "row",
@@ -2614,8 +2609,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4940,
-        800
+        5200,
+        680
       ],
       "parameters": {
         "jsCode": "// Why Code: decides whether this case must wait, by comparing its place in the processing order with every other case for the same account, using their statuses as they are now. That needs all of the account's cases at once.\nconst s = $('Load settings').first().json.settings;\nconst me = $('This case').first().json;\nconst rows = $input.all().map((i) => i.json).filter((r) => r && r.id !== undefined);\nconst max = Number(s.maxAttempts);\nconst stuckBefore = $now.minus({ minutes: Number(s.stuckMinutes) }).toMillis();\n\n// Processing order: relevant date, then move-outs before move-ins, then batch, then row (then id, to break ties).\nconst orderKey = (r) => [String(r.relevantDate ?? ''), r.changeReason === 'TENANCY_START' ? 1 : 0, String(r.batchId ?? ''), Number(r.rowNumber) || 0, Number(r.id) || 0];\nconst comesBefore = (a, b) => {\n  const ka = orderKey(a);\n  const kb = orderKey(b);\n  for (let i = 0; i < ka.length; i++) {\n    if (ka[i] < kb[i]) return true;\n    if (ka[i] > kb[i]) return false;\n  }\n  return false;\n};\nconst unfinished = (r) => r.status === 'new' || r.status === 'in_progress' || (r.status === 'failed' && Number(r.attempts) < max);\nconst stuck = (r) => !r.lastAttemptAt || new Date(r.lastAttemptAt).getTime() < stuckBefore;\n\nconst current = rows.find((r) => r.id === me.id);\nif (!current) {\n  return [{ json: { runNow: false, why: 'case no longer found', caseId: me.id } }];\n}\nconst ready =\n  current.status === 'new' ||\n  (current.status === 'failed' && Number(current.attempts) < max) ||\n  (current.status === 'in_progress' && Number(current.attempts) < max && stuck(current));\nconst blocker = rows.find((r) => r.id !== current.id && unfinished(r) && comesBefore(r, current));\n\nreturn [{\n  json: {\n    runNow: ready && !blocker,\n    why: !ready ? `no longer ready (${current.status}, ${current.attempts} tries)` : blocker ? `held: case ${blocker.id} for the same account is unfinished (${blocker.status})` : 'ready',\n    caseId: current.id,\n    expectedStatus: current.status,\n    expectedAttempts: Number(current.attempts) || 0,\n  },\n}];\n"
@@ -2627,8 +2622,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        5200,
-        800
+        5460,
+        680
       ],
       "parameters": {
         "conditions": {
@@ -2662,8 +2657,8 @@
       "typeVersion": 3.4,
       "executeOnce": true,
       "position": [
-        5460,
-        760
+        5720,
+        680
       ],
       "parameters": {
         "mode": "raw",
@@ -2681,8 +2676,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        5720,
-        760
+        5980,
+        680
       ],
       "parameters": {
         "source": "database",
@@ -2714,8 +2709,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        5980,
-        760
+        6240,
+        680
       ],
       "parameters": {
         "resource": "row",
@@ -2776,8 +2771,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6240,
-        760
+        6500,
+        680
       ],
       "parameters": {
         "conditions": {
@@ -2811,8 +2806,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        6500,
-        900
+        6760,
+        820
       ],
       "parameters": {}
     },
@@ -2826,8 +2821,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        3120,
-        1200
+        3380,
+        1150
       ],
       "parameters": {
         "resource": "row",
@@ -2888,8 +2883,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3380,
-        1200
+        3640,
+        1150
       ],
       "parameters": {
         "conditions": {
@@ -2923,8 +2918,8 @@
       "typeVersion": 1.1,
       "executeOnce": true,
       "position": [
-        3640,
-        1200
+        3900,
+        1150
       ],
       "parameters": {
         "resource": "row",
@@ -2957,8 +2952,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        3900,
-        1200
+        4160,
+        1150
       ],
       "parameters": {
         "batchSize": 1,
@@ -2971,8 +2966,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4160,
-        1300
+        4420,
+        1150
       ],
       "parameters": {
         "mode": "raw",
@@ -2989,8 +2984,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        4420,
-        1300
+        4680,
+        1150
       ],
       "parameters": {
         "resource": "row",
@@ -3020,8 +3015,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4680,
-        1300
+        4940,
+        1150
       ],
       "parameters": {
         "jsCode": "// Why Code: one summary needs counts by status, outcome and reason, fixed plain-English wording, and the worklist rows, all worked out from every case in the batch at once. Natively this would take many Summarize, Set and Merge nodes.\nconst s = $('Load settings').first().json.settings;\nconst b = $('This batch').first().json;\nconst cases = $input.all().map((i) => i.json).filter((r) => r && r.id !== undefined);\nconst max = Number(s.maxAttempts);\n\nconst REASON = {\n  DATES_INVALID: 'The dates on the spreadsheet row are wrong or missing',\n  DEATH_REFERRED: 'The tenancy ended because the tenant died',\n  CHANGE_REASON_NOT_VALID: 'The reason for the change is not one the automation handles',\n  SAME_TENANCY_AS_EARLIER_ROW: 'Covered by an earlier row for the same tenancy',\n  EARLIER_ROW_NOT_COMPLETED: 'The earlier row for this tenancy was not completed, so this person was not added',\n  NO_ACCOUNT_REF: 'The row has no account reference',\n  ADDRESS_NOT_FOUND: 'The account could not be found in RBIS',\n  NO_START_DATE: 'RBIS has no start date to compare against',\n  CHECK_DATES: 'The dates in RBIS do not match the spreadsheet',\n  ACCOUNT_ALREADY_PROCESSED: 'RBIS already shows this change',\n  LEAVER_NOT_LIABLE: 'The person leaving is not the liable person in RBIS',\n  NO_OPTION_TO_TERMINATE: 'RBIS does not allow the current liability to be ended',\n  UNABLE_TO_ADD_PARTY: 'A person could not be added to the account',\n  NO_CONTACT_DETAILS: 'Liability started, but there were no contact details to record',\n  RBIS_ERROR: 'RBIS did not respond or returned an error',\n  PROCESSING_STOPPED: 'Processing stopped unexpectedly and the tries ran out',\n};\nconst reasonText = (code) => REASON[code] || (code ? `Other reason (${code})` : 'No reason recorded');\n\nlet stepNames = [];\nconst stepsInWords = (json) => {\n  try { stepNames = JSON.parse(json || '[]'); } catch (e) { return String(json || ''); }\n  if (!Array.isArray(stepNames)) return String(json || '');\n  return stepNames.map((id) => {\n    const [op, who] = String(id).split(/:(.*)/s);\n    switch (op) {\n      case 'endLiability': return 'Ended the current liability';\n      case 'addLiableParty': return `Made ${who || 'a person'} liable`;\n      case 'createDetail': return 'Created the detail record';\n      case 'setContactDetails': return `Saved contact details for ${who || 'a person'}`;\n      case 'setForwardingAddress': return 'Saved the forwarding address';\n      default: return String(id);\n    }\n  }).join('; ');\n};\n\nconst finished = (r) => ['updated', 'referred', 'duplicate'].includes(r.status) || (r.status === 'failed' && Number(r.attempts) >= max);\nconst allFinished = cases.every(finished);\n\nconst count = (f) => cases.filter(f).length;\nconst updated = cases.filter((r) => r.status === 'updated');\nconst referred = cases.filter((r) => r.status === 'referred');\nconst failed = cases.filter((r) => r.status === 'failed');\nconst duplicate = cases.filter((r) => r.status === 'duplicate');\nconst urgentCount = count((r) => r.urgent === true);\nconst plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;\nconst cap = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Other outcome');\n\n// Batch date from the batch ID: yyyy-MM-ddTHH-mm-ss_name\nconst m = String(b.batchId).match(/^(\\d{4}-\\d{2}-\\d{2})T(\\d{2})-(\\d{2})/);\nconst when = m ? `${m[1]} ${m[2]}:${m[3]}` : String(b.batchId);\n\nconst worklistName = String(b.batchId).replace(/\\.xlsx$/i, '') + '_worklist.xlsx';\nconst worklistPath = `${s.reportsFolder}/${worklistName}`;\nconst worklistShown = worklistPath.replace(/^\\/files\\//, '');\n\n// Worklist: referred, updated with a follow-up, failed with no tries left. Urgent first, then row order.\nconst needsPerson = cases\n  .filter((r) => r.status === 'referred' || (r.status === 'updated' && r.reasonCode) || (r.status === 'failed' && Number(r.attempts) >= max))\n  .sort((a, z) => (z.urgent === true) - (a.urgent === true) || (Number(a.rowNumber) || 0) - (Number(z.rowNumber) || 0));\nconst worklistRows = needsPerson.map((r) => {\n  let earlier = '';\n  if (Number(r.submissions) > 1 && r.previousResult) {\n    try {\n      const p = JSON.parse(r.previousResult);\n      earlier = `${p.status}${p.reasonCode ? ' – ' + reasonText(p.reasonCode) : ''}`;\n    } catch (e) { earlier = String(r.previousResult); }\n  }\n  return {\n    'Urgent': r.urgent === true ? 'URGENT – RBIS partly changed' : '',\n    'What happened': r.status === 'referred' ? 'Referred to staff' : r.status === 'updated' ? 'Updated – follow-up needed' : `Failed after ${r.attempts} tries`,\n    'Reason': reasonText(r.reasonCode),\n    'Reason code': r.reasonCode || '',\n    'RBIS changes already made': r.urgent === true ? stepsInWords(r.stepsDone) : '',\n    'Spreadsheet row': r.rowNumber,\n    'Change': r.changeReason,\n    'Account ref': r.accountRef,\n    'Tenant name': r.tenantName,\n    'Address': r.address,\n    'Postcode': r.postcode,\n    'Start date': r.startDate,\n    'End date': r.endDate,\n    'Earlier result (row sent before)': earlier,\n    'Technical detail': r.status === 'failed' ? r.errorDetail || '' : '',\n    'Case ID': r.id,\n  };\n});\n\n// Summary email: counts only, never names or addresses.\nconst lines = [];\nlines.push(`File: ${b.fileName} (archived)`, '');\nif (urgentCount > 0) lines.push(`URGENT – RBIS partly changed, needs a person now: ${urgentCount}`, '');\n\nlines.push(`Updated: ${updated.length}`);\nconst outcomes = [...new Set(updated.map((r) => r.outcome || ''))];\nconst outcomeOrder = ['liability started', 'liability ended, address saved', 'liability ended'];\noutcomes.sort((a, z) => (outcomeOrder.indexOf(a) + 1 || 99) - (outcomeOrder.indexOf(z) + 1 || 99));\nfor (const o of outcomes) {\n  const group = updated.filter((r) => (r.outcome || '') === o);\n  const noContacts = group.filter((r) => r.reasonCode === 'NO_CONTACT_DETAILS').length;\n  const otherFollowUps = group.filter((r) => r.reasonCode && r.reasonCode !== 'NO_CONTACT_DETAILS').length;\n  let note = '';\n  if (noContacts) note += `   (${noContacts} ${noContacts === 1 ? 'needs' : 'need'} contact details added)`;\n  if (otherFollowUps) note += `   (${otherFollowUps} ${otherFollowUps === 1 ? 'needs' : 'need'} a follow-up)`;\n  lines.push(`  ${cap(o)}: ${group.length}${note}`);\n}\nlines.push('');\n\nlines.push(`Referred to staff: ${referred.length}`);\nconst reasons = [...new Set(referred.map((r) => r.reasonCode || ''))];\nreasons.sort((a, z) => referred.filter((r) => (r.reasonCode || '') === z).length - referred.filter((r) => (r.reasonCode || '') === a).length);\nfor (const code of reasons) {\n  const group = referred.filter((r) => (r.reasonCode || '') === code);\n  const urgent = group.filter((r) => r.urgent === true).length;\n  const note = urgent ? (urgent === group.length ? '   (urgent)' : `   (${urgent} urgent)`) : '';\n  lines.push(`  ${reasonText(code)}: ${group.length}${note}`);\n}\nlines.push('');\n\nconst failedUrgent = failed.filter((r) => r.urgent === true).length;\nlines.push(`Failed after ${max} tries: ${failed.length}${failedUrgent ? (failedUrgent === failed.length ? '   (urgent)' : `   (${failedUrgent} urgent)`) : ''}`);\nlines.push(`Covered by an earlier row for the same tenancy: ${duplicate.length}`);\nconst alreadyRecorded = Math.max(0, (Number(b.rowCount) || 0) - cases.length);\nif (alreadyRecorded > 0) lines.push(`Rows already recorded from an earlier file or repeated in this file, left as they were: ${alreadyRecorded}`);\nlines.push('');\nlines.push(worklistRows.length ? `Worklist: ${worklistShown}` : 'Worklist: none needed, nothing for staff to do');\n\nconst subject = `HARSLL batch ${when} – ${plural(cases.length, 'case', 'cases')}: ${updated.length} updated, ${referred.length} referred, ${failed.length} failed, ${duplicate.length} duplicate`;\n\nreturn [{\n  json: {\n    finished: allFinished,\n    unfinishedCount: cases.length - count(finished),\n    subject,\n    text: lines.join('\\n'),\n    hasWorklist: worklistRows.length > 0,\n    worklistPath,\n    worklistName,\n    worklistRows,\n  },\n}];\n"
@@ -3033,8 +3028,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4940,
-        1300
+        5200,
+        1150
       ],
       "parameters": {
         "conditions": {
@@ -3067,8 +3062,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        5200,
-        1250
+        5460,
+        1150
       ],
       "parameters": {
         "conditions": {
@@ -3101,8 +3096,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        5460,
-        1150
+        5720,
+        1000
       ],
       "parameters": {
         "fieldToSplitOut": "worklistRows",
@@ -3116,8 +3111,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.2,
       "position": [
-        5720,
-        1150
+        5980,
+        1000
       ],
       "parameters": {
         "operation": "xlsx",
@@ -3135,8 +3130,8 @@
       "typeVersion": 1.1,
       "onError": "continueErrorOutput",
       "position": [
-        5980,
-        1150
+        6240,
+        1000
       ],
       "parameters": {
         "operation": "write",
@@ -3154,8 +3149,8 @@
       "executeOnce": true,
       "onError": "continueErrorOutput",
       "position": [
-        6240,
-        1300
+        6500,
+        1150
       ],
       "parameters": {
         "resource": "email",
@@ -3185,8 +3180,8 @@
       "alwaysOutputData": true,
       "onError": "continueRegularOutput",
       "position": [
-        6500,
-        1300
+        6760,
+        1150
       ],
       "parameters": {
         "resource": "row",
@@ -3239,8 +3234,8 @@
       "executeOnce": true,
       "onError": "continueRegularOutput",
       "position": [
-        3120,
-        1700
+        3380,
+        1500
       ],
       "parameters": {
         "resource": "row",
@@ -3293,6 +3288,154 @@
           "convertFieldsToString": false
         },
         "options": {}
+      }
+    },
+    {
+      "id": "8f20fa9e-eca8-41fb-af1f-f3a0a89d95b7",
+      "name": "Next file",
+      "notes": "Collects the lines that go back to \"Loop over files\" so they reach it as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7020,
+        -100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5b1a6317-0e81-4247-bde1-1628c60e8dab",
+      "name": "Next case",
+      "notes": "Collects the lines that go back to \"Loop over cases\" so they reach it as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6760,
+        560
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f8eacd5e-e466-4e1e-9532-3f2751e206e9",
+      "name": "Next batch",
+      "notes": "Collects the lines that go back to \"Loop over batches\" so they reach it as one line. Passes items through unchanged.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        7020,
+        1030
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "adf017c5-870d-450d-ba8d-d4be64fa700c",
+      "name": "Note: how to read this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -1400
+      ],
+      "parameters": {
+        "content": "## HARSLL – Dispatcher: from spreadsheet to finished batch\nStarts when a spreadsheet arrives, every 15 minutes, or on Run now. Reads left to right, then top to bottom:\n\n1. **Start:** load settings, take the lock so only one run works at a time, list the spreadsheets ready to read\n2. **Take in each file:** check it, turn each row into a case, archive it (or reject it and tell staff)\n3. **After intake:** close stuck cases, run the Performer on each case, send each finished batch's summary, release the lock",
+        "width": 1500,
+        "height": 300,
+        "color": 1
+      }
+    },
+    {
+      "id": "373e52df-356f-41af-b7f1-c5ee22f1be9b",
+      "name": "Note: start",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -330
+      ],
+      "parameters": {
+        "content": "## 1. Start\nSettings, the lock, and the list of spreadsheets that have stopped changing.",
+        "width": 3100,
+        "height": 660,
+        "color": 7
+      }
+    },
+    {
+      "id": "46e0e552-edea-4a68-b567-6998af3c838a",
+      "name": "Note: intake",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3050,
+        -1050
+      ],
+      "parameters": {
+        "content": "## 2. Take in each file, one at a time\nTop: unsafe file name, ask staff to rename it. Middle: read the rows and record new cases (a referred case may be reopened). Below: file unreadable or wrong layout, move it to rejected and email staff.",
+        "width": 4200,
+        "height": 1050,
+        "color": 4
+      }
+    },
+    {
+      "id": "cdf1a092-1599-45af-8689-67f060e556b1",
+      "name": "Note: stuck cases",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3310,
+        230
+      ],
+      "parameters": {
+        "content": "## 3a. Close stuck cases\nCases with no tries left are closed as failed.",
+        "width": 780,
+        "height": 250,
+        "color": 7
+      }
+    },
+    {
+      "id": "f6b1d5d6-ca5b-4f06-8b32-1d986143275f",
+      "name": "Note: run cases",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3310,
+        500
+      ],
+      "parameters": {
+        "content": "## 3b. Run the Performer on each case\nOldest first. A case waits if an earlier case on the same account is unfinished. The lock is refreshed after every case.",
+        "width": 3940,
+        "height": 500,
+        "color": 5
+      }
+    },
+    {
+      "id": "9798e769-a762-4935-94ae-011a2d2930bb",
+      "name": "Note: report",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3310,
+        990
+      ],
+      "parameters": {
+        "content": "## 3c. Report each finished batch\nCounts-only summary email, plus a worklist spreadsheet when staff have cases to look at.",
+        "width": 3940,
+        "height": 380,
+        "color": 6
+      }
+    },
+    {
+      "id": "571a7876-7473-44ef-9f08-3cff61c37e6a",
+      "name": "Note: release",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3310,
+        1390
+      ],
+      "parameters": {
+        "content": "## 3d. Release the lock\nRuns last.",
+        "width": 1040,
+        "height": 260,
+        "color": 7
       }
     }
   ],
@@ -3530,7 +3673,7 @@
       "main": [
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3555,7 +3698,7 @@
         ],
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3566,7 +3709,7 @@
       "main": [
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3668,7 +3811,7 @@
       "main": [
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3726,7 +3869,7 @@
         ],
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3748,7 +3891,7 @@
       "main": [
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -3864,7 +4007,7 @@
       "main": [
         [
           {
-            "node": "Loop over files",
+            "node": "Next file",
             "type": "main",
             "index": 0
           }
@@ -4008,7 +4151,7 @@
         ],
         [
           {
-            "node": "Loop over cases",
+            "node": "Next case",
             "type": "main",
             "index": 0
           }
@@ -4052,7 +4195,7 @@
       "main": [
         [
           {
-            "node": "Loop over cases",
+            "node": "Next case",
             "type": "main",
             "index": 0
           }
@@ -4155,7 +4298,7 @@
         ],
         [
           {
-            "node": "Loop over batches",
+            "node": "Next batch",
             "type": "main",
             "index": 0
           }
@@ -4213,7 +4356,7 @@
         ],
         [
           {
-            "node": "Loop over batches",
+            "node": "Next batch",
             "type": "main",
             "index": 0
           }
@@ -4231,7 +4374,7 @@
         ],
         [
           {
-            "node": "Loop over batches",
+            "node": "Next batch",
             "type": "main",
             "index": 0
           }
@@ -4239,6 +4382,39 @@
       ]
     },
     "Mark summary sent": {
+      "main": [
+        [
+          {
+            "node": "Next batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next file": {
+      "main": [
+        [
+          {
+            "node": "Loop over files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next case": {
+      "main": [
+        [
+          {
+            "node": "Loop over cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next batch": {
       "main": [
         [
           {
@@ -4259,27 +4435,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "none"
   },
-  "staticData": {
-    "node:Every 15 minutes": {
-      "recurrenceRules": [
-        null
-      ],
-      "recurrenceRuleSignatures": [
-        null
-      ]
-    }
-  },
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": null,
-  "versionId": "68de4fbd-09c4-4c93-b4fe-40faa87648f4",
-  "activeVersionId": "68de4fbd-09c4-4c93-b4fe-40faa87648f4",
-  "versionCounter": 5,
-  "triggerCount": 3,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "versionMetadata": {
-    "name": null,
-    "description": null
-  }
+  "versionId": "86080bf4-f825-45fa-8a03-319d28a45405"
 }
