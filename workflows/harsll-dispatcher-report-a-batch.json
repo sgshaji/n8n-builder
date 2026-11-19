@@ -1,0 +1,489 @@
+{
+  "id": "dlr4h7esJCHtBP39",
+  "name": "HARSLL – Dispatcher: report a batch",
+  "nodes": [
+    {
+      "id": "d5a91434-32f5-4f1a-a9bf-14144e760299",
+      "name": "This batch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ id: $json.id, batchId: $json.batchId, fileName: $json.fileName, rowCount: $json.rowCount }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "447abb0d-6d77-4004-a966-7121468731c3",
+      "name": "Get the batch's cases",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "batchId",
+              "condition": "eq",
+              "keyValue": "={{ $json.batchId }}"
+            }
+          ]
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "b1829c66-699d-4bdc-a601-54701f102128",
+      "name": "Build the summary and worklist",
+      "notes": "Why Code: counts by status, outcome and reason with fixed plain-English wording, plus the worklist rows, from all of a batch's cases at once. The email holds counts only.",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Why Code: one summary needs counts by status, outcome and reason, fixed plain-English wording, and the worklist rows, all worked out from every case in the batch at once. Natively this would take many Summarize, Set and Merge nodes.\nconst s = $('When called by the Dispatcher').first().json.settings;\nconst b = $('This batch').first().json;\nconst cases = $input.all().map((i) => i.json).filter((r) => r && r.id !== undefined);\nconst max = Number(s.maxAttempts);\n\nconst REASON = {\n  DATES_INVALID: 'The dates on the spreadsheet row are wrong or missing',\n  DEATH_REFERRED: 'The tenancy ended because the tenant died',\n  CHANGE_REASON_NOT_VALID: 'The reason for the change is not one the automation handles',\n  SAME_TENANCY_AS_EARLIER_ROW: 'Covered by an earlier row for the same tenancy',\n  EARLIER_ROW_NOT_COMPLETED: 'The earlier row for this tenancy was not completed, so this person was not added',\n  NO_ACCOUNT_REF: 'The row has no account reference',\n  ADDRESS_NOT_FOUND: 'The account could not be found in RBIS',\n  NO_START_DATE: 'RBIS has no start date to compare against',\n  CHECK_DATES: 'The dates in RBIS do not match the spreadsheet',\n  ACCOUNT_ALREADY_PROCESSED: 'RBIS already shows this change',\n  LEAVER_NOT_LIABLE: 'The person leaving is not the liable person in RBIS',\n  NO_OPTION_TO_TERMINATE: 'RBIS does not allow the current liability to be ended',\n  UNABLE_TO_ADD_PARTY: 'A person could not be added to the account',\n  NO_CONTACT_DETAILS: 'Liability started, but there were no contact details to record',\n  RBIS_ERROR: 'RBIS did not respond or returned an error',\n  PROCESSING_STOPPED: 'Processing stopped unexpectedly and the tries ran out',\n};\nconst reasonText = (code) => REASON[code] || (code ? `Other reason (${code})` : 'No reason recorded');\n\nlet stepNames = [];\nconst stepsInWords = (json) => {\n  try { stepNames = JSON.parse(json || '[]'); } catch (e) { return String(json || ''); }\n  if (!Array.isArray(stepNames)) return String(json || '');\n  return stepNames.map((id) => {\n    const [op, who] = String(id).split(/:(.*)/s);\n    switch (op) {\n      case 'endLiability': return 'Ended the current liability';\n      case 'addLiableParty': return `Made ${who || 'a person'} liable`;\n      case 'createDetail': return 'Created the detail record';\n      case 'setContactDetails': return `Saved contact details for ${who || 'a person'}`;\n      case 'setForwardingAddress': return 'Saved the forwarding address';\n      default: return String(id);\n    }\n  }).join('; ');\n};\n\nconst finished = (r) => ['updated', 'referred', 'duplicate'].includes(r.status) || (r.status === 'failed' && Number(r.attempts) >= max);\nconst allFinished = cases.every(finished);\n\nconst count = (f) => cases.filter(f).length;\nconst updated = cases.filter((r) => r.status === 'updated');\nconst referred = cases.filter((r) => r.status === 'referred');\nconst failed = cases.filter((r) => r.status === 'failed');\nconst duplicate = cases.filter((r) => r.status === 'duplicate');\nconst urgentCount = count((r) => r.urgent === true);\nconst plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;\nconst cap = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Other outcome');\n\n// Batch date from the batch ID: yyyy-MM-ddTHH-mm-ss_name\nconst m = String(b.batchId).match(/^(\\d{4}-\\d{2}-\\d{2})T(\\d{2})-(\\d{2})/);\nconst when = m ? `${m[1]} ${m[2]}:${m[3]}` : String(b.batchId);\n\nconst worklistName = String(b.batchId).replace(/\\.xlsx$/i, '') + '_worklist.xlsx';\nconst worklistPath = `${s.reportsFolder}/${worklistName}`;\nconst worklistShown = worklistPath.replace(/^\\/files\\//, '');\n\n// Worklist: referred, updated with a follow-up, failed with no tries left. Urgent first, then row order.\nconst needsPerson = cases\n  .filter((r) => r.status === 'referred' || (r.status === 'updated' && r.reasonCode) || (r.status === 'failed' && Number(r.attempts) >= max))\n  .sort((a, z) => (z.urgent === true) - (a.urgent === true) || (Number(a.rowNumber) || 0) - (Number(z.rowNumber) || 0));\nconst worklistRows = needsPerson.map((r) => {\n  let earlier = '';\n  if (Number(r.submissions) > 1 && r.previousResult) {\n    try {\n      const p = JSON.parse(r.previousResult);\n      earlier = `${p.status}${p.reasonCode ? ' – ' + reasonText(p.reasonCode) : ''}`;\n    } catch (e) { earlier = String(r.previousResult); }\n  }\n  return {\n    'Urgent': r.urgent === true ? 'URGENT – RBIS partly changed' : '',\n    'What happened': r.status === 'referred' ? 'Referred to staff' : r.status === 'updated' ? 'Updated – follow-up needed' : `Failed after ${r.attempts} tries`,\n    'Reason': reasonText(r.reasonCode),\n    'Reason code': r.reasonCode || '',\n    'RBIS changes already made': r.urgent === true ? stepsInWords(r.stepsDone) : '',\n    'Spreadsheet row': r.rowNumber,\n    'Change': r.changeReason,\n    'Account ref': r.accountRef,\n    'Tenant name': r.tenantName,\n    'Address': r.address,\n    'Postcode': r.postcode,\n    'Start date': r.startDate,\n    'End date': r.endDate,\n    'Earlier result (row sent before)': earlier,\n    'Technical detail': r.status === 'failed' ? r.errorDetail || '' : '',\n    'Case ID': r.id,\n  };\n});\n\n// Summary email: counts only, never names or addresses.\nconst lines = [];\nlines.push(`File: ${b.fileName} (archived)`, '');\nif (urgentCount > 0) lines.push(`URGENT – RBIS partly changed, needs a person now: ${urgentCount}`, '');\n\nlines.push(`Updated: ${updated.length}`);\nconst outcomes = [...new Set(updated.map((r) => r.outcome || ''))];\nconst outcomeOrder = ['liability started', 'liability ended, address saved', 'liability ended'];\noutcomes.sort((a, z) => (outcomeOrder.indexOf(a) + 1 || 99) - (outcomeOrder.indexOf(z) + 1 || 99));\nfor (const o of outcomes) {\n  const group = updated.filter((r) => (r.outcome || '') === o);\n  const noContacts = group.filter((r) => r.reasonCode === 'NO_CONTACT_DETAILS').length;\n  const otherFollowUps = group.filter((r) => r.reasonCode && r.reasonCode !== 'NO_CONTACT_DETAILS').length;\n  let note = '';\n  if (noContacts) note += `   (${noContacts} ${noContacts === 1 ? 'needs' : 'need'} contact details added)`;\n  if (otherFollowUps) note += `   (${otherFollowUps} ${otherFollowUps === 1 ? 'needs' : 'need'} a follow-up)`;\n  lines.push(`  ${cap(o)}: ${group.length}${note}`);\n}\nlines.push('');\n\nlines.push(`Referred to staff: ${referred.length}`);\nconst reasons = [...new Set(referred.map((r) => r.reasonCode || ''))];\nreasons.sort((a, z) => referred.filter((r) => (r.reasonCode || '') === z).length - referred.filter((r) => (r.reasonCode || '') === a).length);\nfor (const code of reasons) {\n  const group = referred.filter((r) => (r.reasonCode || '') === code);\n  const urgent = group.filter((r) => r.urgent === true).length;\n  const note = urgent ? (urgent === group.length ? '   (urgent)' : `   (${urgent} urgent)`) : '';\n  lines.push(`  ${reasonText(code)}: ${group.length}${note}`);\n}\nlines.push('');\n\nconst failedUrgent = failed.filter((r) => r.urgent === true).length;\nlines.push(`Failed after ${max} tries: ${failed.length}${failedUrgent ? (failedUrgent === failed.length ? '   (urgent)' : `   (${failedUrgent} urgent)`) : ''}`);\nlines.push(`Covered by an earlier row for the same tenancy: ${duplicate.length}`);\nconst alreadyRecorded = Math.max(0, (Number(b.rowCount) || 0) - cases.length);\nif (alreadyRecorded > 0) lines.push(`Rows already recorded from an earlier file or repeated in this file, left as they were: ${alreadyRecorded}`);\nlines.push('');\nlines.push(worklistRows.length ? `Worklist: ${worklistShown}` : 'Worklist: none needed, nothing for staff to do');\n\nconst subject = `HARSLL batch ${when} – ${plural(cases.length, 'case', 'cases')}: ${updated.length} updated, ${referred.length} referred, ${failed.length} failed, ${duplicate.length} duplicate`;\n\nreturn [{\n  json: {\n    finished: allFinished,\n    unfinishedCount: cases.length - count(finished),\n    subject,\n    text: lines.join('\\n'),\n    hasWorklist: worklistRows.length > 0,\n    worklistPath,\n    worklistName,\n    worklistRows,\n  },\n}];\n"
+      }
+    },
+    {
+      "id": "de770df8-cdf3-4632-a42d-2f5c44790521",
+      "name": "Batch finished?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "16f19c91-7bbc-4438-ae71-aadf7de70bb6",
+              "leftValue": "={{ $json.finished === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "caaae62d-ae06-4283-aaba-d59c27b0085b",
+      "name": "Worklist needed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "db3e499a-cb99-4a1b-ad05-f212c181564f",
+              "leftValue": "={{ $json.hasWorklist === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4f6bb6fe-1ee8-495f-afab-f72299ff73b2",
+      "name": "One row per worklist entry",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        -150
+      ],
+      "parameters": {
+        "fieldToSplitOut": "worklistRows",
+        "include": "noOtherFields",
+        "options": {}
+      }
+    },
+    {
+      "id": "44a9ae7f-c257-42ad-aeb9-90521cec0b93",
+      "name": "Make the worklist spreadsheet",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.2,
+      "position": [
+        1820,
+        -150
+      ],
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "data",
+        "options": {
+          "sheetName": "Worklist",
+          "fileName": "={{ $('Build the summary and worklist').first().json.worklistName }}"
+        }
+      }
+    },
+    {
+      "id": "55430138-8878-4370-ad4c-aab94167fd04",
+      "name": "Save the worklist",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "onError": "continueErrorOutput",
+      "position": [
+        2080,
+        -150
+      ],
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Build the summary and worklist').first().json.worklistPath }}",
+        "dataPropertyName": "data",
+        "options": {}
+      }
+    },
+    {
+      "id": "8b7e62b4-7287-43a4-a4c5-0e6ab7f08023",
+      "name": "Send the summary email",
+      "webhookId": "7b5533e4-e144-4102-874e-36e8ab6bfb26",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "executeOnce": true,
+      "onError": "continueErrorOutput",
+      "position": [
+        2340,
+        0
+      ],
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailFrom }}",
+        "toEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailTo }}",
+        "subject": "={{ $('Build the summary and worklist').first().json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $('Build the summary and worklist').first().json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "qwZ9yygtBArarq6Q",
+          "name": "Mailpit (local test mailbox)"
+        }
+      }
+    },
+    {
+      "id": "0d879596-fd3a-4130-a50f-0f7085d5af24",
+      "name": "Mark summary sent",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        2600,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('This batch').first().json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "summarySentAt": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "summarySentAt",
+              "displayName": "summarySentAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "91834628-a756-4c28-872a-e903814a08ee",
+      "name": "When called by the Dispatcher",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "cd9c9476-f890-48c7-a0f4-afcfc3252690",
+      "name": "Done with this batch",
+      "notes": "Every path ends here. Its output goes back to the Dispatcher, which moves on to the next batch.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        150
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "07783e51-d84f-4fc9-8d57-f0e9a019658c",
+      "name": "Note: how to read this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -640
+      ],
+      "parameters": {
+        "content": "## HARSLL – Dispatcher: report a batch\nCalled by the Dispatcher once for each spreadsheet whose summary has not been sent. Gets the batch and the settings.\n\n- Reads the batch's cases. If any is unfinished, it stops here and the batch waits for a later run\n- Otherwise it saves the staff worklist (when staff have cases to look at), sends the counts-only summary email, and marks the summary sent",
+        "width": 1300,
+        "height": 300,
+        "color": 1
+      }
+    },
+    {
+      "id": "3b54da8b-9959-46f2-8dd3-d4e1ab206585",
+      "name": "Note: report one batch",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -310
+      ],
+      "parameters": {
+        "content": "## Report one batch\nCounts-only summary email, plus a worklist spreadsheet when staff have cases to look at.",
+        "width": 3130,
+        "height": 680,
+        "color": 6
+      }
+    }
+  ],
+  "connections": {
+    "When called by the Dispatcher": {
+      "main": [
+        [
+          {
+            "node": "This batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "This batch": {
+      "main": [
+        [
+          {
+            "node": "Get the batch's cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the batch's cases": {
+      "main": [
+        [
+          {
+            "node": "Build the summary and worklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build the summary and worklist": {
+      "main": [
+        [
+          {
+            "node": "Batch finished?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch finished?": {
+      "main": [
+        [
+          {
+            "node": "Worklist needed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done with this batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worklist needed?": {
+      "main": [
+        [
+          {
+            "node": "One row per worklist entry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send the summary email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One row per worklist entry": {
+      "main": [
+        [
+          {
+            "node": "Make the worklist spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make the worklist spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Save the worklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save the worklist": {
+      "main": [
+        [
+          {
+            "node": "Send the summary email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done with this batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the summary email": {
+      "main": [
+        [
+          {
+            "node": "Mark summary sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done with this batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark summary sent": {
+      "main": [
+        [
+          {
+            "node": "Done with this batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "timezone": "Europe/London",
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "c88b56e8-9040-4b98-b95c-ec8765f8db9b"
+}

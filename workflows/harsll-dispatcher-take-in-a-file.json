@@ -1,0 +1,2291 @@
+{
+  "id": "KsUFs7e8kubcri9g",
+  "name": "HARSLL – Dispatcher: take in a file",
+  "nodes": [
+    {
+      "id": "248f018c-3ed5-4317-a97d-682e6370daf2",
+      "name": "Note file details",
+      "notes": "batchId = <yyyy-MM-ddTHH-mm-ss>_<file name>, local time.",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        -600
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ fileName: $json.fileName, safeName: /^[A-Za-z0-9 _.()-]+\\.xlsx$/.test($json.fileName), batchId: $now.toFormat(\"yyyy-MM-dd'T'HH-mm-ss\") + '_' + $json.fileName, filePath: $('When called by the Dispatcher').first().json.settings.inputFolder + '/' + $json.fileName }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "5688342e-79e2-42c5-abf9-d439a46d5a1a",
+      "name": "File name safe?",
+      "notes": "Only letters, numbers, spaces and _ - . ( ), ending .xlsx. Unsafe names never reach a command.",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        -600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "811d6664-e2c5-429c-a0b6-aa4201b9e794",
+              "leftValue": "={{ $json.safeName === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "80b31e2b-1a36-4673-aff1-b78b57fc7b10",
+      "name": "Find earlier rename request",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        780,
+        -900
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fileName",
+              "condition": "eq",
+              "keyValue": "={{ $('Note file details').first().json.fileName }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "needs_rename"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "a3c391f7-2a42-47b3-ae55-919c65c8ea6e",
+      "name": "Already asked to rename it?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        -900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1167214-d9ab-455a-a545-bc92f1758192",
+              "leftValue": "={{ $json.id !== undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1950bf46-41c3-4eba-a10d-4bd78df60e20",
+      "name": "Email: please rename the file",
+      "webhookId": "ef6ebc19-7f07-45c7-98f9-a96b0cfeb805",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "executeOnce": true,
+      "onError": "continueErrorOutput",
+      "position": [
+        1300,
+        -900
+      ],
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailFrom }}",
+        "toEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailTo }}",
+        "subject": "HARSLL: please rename a spreadsheet",
+        "emailFormat": "text",
+        "text": "=A spreadsheet in the HARSLL input folder has a name the automation will not open, so it has been left where it is.\n\nFile: {{ $('Note file details').first().json.fileName }}\n\nPlease rename it using only letters, numbers, spaces and these characters: _ - . ( )\nThe name must end in .xlsx. It will be picked up automatically once renamed.\n\nThis is the only email about this file.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "qwZ9yygtBArarq6Q",
+          "name": "Mailpit (local test mailbox)"
+        }
+      }
+    },
+    {
+      "id": "091541a1-0f6a-4c84-add0-4057a73b55a9",
+      "name": "Record that renaming was requested",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        1560,
+        -900
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "batchId": "={{ $('Note file details').first().json.batchId }}",
+            "fileName": "={{ $('Note file details').first().json.fileName }}",
+            "status": "needs_rename",
+            "readAttempts": "={{ 0 }}",
+            "rowCount": "={{ 0 }}",
+            "receivedAt": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "readAttempts",
+              "displayName": "readAttempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowCount",
+              "displayName": "rowCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d31a0877-89f9-463c-afad-c00039e4173c",
+      "name": "Find earlier failed reads",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        780,
+        -600
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fileName",
+              "condition": "eq",
+              "keyValue": "={{ $('Note file details').first().json.fileName }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "unreadable"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "1ef659fe-7cec-4e7d-a13a-96079d008c49",
+      "name": "Read the spreadsheet",
+      "notes": "Literal brackets on, so a name like 'changes (1).xlsx' is not read as a pattern.",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        1040,
+        -600
+      ],
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "={{ $('Note file details').first().json.filePath }}",
+        "options": {
+          "literalBrackets": true,
+          "dataPropertyName": "data"
+        }
+      }
+    },
+    {
+      "id": "d98b190b-9b1f-450f-ad38-66be3b40a537",
+      "name": "Extract the rows",
+      "notes": "Header row on; Include Empty Cells on, so an empty column is not mistaken for a missing one. A file that cannot be read gives one item with an error field.",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        1300,
+        -600
+      ],
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true,
+          "includeEmptyCells": true
+        }
+      }
+    },
+    {
+      "id": "131138f5-3d28-4e57-a126-48292f888210",
+      "name": "Check the file",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        1560,
+        -600
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ readFailed: $('Extract the rows').all().some(i => i.json.error !== undefined && Object.keys(i.json).length === 1), readError: String($('Extract the rows').first().json.error ?? ''), rowCount: $('Extract the rows').all().filter(i => Object.keys(i.json).length > 0 && !(i.json.error !== undefined && Object.keys(i.json).length === 1)).length, missingColumns: $('When called by the Dispatcher').first().json.settings.requiredColumns.filter(c => !Object.keys($('Extract the rows').first().json).includes(c)) }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cff44c10-a384-4ece-a94b-7fc5524d4018",
+      "name": "Could the file be read?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        -600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea67e2e8-99ba-4923-a471-45f6509ab9db",
+              "leftValue": "={{ $json.readFailed !== true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00852b45-f165-48fa-a0fd-8d4eafc76d65",
+      "name": "Count the failed read",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        2080,
+        -250
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ readAttempts: (Number($('Find earlier failed reads').first().json.readAttempts) || 0) + 1, batchId: $('Find earlier failed reads').first().json.batchId || $('Note file details').first().json.batchId, rowCount: 0, reason: 'The file could not be opened as a spreadsheet on ' + ((Number($('Find earlier failed reads').first().json.readAttempts) || 0) + 1) + ' runs. Technical detail: ' + $('Check the file').first().json.readError }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "578eebe0-80a1-44ef-ae94-7cc022875a8b",
+      "name": "Tried enough times?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2340,
+        -250
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d96abac8-7da2-4be6-a15e-e38be7860562",
+              "leftValue": "={{ $json.readAttempts >= Number($('When called by the Dispatcher').first().json.settings.maxFileReadAttempts) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "640d4119-758c-4841-a6a3-39706fe490e4",
+      "name": "Record unreadable file",
+      "notes": "Left in the input folder for the next run.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        2600,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fileName",
+              "condition": "eq",
+              "keyValue": "={{ $('Note file details').first().json.fileName }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "unreadable"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "batchId": "={{ $json.batchId }}",
+            "fileName": "={{ $('Note file details').first().json.fileName }}",
+            "status": "unreadable",
+            "readAttempts": "={{ $json.readAttempts }}",
+            "rowCount": "={{ 0 }}",
+            "receivedAt": "={{ $('Find earlier failed reads').first().json.receivedAt ? $('Find earlier failed reads').first().json.receivedAt : $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "readAttempts",
+              "displayName": "readAttempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowCount",
+              "displayName": "rowCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7cc3fb37-1e73-4d0c-ae8c-3b65873ce382",
+      "name": "Columns and rows as expected?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        -600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a5c03587-2c69-4330-af35-91ab89d8628c",
+              "leftValue": "={{ $json.missingColumns.length === 0 && $json.rowCount > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "17247ed7-70ef-4821-ac43-2224ff650125",
+      "name": "Reason: wrong layout",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        2340,
+        -400
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ batchId: $('Find earlier failed reads').first().json.batchId || $('Note file details').first().json.batchId, readAttempts: Number($('Find earlier failed reads').first().json.readAttempts) || 0, rowCount: $json.rowCount, reason: $json.rowCount === 0 ? 'The file is empty or has no rows of changes under its header row.' : 'The file is missing these columns: ' + $json.missingColumns.join(', ') + '.' }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "8199c12c-43ca-423d-ac06-33aad518528c",
+      "name": "Note the rejection",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "executeOnce": true,
+      "position": [
+        2600,
+        -250
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ batchId: $json.batchId, readAttempts: $json.readAttempts, rowCount: $json.rowCount || 0, reason: $json.reason }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "bae167b4-1620-429b-a3bd-2d93de873cdc",
+      "name": "Move file to rejected",
+      "notes": "Only reached for safe names, so the quoted name cannot inject a command. If the move fails, the file stays for the next run and no email is sent.",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "executeOnce": true,
+      "onError": "continueErrorOutput",
+      "position": [
+        2860,
+        -250
+      ],
+      "parameters": {
+        "command": "=mv '{{ $('When called by the Dispatcher').first().json.settings.inputFolder }}/{{ $('Note file details').first().json.fileName }}' '{{ $('When called by the Dispatcher').first().json.settings.rejectedFolder }}/{{ $('Note the rejection').first().json.batchId }}'"
+      }
+    },
+    {
+      "id": "7bd39d0e-de66-4cc8-aae4-6e199b4180a8",
+      "name": "Record rejected file",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        3120,
+        -250
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fileName",
+              "condition": "eq",
+              "keyValue": "={{ $('Note file details').first().json.fileName }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "unreadable"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "batchId": "={{ $('Note the rejection').first().json.batchId }}",
+            "fileName": "={{ $('Note file details').first().json.fileName }}",
+            "status": "rejected",
+            "readAttempts": "={{ $('Note the rejection').first().json.readAttempts }}",
+            "rowCount": "={{ $('Note the rejection').first().json.rowCount }}",
+            "receivedAt": "={{ $('Find earlier failed reads').first().json.receivedAt ? $('Find earlier failed reads').first().json.receivedAt : $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "readAttempts",
+              "displayName": "readAttempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowCount",
+              "displayName": "rowCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4e15079e-6155-44f4-ab3c-78eae1745a00",
+      "name": "Email: file rejected",
+      "webhookId": "a3011af0-aa49-4134-88f3-e9afecd09f02",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        3380,
+        -250
+      ],
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailFrom }}",
+        "toEmail": "={{ $('When called by the Dispatcher').first().json.settings.summaryEmailTo }}",
+        "subject": "=HARSLL: spreadsheet rejected – {{ $('Note file details').first().json.fileName }}",
+        "emailFormat": "text",
+        "text": "=The spreadsheet \"{{ $('Note file details').first().json.fileName }}\" could not be processed. It has been moved to the rejected folder as {{ ($('When called by the Dispatcher').first().json.settings.rejectedFolder + '/' + $('Note the rejection').first().json.batchId).replace(/^\\/files\\//, '') }}.\n\nReason: {{ $('Note the rejection').first().json.reason }}\n\nNo cases were recorded from it. Please correct the file and put it in the input folder again.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "qwZ9yygtBArarq6Q",
+          "name": "Mailpit (local test mailbox)"
+        }
+      }
+    },
+    {
+      "id": "4b17dffc-8c53-4852-acc2-89b0f0014def",
+      "name": "Tidy rows",
+      "notes": "Why Code: three date forms with validation and rounding; keys built with the shared normalise() rule.",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        -600
+      ],
+      "parameters": {
+        "jsCode": "// Why Code: each date can arrive in three forms (date-time text that may be 1 ms early, dd/MM/yyyy text, or an Excel day number) and must be checked as a real date, keeping the original text when it is not one. Set-node expressions would need multi-statement logic for this.\nconst s = $('When called by the Dispatcher').first().json.settings;\nconst file = $('Note file details').first().json;\n\nconst norm = (x) => String(x ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\nconst text = (x) => (x === null || x === undefined ? '' : String(x).trim());\n\n// A real calendar date as yyyy-MM-dd, or null if the parts do not make one (31/02 is not a date).\nfunction realDate(y, m, d) {\n  const dt = DateTime.fromObject({ year: y, month: m, day: d }, { zone: 'utc' });\n  return dt.isValid && dt.year === y && dt.month === m && dt.day === d ? dt.toFormat('yyyy-MM-dd') : null;\n}\n\nfunction tidyDate(v) {\n  if (v === null || v === undefined) return '';\n  if (typeof v === 'number') {\n    // Excel day number: days since 30 Dec 1899. Round to the nearest second, then take the date.\n    if (!Number.isFinite(v) || v < 1 || v >= 2958466) return String(v);\n    const ms = Date.UTC(1899, 11, 30) + Math.round(v * 86400) * 1000;\n    return DateTime.fromMillis(ms, { zone: 'utc' }).toFormat('yyyy-MM-dd');\n  }\n  const t = String(v).trim();\n  if (t === '') return '';\n  let m;\n  // Date-time text, as Extract from File returns real Excel dates (sometimes 1 ms early).\n  if (/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:?\\d{2})?$/.test(t)) {\n    const dt = DateTime.fromISO(t, { zone: 'utc' });\n    if (!dt.isValid) return t;\n    return DateTime.fromMillis(Math.round(dt.toMillis() / 1000) * 1000, { zone: 'utc' }).toFormat('yyyy-MM-dd');\n  }\n  // dd/MM/yyyy text (UK order)\n  if ((m = t.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/))) return realDate(+m[3], +m[2], +m[1]) ?? t;\n  // yyyy-MM-dd text\n  if ((m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/))) return realDate(+m[1], +m[2], +m[3]) ?? t;\n  // Anything else is kept as written, so check 1 can refer it.\n  return t;\n}\n\nreturn $('Extract the rows').all().map((item, index) => {\n  const r = item.json;\n  const changeReason = text(r.ChangeReason).toUpperCase();\n  const accountRef = text(r.AccountRef).toUpperCase();\n  const address = text(r.Address);\n  const tenantName = text(r.TenantName);\n  const startDate = tidyDate(r.StartDate);\n  const endDate = tidyDate(r.EndDate);\n  const relevantDate = changeReason === 'TENANCY_START' ? startDate : endDate;\n  return {\n    json: {\n      caseKey: [changeReason, accountRef, norm(address), norm(tenantName), relevantDate].join('|'),\n      tenancyKey: [changeReason, accountRef, norm(address), relevantDate].join('|'),\n      batchId: file.batchId,\n      rowNumber: index + 2,\n      changeReason,\n      accountRef,\n      address,\n      postcode: text(r.Postcode),\n      isFlat: /^flat/i.test(address), // interfaces.md: starts with \"Flat\", ignoring case\n      tenantName,\n      startDate,\n      endDate,\n      relevantDate,\n      forwardingAddress: text(r.ForwardingAddress),\n      contactEmail: text(r.ContactEmail),\n      contactPhone: text(r.ContactPhone),\n      sourceSystem: text(r.SourceSystem),\n    },\n  };\n});\n"
+      }
+    },
+    {
+      "id": "9e21605a-df34-4b52-a403-ecfe8d9956a9",
+      "name": "Link rows of the same tenancy",
+      "notes": "Why Code: needs all rows of the file at once to group them (design: Rows for the same tenancy).",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        -600
+      ],
+      "parameters": {
+        "jsCode": "// Why Code: rows of one tenancy are linked wherever they are in the file, which needs all of the file's rows at once (design: \"Rows for the same tenancy\").\nconst rows = $input.all().map((i) => i.json);\n\n// A row whose case key already appeared earlier in this file is the same change for the same\n// person. The design's case-key rule leaves a row alone when its key is already recorded, so\n// the repeat is not recorded a second time.\nconst seen = new Set();\nconst kept = [];\nfor (const r of rows) {\n  if (seen.has(r.caseKey)) continue;\n  seen.add(r.caseKey);\n  kept.push(r);\n}\n\n// Group by tenancy key; the first row of each group is the lead row.\nconst groups = new Map();\nfor (const r of kept) {\n  if (!groups.has(r.tenancyKey)) groups.set(r.tenancyKey, []);\n  groups.get(r.tenancyKey).push(r);\n}\n\nreturn kept.map((r) => {\n  const group = groups.get(r.tenancyKey);\n  const lead = group[0];\n  const isLeadRow = lead === r;\n  return {\n    json: {\n      ...r,\n      isLeadRow,\n      jointTenants: isLeadRow\n        ? JSON.stringify(group.slice(1).map((o) => ({ name: o.tenantName, email: o.contactEmail, phone: o.contactPhone })))\n        : '[]',\n      coveredByCaseKey: isLeadRow ? '' : lead.caseKey,\n    },\n  };\n});\n"
+      }
+    },
+    {
+      "id": "fdcfe153-ea86-483f-a4b9-ee0199f7c7bb",
+      "name": "Keep only new case keys",
+      "notes": "Runs first (top branch): new case keys are inserted before the batch is recorded and the file archived.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2860,
+        -750
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "caseKey",
+              "condition": "eq",
+              "keyValue": "={{ $json.caseKey }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "68e2c714-6287-4dc6-a7ac-01b9da793f56",
+      "name": "Record new case",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        -750
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "caseKey": "={{ $json.caseKey }}",
+            "tenancyKey": "={{ $json.tenancyKey }}",
+            "batchId": "={{ $json.batchId }}",
+            "rowNumber": "={{ $json.rowNumber }}",
+            "changeReason": "={{ $json.changeReason }}",
+            "accountRef": "={{ $json.accountRef }}",
+            "address": "={{ $json.address }}",
+            "postcode": "={{ $json.postcode }}",
+            "isFlat": "={{ $json.isFlat }}",
+            "tenantName": "={{ $json.tenantName }}",
+            "isLeadRow": "={{ $json.isLeadRow }}",
+            "jointTenants": "={{ $json.jointTenants }}",
+            "coveredByCaseKey": "={{ $json.coveredByCaseKey }}",
+            "startDate": "={{ $json.startDate }}",
+            "endDate": "={{ $json.endDate }}",
+            "relevantDate": "={{ $json.relevantDate }}",
+            "forwardingAddress": "={{ $json.forwardingAddress }}",
+            "contactEmail": "={{ $json.contactEmail }}",
+            "contactPhone": "={{ $json.contactPhone }}",
+            "sourceSystem": "={{ $json.sourceSystem }}",
+            "status": "new",
+            "reasonCode": "",
+            "reasonText": "",
+            "outcome": "",
+            "urgent": "={{ false }}",
+            "stepsDone": "[]",
+            "attempts": "={{ 0 }}",
+            "submissions": "={{ 1 }}",
+            "previousResult": "",
+            "errorDetail": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "caseKey",
+              "displayName": "caseKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tenancyKey",
+              "displayName": "tenancyKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowNumber",
+              "displayName": "rowNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "changeReason",
+              "displayName": "changeReason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "accountRef",
+              "displayName": "accountRef",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "isFlat",
+              "displayName": "isFlat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tenantName",
+              "displayName": "tenantName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "isLeadRow",
+              "displayName": "isLeadRow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jointTenants",
+              "displayName": "jointTenants",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coveredByCaseKey",
+              "displayName": "coveredByCaseKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "startDate",
+              "displayName": "startDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "endDate",
+              "displayName": "endDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "relevantDate",
+              "displayName": "relevantDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "forwardingAddress",
+              "displayName": "forwardingAddress",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contactEmail",
+              "displayName": "contactEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contactPhone",
+              "displayName": "contactPhone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sourceSystem",
+              "displayName": "sourceSystem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonCode",
+              "displayName": "reasonCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonText",
+              "displayName": "reasonText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgent",
+              "displayName": "urgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stepsDone",
+              "displayName": "stepsDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "submissions",
+              "displayName": "submissions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "previousResult",
+              "displayName": "previousResult",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorDetail",
+              "displayName": "errorDetail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "857ade55-6824-43c0-aff8-3107cd28cae5",
+      "name": "Find the earlier case",
+      "notes": "Second branch: rows whose case key is already recorded. Only a referred case is reopened; updated, duplicate, new, failed and in_progress cases are left alone.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2860,
+        -600
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "caseKey",
+              "condition": "eq",
+              "keyValue": "={{ $json.caseKey }}"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "6d85932a-3f2b-4155-a4f4-50268c17c304",
+      "name": "Was it referred?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3120,
+        -600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7d61913d-8a58-461f-a97e-70e53a93e6e9",
+              "leftValue": "={{ $json.status === 'referred' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "13722893-9b57-41ed-a365-2366da4cbf5d",
+      "name": "Combine with the new row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3380,
+        -600
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ id: $json.id, oldStatus: $json.status, oldReasonCode: $json.reasonCode || '', oldBatchId: $json.batchId || '', submissions: Number($json.submissions || 1), row: $('Link rows of the same tenancy').all().map(i => i.json).find(r => r.caseKey === $json.caseKey) }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "5b98272e-142f-4bf0-a1c3-654b6e0fc677",
+      "name": "New row found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3640,
+        -600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "630537b3-e7b0-4774-adaa-b85af9345a8b",
+              "leftValue": "={{ !!$json.row && $json.row.caseKey !== undefined && typeof $json.id === 'number' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bc5d8588-6ba9-40b8-a66f-dcd48f18e27f",
+      "name": "Stop: reopen data missing",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        -450
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "={{ 'Could not match a recorded case to its row in the new file (case ' + $json.id + '). Nothing was reopened.' }}"
+      }
+    },
+    {
+      "id": "6901a26d-d2d8-4136-ae1d-c8e05469b082",
+      "name": "Reopen case in this batch",
+      "notes": "Reopened in the new file's batch with the new row's details; earlier result kept in previousResult.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3900,
+        -600
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.casesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "referred"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenancyKey": "={{ $json.row.tenancyKey }}",
+            "batchId": "={{ $json.row.batchId }}",
+            "rowNumber": "={{ $json.row.rowNumber }}",
+            "changeReason": "={{ $json.row.changeReason }}",
+            "accountRef": "={{ $json.row.accountRef }}",
+            "address": "={{ $json.row.address }}",
+            "postcode": "={{ $json.row.postcode }}",
+            "isFlat": "={{ $json.row.isFlat }}",
+            "tenantName": "={{ $json.row.tenantName }}",
+            "isLeadRow": "={{ $json.row.isLeadRow }}",
+            "jointTenants": "={{ $json.row.jointTenants }}",
+            "coveredByCaseKey": "={{ $json.row.coveredByCaseKey }}",
+            "startDate": "={{ $json.row.startDate }}",
+            "endDate": "={{ $json.row.endDate }}",
+            "relevantDate": "={{ $json.row.relevantDate }}",
+            "forwardingAddress": "={{ $json.row.forwardingAddress }}",
+            "contactEmail": "={{ $json.row.contactEmail }}",
+            "contactPhone": "={{ $json.row.contactPhone }}",
+            "sourceSystem": "={{ $json.row.sourceSystem }}",
+            "status": "new",
+            "attempts": "={{ 0 }}",
+            "stepsDone": "[]",
+            "reasonCode": "",
+            "reasonText": "",
+            "outcome": "",
+            "urgent": "={{ false }}",
+            "errorDetail": "",
+            "submissions": "={{ $json.submissions + 1 }}",
+            "previousResult": "={{ JSON.stringify({ status: $json.oldStatus, reasonCode: $json.oldReasonCode, batchId: $json.oldBatchId }) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenancyKey",
+              "displayName": "tenancyKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowNumber",
+              "displayName": "rowNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "changeReason",
+              "displayName": "changeReason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "accountRef",
+              "displayName": "accountRef",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "postcode",
+              "displayName": "postcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "isFlat",
+              "displayName": "isFlat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tenantName",
+              "displayName": "tenantName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "isLeadRow",
+              "displayName": "isLeadRow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jointTenants",
+              "displayName": "jointTenants",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coveredByCaseKey",
+              "displayName": "coveredByCaseKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "startDate",
+              "displayName": "startDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "endDate",
+              "displayName": "endDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "relevantDate",
+              "displayName": "relevantDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "forwardingAddress",
+              "displayName": "forwardingAddress",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contactEmail",
+              "displayName": "contactEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contactPhone",
+              "displayName": "contactPhone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sourceSystem",
+              "displayName": "sourceSystem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stepsDone",
+              "displayName": "stepsDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonCode",
+              "displayName": "reasonCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasonText",
+              "displayName": "reasonText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgent",
+              "displayName": "urgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorDetail",
+              "displayName": "errorDetail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "submissions",
+              "displayName": "submissions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "previousResult",
+              "displayName": "previousResult",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "82e71bba-dd01-419b-ab3c-276d064800e7",
+      "name": "Record the batch",
+      "notes": "Bottom branch, so it runs after the cases are recorded. Updates the file's earlier 'unreadable' record if there is one.",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        2860,
+        -450
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('When called by the Dispatcher').first().json.settings.batchesTableId }}"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fileName",
+              "condition": "eq",
+              "keyValue": "={{ $('Note file details').first().json.fileName }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "unreadable"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "batchId": "={{ $('Note file details').first().json.batchId }}",
+            "fileName": "={{ $('Note file details').first().json.fileName }}",
+            "status": "received",
+            "readAttempts": "={{ Number($('Find earlier failed reads').first().json.readAttempts) || 0 }}",
+            "rowCount": "={{ $('Check the file').first().json.rowCount }}",
+            "receivedAt": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "batchId",
+              "displayName": "batchId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fileName",
+              "displayName": "fileName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "readAttempts",
+              "displayName": "readAttempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "rowCount",
+              "displayName": "rowCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fb01d208-4449-49be-ab9a-7cb0ce9584c2",
+      "name": "Move file to archive",
+      "notes": "mv with the name in single quotes; only reached for safe names. Archived as <yyyy-MM-ddTHH-mm-ss>_<name>.",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        3120,
+        -450
+      ],
+      "parameters": {
+        "command": "=mv '{{ $('When called by the Dispatcher').first().json.settings.inputFolder }}/{{ $('Note file details').first().json.fileName }}' '{{ $('When called by the Dispatcher').first().json.settings.archiveFolder }}/{{ $('Note file details').first().json.batchId }}'"
+      }
+    },
+    {
+      "id": "62294475-ea98-4184-b753-ebc88fd61282",
+      "name": "When called by the Dispatcher",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -600
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "a1ff75cc-cfce-4f90-a431-67e152cfaf35",
+      "name": "Done with this file",
+      "notes": "Every path ends here. Its output goes back to the Dispatcher, which moves on to the next file.",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        50
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b943637a-7493-4159-bfb9-7fe113e30ef9",
+      "name": "Note: how to read this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -1390
+      ],
+      "parameters": {
+        "content": "## HARSLL – Dispatcher: take in a file\nCalled by the Dispatcher once for each spreadsheet that has stopped changing. Gets the file name and the settings; returns when the file is dealt with.\n\n- **Top row:** unsafe file name, so staff are asked (once) to rename it\n- **Middle row:** read the rows, record one case per new row (a referred case may be reopened), record the batch, archive the file\n- **Lower rows:** unreadable file (retried a few times) or wrong layout, so it is moved to rejected and staff are emailed",
+        "width": 1500,
+        "height": 300,
+        "color": 1
+      }
+    },
+    {
+      "id": "655fa0f1-e31f-4144-b8cc-244dc67a9a8f",
+      "name": "Note: take in one file",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -70,
+        -1060
+      ],
+      "parameters": {
+        "content": "## Take in one file\nThe three steps after \"Link rows of the same tenancy\" run top to bottom: record new cases, reopen earlier cases, then record the batch and archive the file. Keep that vertical order.",
+        "width": 4430,
+        "height": 1330,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "When called by the Dispatcher": {
+      "main": [
+        [
+          {
+            "node": "Note file details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Note file details": {
+      "main": [
+        [
+          {
+            "node": "File name safe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File name safe?": {
+      "main": [
+        [
+          {
+            "node": "Find earlier failed reads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find earlier rename request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find earlier rename request": {
+      "main": [
+        [
+          {
+            "node": "Already asked to rename it?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already asked to rename it?": {
+      "main": [
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: please rename the file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email: please rename the file": {
+      "main": [
+        [
+          {
+            "node": "Record that renaming was requested",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record that renaming was requested": {
+      "main": [
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find earlier failed reads": {
+      "main": [
+        [
+          {
+            "node": "Read the spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Extract the rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract the rows": {
+      "main": [
+        [
+          {
+            "node": "Check the file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check the file": {
+      "main": [
+        [
+          {
+            "node": "Could the file be read?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Could the file be read?": {
+      "main": [
+        [
+          {
+            "node": "Columns and rows as expected?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count the failed read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count the failed read": {
+      "main": [
+        [
+          {
+            "node": "Tried enough times?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tried enough times?": {
+      "main": [
+        [
+          {
+            "node": "Note the rejection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record unreadable file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record unreadable file": {
+      "main": [
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Columns and rows as expected?": {
+      "main": [
+        [
+          {
+            "node": "Tidy rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reason: wrong layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reason: wrong layout": {
+      "main": [
+        [
+          {
+            "node": "Note the rejection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Note the rejection": {
+      "main": [
+        [
+          {
+            "node": "Move file to rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file to rejected": {
+      "main": [
+        [
+          {
+            "node": "Record rejected file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record rejected file": {
+      "main": [
+        [
+          {
+            "node": "Email: file rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email: file rejected": {
+      "main": [
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tidy rows": {
+      "main": [
+        [
+          {
+            "node": "Link rows of the same tenancy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link rows of the same tenancy": {
+      "main": [
+        [
+          {
+            "node": "Keep only new case keys",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find the earlier case",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Record the batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep only new case keys": {
+      "main": [
+        [
+          {
+            "node": "Record new case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the earlier case": {
+      "main": [
+        [
+          {
+            "node": "Was it referred?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Was it referred?": {
+      "main": [
+        [
+          {
+            "node": "Combine with the new row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine with the new row": {
+      "main": [
+        [
+          {
+            "node": "New row found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New row found?": {
+      "main": [
+        [
+          {
+            "node": "Reopen case in this batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: reopen data missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record the batch": {
+      "main": [
+        [
+          {
+            "node": "Move file to archive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file to archive": {
+      "main": [
+        [
+          {
+            "node": "Done with this file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "timezone": "Europe/London",
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "d832d185-dac5-43cb-9312-de3190ed1b18"
+}

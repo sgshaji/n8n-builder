@@ -1,11 +1,6 @@
 {
-  "updatedAt": "2026-11-18T22:27:49.519Z",
-  "createdAt": "2026-11-18T20:37:55.249Z",
   "id": "lq2vGGGRcILxjPpb",
   "name": "HARSLL – Settings",
-  "description": null,
-  "active": true,
-  "isArchived": false,
   "nodes": [
     {
       "id": "trig",
@@ -32,7 +27,7 @@
       ],
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\n  \"settings\": {\n    \"profile\": \"production\",\n    \"landlordNames\": [\"Example Housing Association\"],\n    \"landlordLiabilityEndsOn\": \"startDate\",\n    \"landlordLiableFrom\": \"endDate\",\n    \"confirmLeaverIsLiable\": true,\n    \"jointTenantHandling\": \"leadRowAddsAll\",\n    \"addPersonToExistingTenancy\": false,\n    \"requiredSourceSystem\": \"ABRITAS\",\n    \"allowedChangeReasons\": [\"TENANCY_START\", \"TENANCY_END\"],\n    \"deathHandling\": \"refer\",\n    \"deathChangeReasons\": [\"DECEASED\"],\n    \"nameMatch\": \"normalised\",\n    \"requiredColumns\": [\"ChangeReason\", \"AccountRef\", \"TenantName\", \"Address\", \"Postcode\", \"StartDate\", \"EndDate\"],\n    \"optionalColumns\": [\"ForwardingAddress\", \"ContactEmail\", \"ContactPhone\", \"SourceSystem\"],\n    \"maxAttempts\": 3,\n    \"stuckMinutes\": 15,\n    \"lockStaleMinutes\": 30,\n    \"fileSettleSeconds\": 60,\n    \"maxFileReadAttempts\": 3,\n    \"summaryEmailTo\": \"harsll-team@example.test\",\n    \"summaryEmailFrom\": \"harsll@example.test\",\n    \"inputFolder\": \"/files/input\",\n    \"archiveFolder\": \"/files/archive\",\n    \"rejectedFolder\": \"/files/rejected\",\n    \"reportsFolder\": \"/files/reports\",\n    \"rbisBaseUrl\": \"http://mock-rbis:8080\",\n    \"casesTableId\": \"SBZZFYYtjdKZcTha\",\n    \"batchesTableId\": \"4jaeshwJnybiuyp3\",\n    \"lockTableId\": \"4iFl6qPseCy2DyGb\",\n    \"performerWorkflowId\": \"Bxb1mMwb4TOFuP8j\",\n    \"adapterWorkflowId\": \"UEa9ahhsExQ8SXfb\"\n  }\n}",
+        "jsonOutput": "{\n  \"settings\": {\n    \"profile\": \"production\",\n    \"landlordNames\": [\n      \"Example Housing Association\"\n    ],\n    \"landlordLiabilityEndsOn\": \"startDate\",\n    \"landlordLiableFrom\": \"endDate\",\n    \"confirmLeaverIsLiable\": true,\n    \"jointTenantHandling\": \"leadRowAddsAll\",\n    \"addPersonToExistingTenancy\": false,\n    \"requiredSourceSystem\": \"ABRITAS\",\n    \"allowedChangeReasons\": [\n      \"TENANCY_START\",\n      \"TENANCY_END\"\n    ],\n    \"deathHandling\": \"refer\",\n    \"deathChangeReasons\": [\n      \"DECEASED\"\n    ],\n    \"nameMatch\": \"normalised\",\n    \"requiredColumns\": [\n      \"ChangeReason\",\n      \"AccountRef\",\n      \"TenantName\",\n      \"Address\",\n      \"Postcode\",\n      \"StartDate\",\n      \"EndDate\"\n    ],\n    \"optionalColumns\": [\n      \"ForwardingAddress\",\n      \"ContactEmail\",\n      \"ContactPhone\",\n      \"SourceSystem\"\n    ],\n    \"maxAttempts\": 3,\n    \"stuckMinutes\": 15,\n    \"lockStaleMinutes\": 30,\n    \"fileSettleSeconds\": 60,\n    \"maxFileReadAttempts\": 3,\n    \"summaryEmailTo\": \"harsll-team@example.test\",\n    \"summaryEmailFrom\": \"harsll@example.test\",\n    \"inputFolder\": \"/files/input\",\n    \"archiveFolder\": \"/files/archive\",\n    \"rejectedFolder\": \"/files/rejected\",\n    \"reportsFolder\": \"/files/reports\",\n    \"rbisBaseUrl\": \"http://mock-rbis:8080\",\n    \"casesTableId\": \"SBZZFYYtjdKZcTha\",\n    \"batchesTableId\": \"4jaeshwJnybiuyp3\",\n    \"lockTableId\": \"4iFl6qPseCy2DyGb\",\n    \"takeInFileWorkflowId\": \"KsUFs7e8kubcri9g\",\n    \"reportBatchWorkflowId\": \"dlr4h7esJCHtBP39\",\n    \"performerWorkflowId\": \"Bxb1mMwb4TOFuP8j\",\n    \"adapterWorkflowId\": \"UEa9ahhsExQ8SXfb\"\n  }\n}",
         "includeOtherFields": false,
         "options": {}
       }
@@ -59,18 +54,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "none"
   },
-  "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": null,
-  "versionId": "e5edc9b7-319b-4677-b253-9a65bf024782",
-  "activeVersionId": "e5edc9b7-319b-4677-b253-9a65bf024782",
-  "versionCounter": 3,
-  "triggerCount": 0,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "versionMetadata": {
-    "name": null,
-    "description": null
-  }
+  "versionId": "feb2a74a-b3a8-4ec2-8801-9f4a12903d8a"
 }

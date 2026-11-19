@@ -50,7 +50,8 @@ Workflow **HARSLL – Settings** (`lq2vGGGRcILxjPpb`, published). Returns one it
 | `inputFolder`, `archiveFolder`, `rejectedFolder`, `reportsFolder` | `/files/input`, `/files/archive`, `/files/rejected`, `/files/reports` | |
 | `rbisBaseUrl` | `http://mock-rbis:8080` | |
 | `casesTableId`, `batchesTableId`, `lockTableId` | See [Tables](#tables) | |
-| `performerWorkflowId`, `adapterWorkflowId` | `Bxb1mMwb4TOFuP8j`, `UEa9ahhsExQ8SXfb` | The Performer and the RBIS adapter |
+| `takeInFileWorkflowId`, `reportBatchWorkflowId` | `KsUFs7e8kubcri9g`, `dlr4h7esJCHtBP39` | HARSLL – Dispatcher: take in a file, and HARSLL – Dispatcher: report a batch |
+| `performerWorkflowId`, `adapterWorkflowId` | `Bxb1mMwb4TOFuP8j`, `UEa9ahhsExQ8SXfb` | HARSLL – Performer, and HARSLL – Performer: RBIS adapter |
 
 The email credential is **Mailpit (local test mailbox)** (`qwZ9yygtBArarq6Q`, SMTP to `mailpit:1025`).
 
@@ -118,6 +119,28 @@ The Dispatcher has **three** triggers. All three run the same steps.
 | Timer | **Schedule Trigger** | Every 15 minutes, not on the quarter hour. It is also the only trigger for files copied with an old modified time, which the file trigger may not notice |
 | **Run now** | **Webhook**, `POST /webhook/harsll-run-now`, responds immediately with `{"started": true}` | **Addition to the design.** Lets the test runner start a run, for example to retry failed cases, without waiting for the timer. No waiting step. Local only; review before production |
 
+## Dispatcher → take in a file
+
+The Dispatcher calls **HARSLL – Dispatcher: take in a file** (ID from `settings.takeInFileWorkflowId`) once per settled spreadsheet, one at a time, waiting for each.
+
+**Input**, one item: `{ "fileName": "harsll-main.xlsx", "settings": { ... } }`. The file is in `settings.inputFolder`.
+
+**What it does:** everything for one file. Unsafe name: email once asking for a rename, leave the file. Unreadable: count the try, reject after `maxFileReadAttempts`. Wrong layout or no rows: reject at once. Otherwise: record one case per new case key, reopen referred cases sent again, record the batch, move the file to the archive. Rejected files are moved to `rejectedFolder` and staff are emailed.
+
+**Output:** whatever its last step returns. The Dispatcher only needs it to move on, and moves on even if nothing comes back. It writes its results to the Cases and Batches tables itself. A missing reopen row still stops the whole run, as before.
+
+**Order matters inside it.** After "Link rows of the same tenancy" three branches run top to bottom: record new cases, reopen earlier cases, record the batch and archive the file.
+
+## Dispatcher → report a batch
+
+The Dispatcher calls **HARSLL – Dispatcher: report a batch** (ID from `settings.reportBatchWorkflowId`) once per batch with `status = received` and no `summarySentAt`, one at a time, after it has checked it still holds the lock.
+
+**Input**, one item: the batch row from the Batches table (`id`, `batchId`, `fileName`, `rowCount`, ...) plus `settings`.
+
+**What it does:** reads the batch's cases. If any is unfinished, it stops and the batch waits for a later run. Otherwise it saves `reports/<batch>_worklist.xlsx` when staff have cases to look at, sends the counts-only summary email, and sets `summarySentAt`. If saving or sending fails, `summarySentAt` stays empty, so a later run tries again.
+
+**Output:** as above, only used to move on.
+
 ## Dispatcher → Performer
 
 The Dispatcher calls **HARSLL – Performer** (ID from `settings.performerWorkflowId`) once per case, one at a time, waiting for each.
@@ -153,7 +176,7 @@ The Dispatcher calls **HARSLL – Performer** (ID from `settings.performerWorkfl
 
 ## Performer → RBIS adapter
 
-The Performer calls **HARSLL – RBIS adapter** (ID from `settings.adapterWorkflowId`) once per RBIS step.
+The Performer calls **HARSLL – Performer: RBIS adapter** (ID from `settings.adapterWorkflowId`) once per RBIS step.
 
 **Input**, one item:
 

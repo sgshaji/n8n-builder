@@ -6,9 +6,9 @@
 
 ## Summary
 
-HARSLL is rebuilt as **four n8n workflows**, a **Cases table** with two small helper tables, and a **pretend RBIS** that runs next to n8n in Docker.
+HARSLL is rebuilt as **six n8n workflows**, a **Cases table** with two small helper tables, and a **pretend RBIS** that runs next to n8n in Docker.
 
-- The **Dispatcher** records one case per spreadsheet row about a minute after a file arrives, archives the file, and then works through every unfinished case. A timer repeats this, so nothing waits on a person.
+- The **Dispatcher** records one case per spreadsheet row about a minute after a file arrives, archives the file, and then works through every unfinished case. A timer repeats this, so nothing waits on a person. Taking in a file and reporting a batch are its own small workflows, which it calls.
 - The **Performer** takes one case, applies the five safety checks, then updates the account or refers the case with a reason.
 - All RBIS work goes through **one RBIS adapter workflow**. Today it talks to the pretend RBIS; later only this workflow changes.
 - **Unknown business rules are settings** with cautious defaults, listed in [Settings and assumptions](#settings-and-assumptions).
@@ -40,6 +40,7 @@ The three build tracks met situations this design did not cover, or covered loos
 | B15 | **A header-only, zero-byte or text file named `.xlsx`** | Rejected at once as "no rows". Only a damaged spreadsheet is "unreadable" and retried | Track B |
 | B16 | **Starting a run for tests** | A third Dispatcher trigger, **Run now** (`POST /webhook/harsll-run-now`), for local testing. Review before production | Interfaces |
 | B17 | **The Performer and Dispatcher were hard to read in the editor** | Laid out in labelled boxes, one per check or stage. Pass-through steps gather the error lines (**Errors: …**) and loop lines (**Next file / case / batch**) so each reaches its target as one line. No behaviour changed; all scenarios re-run. See [reading the workflows](../../workflows/README.md#reading-the-workflows-in-the-editor) | After the build |
+| B18 | **The Dispatcher did four jobs in one workflow** (about 80 steps) | Taking in one file and reporting one batch are now their own workflows, **HARSLL – Dispatcher: take in a file** and **HARSLL – Dispatcher: report a batch**, called once per file and once per batch. Their IDs are settings. The RBIS adapter was renamed **HARSLL – Performer: RBIS adapter** to follow the naming rule. One small hardening: if a called workflow ever returned nothing, the Dispatcher now still moves on to the next file or batch | After the build |
 
 **Found during the build, not yet settled.** These are listed in [Open questions](#open-questions).
 
@@ -127,40 +128,49 @@ flowchart LR
     subgraph N8N["n8n"]
         SET[HARSLL – Settings]
         D[HARSLL – Dispatcher]
+        DT[HARSLL – Dispatcher:<br/>take in a file]
+        DR[HARSLL – Dispatcher:<br/>report a batch]
         P[HARSLL – Performer]
-        A[HARSLL – RBIS adapter]
+        A[HARSLL – Performer:<br/>RBIS adapter]
         T[(Cases table)]
         B[(Batches and lock tables)]
     end
 
     IN -->|file arrives, or timer| D
     D -->|loads once per run| SET
-    D -->|records cases| T
-    D -->|records file, takes lock| B
-    D -->|moves file| AR
-    D -->|bad file| RJ
+    D -->|takes the lock| B
+    D -->|each settled file| DT
+    DT -->|records cases| T
+    DT -->|records file| B
+    DT -->|moves file| AR
+    DT -->|bad file| RJ
     D -->|each unfinished case| P
     P -->|claims and updates case| T
     P -->|every RBIS step| A
     A -->|HTTP| R[Pretend RBIS<br/>Docker service]
-    D -->|worklist| RP
-    D -->|summary, counts only| M[Mailpit<br/>test mailbox]
+    D -->|each batch waiting for its summary| DR
+    DR -->|worklist| RP
+    DR -->|summary, counts only| M[Mailpit<br/>test mailbox]
 ```
 
-### The four workflows
+### The six workflows
+
+Naming rule: **`HARSLL – <workflow that calls it>: <job>`**. A workflow called by only one other is named after its caller, so the n8n list groups them and shows who calls whom. The Dispatcher, Performer and Settings keep plain names: the first two are the two UiPath robots, and Settings is used by all.
 
 | Workflow | File | Starts when | Job |
 | --- | --- | --- | --- |
-| **HARSLL – Dispatcher** | `harsll-dispatcher.json` | A file is added to the input folder, or the timer fires | Take in files, then process every unfinished case, then report |
-| **HARSLL – Performer** | `harsll-performer.json` | Called by the Dispatcher, once per case | Run the checks, update RBIS or refer the case, record the result |
-| **HARSLL – RBIS adapter** | `harsll-rbis-adapter.json` | Called by the Performer, once per RBIS step | The only place that talks to RBIS |
-| **HARSLL – Settings** | `harsll-settings.json` | Called by the Dispatcher, once per run | Returns every setting. The Dispatcher passes them on to the Performer and adapter |
+| **HARSLL – Dispatcher** | `harsll-dispatcher.json` | A file is added to the input folder, the timer fires, or **Run now** | Takes the lock, takes in each file, runs every unfinished case, reports each finished batch, releases the lock |
+| **HARSLL – Dispatcher: take in a file** | `harsll-dispatcher-take-in-a-file.json` | Called by the Dispatcher, once per settled file | Checks the file, records one case per new row, records the batch, archives the file; or rejects it and emails staff |
+| **HARSLL – Dispatcher: report a batch** | `harsll-dispatcher-report-a-batch.json` | Called by the Dispatcher, once per batch waiting for its summary | If every case is finished: saves the worklist, sends the summary email, marks the summary sent |
+| **HARSLL – Performer** | `harsll-performer.json` | Called by the Dispatcher, once per case | Runs the checks, updates RBIS or refers the case, records the result |
+| **HARSLL – Performer: RBIS adapter** | `harsll-performer-rbis-adapter.json` | Called by the Performer, once per RBIS step | The only place that talks to RBIS |
+| **HARSLL – Settings** | `harsll-settings.json` | Called by the Dispatcher, once per run | Returns every setting. The Dispatcher passes them on to the workflows it calls |
 
-Dispatcher and Performer match the two UiPath robots. Settings replaces UiPath's "Get Assets". The adapter isolates the RBIS steps so that moving to the real RBIS changes one workflow.
+Dispatcher and Performer match the two UiPath robots. Settings replaces UiPath's "Get Assets". The adapter isolates the RBIS steps so that moving to the real RBIS changes one workflow. Taking in a file and reporting a batch were split out of the Dispatcher after the build (change B18), so each can be read and tested on its own.
 
 ## Dispatcher
 
-The Dispatcher has two parts. **Intake** turns files into cases. **Processing** works through unfinished cases. Both run on every start, whichever trigger fired.
+The Dispatcher has two parts. **Intake** turns files into cases. **Processing** works through unfinished cases. Both run on every start, whichever trigger fired. The steps for one file are in **HARSLL – Dispatcher: take in a file**, and writing the worklist and summary for one batch is in **HARSLL – Dispatcher: report a batch**. The chart below shows the whole job.
 
 ```mermaid
 flowchart TD
@@ -216,8 +226,9 @@ flowchart TD
 | Case key lookup, insert, reopen | **Data table** | |
 | Move file | **Execute Command** | `mv` with the file name in single quotes. Only reached for names that passed the safety check, so no name can inject a command |
 | Run Performer | **Execute Sub-workflow** | Once per case, waits for each, continues if one errors |
-| Worklist | **Convert to File** + **Read/Write Files from Disk** | `reports/<batch>_worklist.xlsx` |
-| Summary | **Summarize** + **Send Email** | Counts only |
+| Take in a file | **Execute Sub-workflow** → HARSLL – Dispatcher: take in a file | Once per settled file. File name safety check through archiving or rejection (the rows above from "File name safe?" to "Move file") run there |
+| Worklist | **Convert to File** + **Read/Write Files from Disk** | `reports/<batch>_worklist.xlsx`. In HARSLL – Dispatcher: report a batch |
+| Summary | **Code** + **Send Email** | Counts only. In HARSLL – Dispatcher: report a batch, called once per batch waiting for its summary |
 
 ### Rows for the same tenancy
 
@@ -557,7 +568,7 @@ The timer interval (15 minutes) is not in this table. It is set on the Dispatche
 | Summary email | Counts only | No names or addresses, by design |
 | Cases table | Names, addresses, account references | Retention period to be agreed. A clean-up step is added once it is |
 | Worklist files | The same, for cases that need a person | Stay in the `reports` folder; never emailed |
-| n8n run history | Would hold spreadsheet rows and case details | **All four workflows** are set not to save data for successful runs. Failed runs are kept for diagnosis and removed after 168 hours, which is 7 days (`EXECUTIONS_DATA_MAX_AGE=168`) |
+| n8n run history | Would hold spreadsheet rows and case details | **All six workflows** are set not to save data for successful runs. Failed runs are kept for diagnosis and removed after 168 hours, which is 7 days (`EXECUTIONS_DATA_MAX_AGE=168`) |
 | Archive and rejected folders | The original spreadsheets | Retention to be agreed |
 
 Local development uses made-up data only, so these controls matter from Phase 5.

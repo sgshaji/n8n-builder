@@ -62,7 +62,7 @@ Everything is plain Node.js with no extra packages.
 ## Before you run the tests
 
 1. The local stack is running: `docker compose up -d` (see [Run n8n locally](setup/01-run-n8n-locally.md)).
-2. The four HARSLL workflows are built and **published**, with the production settings, and the Dispatcher's **Run now** webhook works.
+2. The six HARSLL workflows are built and **published**, with the production settings, and the Dispatcher's **Run now** webhook works.
 3. `.env` has a working `N8N_API_KEY`. The runner reads it and never prints it.
 
 > **The tests wipe the HARSLL data.** Each group empties the Cases and Batches tables, frees the lock, resets the pretend RBIS, empties the `input`, `archive`, `rejected` and `reports` folders under `data/`, and deletes every message in the test mailbox. Use them only on a local stack with made-up data.

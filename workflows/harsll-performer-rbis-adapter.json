@@ -1,11 +1,6 @@
 {
-  "updatedAt": "2026-11-18T22:27:49.746Z",
-  "createdAt": "2026-11-18T20:59:37.141Z",
   "id": "UEa9ahhsExQ8SXfb",
-  "name": "HARSLL – RBIS adapter",
-  "description": null,
-  "active": true,
-  "isArchived": false,
+  "name": "HARSLL – Performer: RBIS adapter",
   "nodes": [
     {
       "id": "27989717-3182-4ff9-b1d4-5b2f935718d0",
@@ -1359,18 +1354,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "none"
   },
-  "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": null,
-  "versionId": "42d16449-2b95-4bd3-8f07-6468e5a0bc7e",
-  "activeVersionId": "42d16449-2b95-4bd3-8f07-6468e5a0bc7e",
-  "versionCounter": 5,
-  "triggerCount": 0,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "versionMetadata": {
-    "name": null,
-    "description": null
-  }
+  "versionId": "42d16449-2b95-4bd3-8f07-6468e5a0bc7e"
 }
