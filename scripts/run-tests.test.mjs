@@ -401,13 +401,13 @@ test("parseArgs: defaults, --only, --profile, and errors", () => {
   assert.equal(parseArgs([]).profile, "production");
   assert.deepEqual(parseArgs(["--only", "1, 2,6"]).only, [1, 2, 6]);
   assert.deepEqual(parseArgs(["--only=24"]).only, [24]);
-  assert.equal(parseArgs(["--profile", "trackC", "--self-check"]).selfCheck, true);
+  assert.equal(parseArgs(["--self-check"]).selfCheck, true);
   assert.throws(() => parseArgs(["--only", "x"]), /not a scenario number/);
   assert.throws(() => parseArgs(["--profile", "nope"]), /Unknown profile/);
   assert.throws(() => parseArgs(["--frobnicate"]), /Unknown option/);
 });
 
-test("selectGroups: --only picks the groups; the slow group needs --include-slow and the production profile", () => {
+test("selectGroups: --only picks the groups; the slow group needs --include-slow", () => {
   const ids = (sel) => sel.chosen.map((c) => c.group.id);
   assert.deepEqual(ids(selectGroups(data, parseArgs(["--only", "2,24"]))), ["main", "retry-24"]);
   assert.deepEqual(selectGroups(data, parseArgs(["--only", "2,24"])).chosen[0].wanted, [2]);
@@ -415,7 +415,6 @@ test("selectGroups: --only picks the groups; the slow group needs --include-slow
   assert.ok(!ids(all).includes("while-stopped"));
   assert.equal(all.skipped[0].group.id, "while-stopped");
   assert.ok(ids(selectGroups(data, parseArgs(["--include-slow"]))).includes("while-stopped"));
-  assert.ok(!ids(selectGroups(data, parseArgs(["--include-slow", "--profile", "trackC"]))).includes("while-stopped"));
   assert.throws(() => selectGroups(data, parseArgs(["--only", "99"])), /no such scenario/);
 });
 

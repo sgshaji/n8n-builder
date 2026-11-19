@@ -1,7 +1,7 @@
 # HARSLL: keeping council tax accounts in step with tenancy changes
 
 Business overview · 19 November 2026
-Shared version: [Business overview tab](https://claude.ai/artifact/Kjx7dd8njphvDfwTq833cU#7d961d07-adad).
+Shared version: [Business overview tab](https://claude.ai/artifact/Kjx7dd8njphvDfwTq833cU#7d961d07-adad) (an earlier copy; this file is the current one).
 Technical detail: [HARSLL-uipath-process.md](../process/HARSLL-uipath-process.md).
 
 HARSLL is an automated process that updates council tax accounts when a council tenancy starts or ends. The aim is that the right person is billed from the right date, without staff entering each change by hand. It changes an account only when five safety checks pass. Anything it is unsure about is passed to staff.
@@ -82,6 +82,8 @@ HARSLL has **two automated parts**. The first prepares cases and puts them on a 
 
 Splitting the work this way means one difficult case never holds up the rest. Each case is checked and either applied or referred on its own.
 
+In the new version built with n8n, the two parts stay the same, but they are built as six smaller workflows, each with one job. [How HARSLL works](../guides/how-harsll-works.md) describes each one, and [Using HARSLL day to day](../guides/using-harsll.md) is the guide for the team that sends the spreadsheets and handles referred cases.
+
 ## Safety checks
 
 Before changing any account, HARSLL applies five business rules in order. **All five must pass.** If any rule fails, the account is left exactly as it was and the case goes to staff.
@@ -141,8 +143,8 @@ The process owner needs to confirm the points below before this document can be 
 | 5 | **Which types of tenancy change are accepted** | Defines exactly what is automated and what stays manual |
 | 6 | **The exact rule for comparing the two records** (safety check 4) | The most complex rule; it decides when an account is changed or referred |
 | 7 | **That RBIS is the council tax system and ABRITAS is the housing system** the changes come from | The systems are inferred from the process files |
-| 9 | **Whether the landlord is liable for a property between tenancies**, and whether HARSLL refers to housing association or registered social landlord tenancies | Safety check 4 is built on this reading. If so, "council tenancy" in this document should read "social landlord tenancy" |
 | 8 | **How the automation connects to the council tax system:** through its screens, or through a direct link | Affects how reliable the process is, and which tools could run it in future |
+| 9 | **Whether the landlord is liable for a property between tenancies**, and whether HARSLL refers to housing association or registered social landlord tenancies | Safety check 4 is built on this reading. If so, "council tenancy" in this document should read "social landlord tenancy" |
 
 ## Key terms
 

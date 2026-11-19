@@ -1,7 +1,7 @@
 # Phase 4 trials: results
 
 **Run on:** 19 November 2026, n8n 2.48.5 in Docker on Windows 11 (ARM), repo in a OneDrive folder.
-**Result:** all four trials passed. The [design](HARSLL-n8n-design.md) stands, with three small build details added.
+**Result:** all four trials passed. The [design](../design/HARSLL-n8n-design.md) stands, with three small build details added.
 
 The design asked for four short trials before building, because each one tested something the design depends on but had not been proven on this setup. The trial workflows, table and files were deleted afterwards.
 

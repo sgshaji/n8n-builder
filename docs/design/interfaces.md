@@ -2,7 +2,7 @@
 
 **Purpose:** the exact hand-overs between the HARSLL workflows, so they can be built in parallel and fit together. The [design](HARSLL-n8n-design.md) says *what* each part does; this document says *what passes between them*. If the two disagree, raise it; do not guess.
 
-**Status:** written for the parallel build (19 November 2026) and updated at the reconcile stage to match what was built.
+**Status:** current. Written for the parallel build (19 November 2026) and kept in step with the workflows since. IDs shown are those of the original local n8n; on any other n8n they differ, and `scripts/setup-harsll.mjs` fills them in.
 
 ## Shared conventions
 
@@ -17,7 +17,7 @@
 | Settings | Loaded once per Dispatcher run and passed down. Every sub-workflow receives a `settings` object and must not call the Settings workflow itself |
 | Code nodes | Only where the design allows or no native node fits. Notes start with `Why Code:` |
 | Node names | Plain English, saying what the step does: "Check 1: row usable?", "Refer case", not "IF1" |
-| Workflow settings | `executionOrder: v1`, `timezone: Europe/London`. Leave run-history settings at their defaults during the build; they are set at the reconcile stage |
+| Workflow settings | `executionOrder: v1`, `timezone: Europe/London`, `saveDataSuccessExecution: none`, `saveDataErrorExecution: all`, `saveManualExecutions: false`, `saveExecutionProgress: false` |
 | Validation | Validate every workflow with the n8n-mcp validator before saving, and fix errors |
 | **Silent expression errors** | In n8n 2.48.5 an expression that hits an ordinary JavaScript error (bad JSON, a property of `null`) does **not** stop the node: the value becomes `null`. Never rely on an expression failing to stop a dangerous path. Parse JSON only in Code nodes (they do stop), and check other values explicitly, with the cautious branch as the fallback |
 
@@ -44,7 +44,7 @@ Workflow **HARSLL – Settings** (`lq2vGGGRcILxjPpb`, published). Returns one it
 | `maxAttempts` | `3` | |
 | `stuckMinutes` | `15` | |
 | `lockStaleMinutes` | `30` | |
-| `fileSettleSeconds` | `60` | |
+| `fileSettleSeconds` | `60` | At least 60: the file listing takes only files unchanged for a minute |
 | `maxFileReadAttempts` | `3` | |
 | `summaryEmailTo` / `summaryEmailFrom` | `harsll-team@example.test` / `harsll@example.test` | |
 | `inputFolder`, `archiveFolder`, `rejectedFolder`, `reportsFolder` | `/files/input`, `/files/archive`, `/files/rejected`, `/files/reports` | |
@@ -53,19 +53,19 @@ Workflow **HARSLL – Settings** (`lq2vGGGRcILxjPpb`, published). Returns one it
 | `takeInFileWorkflowId`, `reportBatchWorkflowId` | `KsUFs7e8kubcri9g`, `dlr4h7esJCHtBP39` | HARSLL – Dispatcher: take in a file, and HARSLL – Dispatcher: report a batch |
 | `performerWorkflowId`, `adapterWorkflowId` | `Bxb1mMwb4TOFuP8j`, `UEa9ahhsExQ8SXfb` | HARSLL – Performer, and HARSLL – Performer: RBIS adapter |
 
-The email credential is **Mailpit (local test mailbox)** (`qwZ9yygtBArarq6Q`, SMTP to `mailpit:1025`).
+The email credential is **Mailpit (local test mailbox)** (SMTP to `mailpit:1025`, no login; ID `qwZ9yygtBArarq6Q` in the original local n8n). Another environment uses its own SMTP credential.
 
 ## Tables
 
 All three kinds exist in n8n with the columns below. Columns not listed in the design were added: `tenancyKey`, `isLeadRow`, `relevantDate`.
 
-| Table | Production | Track A | Track B | Track C |
-| --- | --- | --- | --- | --- |
-| Cases | `harsll_cases` `SBZZFYYtjdKZcTha` | `trackA_cases` `A0QezsR9YWAsD6Z9` | `trackB_cases` `fKgz5jaovu1lXFxF` | `trackC_cases` `rMQDvBaEjwGIanqf` |
-| Batches | `harsll_batches` `4jaeshwJnybiuyp3` | | `trackB_batches` `Au3kGjRv0bauKmlw` | `trackC_batches` `uM2kkAGutYhptMNK` |
-| Lock | `harsll_lock` `4iFl6qPseCy2DyGb` | | `trackB_lock` `SKA4C9Pihmt3oowK` | `trackC_lock` `hCHw5zGXvh5ddm5k` |
+| Table | Name | ID in the original local n8n |
+| --- | --- | --- |
+| Cases | `harsll_cases` | `SBZZFYYtjdKZcTha` |
+| Batches | `harsll_batches` | `4jaeshwJnybiuyp3` |
+| Lock | `harsll_lock` | `4iFl6qPseCy2DyGb` |
 
-Each lock table has one row: `{ name: "dispatcher", lockedAt: null, lockedBy: "" }`.
+The workflows find the tables through the IDs in Settings; the test runner and the set-up script find them by name. The lock table has one row: `{ name: "dispatcher", lockedAt: null, lockedBy: "" }`.
 
 ### Cases table columns
 
@@ -115,7 +115,7 @@ The Dispatcher has **three** triggers. All three run the same steps.
 
 | Trigger | Node | Detail |
 | --- | --- | --- |
-| File added | **Local File Trigger** | Folder from the trigger node (it cannot read settings): `/files/input` in production, `/files/trackB/input` during the build. Event "File Added", **Use Polling** and **Await Write Finish** on, then a **Wait** of `fileSettleSeconds` |
+| File added | **Local File Trigger** | Folder set on the trigger node (it cannot read settings); must equal `settings.inputFolder`, `/files/input` locally. Event "File Added", **Use Polling** and **Await Write Finish** on, then a **Wait** of `fileSettleSeconds` |
 | Timer | **Schedule Trigger** | Every 15 minutes, not on the quarter hour. It is also the only trigger for files copied with an old modified time, which the file trigger may not notice |
 | **Run now** | **Webhook**, `POST /webhook/harsll-run-now`, responds immediately with `{"started": true}` | **Addition to the design.** Lets the test runner start a run, for example to retry failed cases, without waiting for the timer. No waiting step. Local only; review before production |
 
@@ -240,31 +240,10 @@ The Performer records each successful RBIS change in `stepsDone`, as a JSON arra
 
 A step whose call returned `alreadyDone: true` is recorded too.
 
-## Pretend RBIS copies
+## Pretend RBIS
 
-| Who | URL from n8n | URL from your machine | Rule |
-| --- | --- | --- | --- |
-| Everyone, after the build | `http://mock-rbis:8080` | http://localhost:8088 | Used by the workflows and the test runner |
-| Track A (build only, removed) | `http://mock-rbis-a:8080` | http://localhost:8089 | |
-| Track C (build only, removed) | `http://mock-rbis-c:8080` | http://localhost:8091 | |
+| URL from n8n | URL from your machine | Used by |
+| --- | --- | --- |
+| `http://mock-rbis:8080` | http://localhost:8088 | The workflows (`settings.rbisBaseUrl`), the test runner and the sample run |
 
-All load `test-data/rbis-accounts.json`. Endpoints: [mock-rbis/README.md](../../mock-rbis/README.md).
-
-## Track resources (build only)
-
-These existed during the parallel build and were **removed at the reconcile stage**. Kept here as a record.
-
-| Track | Builds | Uses | Folders |
-| --- | --- | --- | --- |
-| **A** | HARSLL – RBIS adapter, HARSLL – Performer | `trackA_cases`, `mock-rbis-a`. Passes its own settings object in tests | None |
-| **B** | HARSLL – Dispatcher, HARSLL – Performer (stand-in, track B) | **HARSLL – Settings (track B, dev)** (`lI18cfcKFPSv2heB`), `trackB_*` tables | `data/trackB/` = `/files/trackB/` |
-| **C** | Test kit: scenarios, spreadsheet generator, test runner | `trackC_*` tables, `mock-rbis-c` | `data/trackC/` = `/files/trackC/` |
-
-Rules for every track:
-
-- **Webhook paths are shared across all workflows.** Prefix any test webhook with your track: `track-a-…`, `track-b-…`, `track-c-…`. The only exception is `harsll-run-now`, owned by track B.
-- **You may turn on "Available in MCP"** for your own workflows, to run them through the MCP tools.
-- **Touch only your own resources.** Never change, reset or delete another track's tables, pretend RBIS, folders, workflows or files, and never the production ones.
-- **Do not run `git add`, `git commit` or `git push`.** The reconcile stage commits everything.
-- **Do not edit shared files**: `README.md`, `CLAUDE.md`, `docs/design/HARSLL-n8n-design.md`, this file, `compose.yaml`, `.env.example`. Put proposed changes in your build notes.
-- **Write build notes** in `docs/build-notes/track-<A|B|C>.md`: what you built (workflow names and IDs), how you tested it and the results, every place you departed from the design or this document and why, and open issues.
+It loads `test-data/rbis-accounts.json`. Endpoints: [mock-rbis/README.md](../../mock-rbis/README.md). During the build there were two more copies, one per build track; see [Build history](../history/README.md).

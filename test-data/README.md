@@ -6,6 +6,7 @@ Made-up data for building and testing HARSLL. **Everything here is invented**: t
 | --- | --- | --- |
 | [`rbis-accounts.json`](rbis-accounts.json) | The accounts the pretend RBIS starts with: 31 accounts, each set up for one or more test scenarios | [`mock-rbis`](../mock-rbis/README.md) |
 | [`scenarios.json`](scenarios.json) | The 37 test scenarios: spreadsheet rows, set-up, groups and expected results | [`scripts/run-tests.mjs`](../scripts/run-tests.mjs) |
+| [`sample/harsll-sample.xlsx`](sample/harsll-sample.xlsx) | A 10-row sample spreadsheet for trying HARSLL, built from 8 of the scenarios by `node scripts/try-sample.mjs --write-file`. Do not edit it by hand | [`scripts/try-sample.mjs`](../scripts/try-sample.mjs) and [Try HARSLL with sample data](../docs/guides/try-harsll-with-sample-data.md) |
 | [`spreadsheets/`](spreadsheets/) | The test spreadsheets, generated from `scenarios.json` by [`scripts/make-test-spreadsheets.mjs`](../scripts/make-test-spreadsheets.mjs). Do not edit them by hand | The test runner |
 
 How to run the tests: [Testing HARSLL](../docs/testing.md).

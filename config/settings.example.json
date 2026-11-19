@@ -1,0 +1,18 @@
+{
+  "_readme": {
+    "what": "Example settings overrides for scripts/setup-harsll.mjs --settings <file>. Copy to config/<environment>.local.json (ignored by Git) and change the values. Every value here is a made-up placeholder.",
+    "rules": "Give only the settings that differ from the defaults in workflows/harsll-settings.json; any of its keys may be given except the table and workflow IDs, which the script always fills in. Unknown keys and wrong types stop the script. Keys starting with _ are comments.",
+    "environment": "profile names the copy. inputFolder, archiveFolder, rejectedFolder and reportsFolder are paths inside the n8n container; the file trigger watches inputFolder. rbisBaseUrl is the address of RBIS (the pretend RBIS is http://mock-rbis:8080).",
+    "email": "summaryEmailTo receives the batch summaries and rejection notices; summaryEmailFrom is the sender. The mail server itself is the SMTP credential in n8n, not a setting.",
+    "businessRules": "The other settings (landlordNames, deathHandling, maxAttempts and so on) are business rules. Each default is an assumption until the process owner confirms it: see docs/design/HARSLL-n8n-design.md. Override them here only when confirmed for this environment."
+  },
+  "profile": "example-test",
+  "landlordNames": ["Example Housing Association"],
+  "summaryEmailTo": "harsll-team@council.example",
+  "summaryEmailFrom": "harsll-robot@council.example",
+  "inputFolder": "/files/input",
+  "archiveFolder": "/files/archive",
+  "rejectedFolder": "/files/rejected",
+  "reportsFolder": "/files/reports",
+  "rbisBaseUrl": "https://rbis.council.example/api"
+}

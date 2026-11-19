@@ -17,9 +17,9 @@ Exported n8n workflows live here as JSON files, one file per workflow. This fold
 
 How they fit together: [design](../docs/design/HARSLL-n8n-design.md). Exact hand-overs between them: [interfaces](../docs/design/interfaces.md).
 
-The IDs are those of the original local n8n. On another machine, importing gives new IDs: update `takeInFileWorkflowId`, `reportBatchWorkflowId`, `performerWorkflowId` and `adapterWorkflowId` in **HARSLL – Settings**, the Settings workflow ID in the Dispatcher's **Load settings** step, and the table IDs in Settings.
+The IDs are those of the original local n8n. **To install these files into any n8n, use the set-up script**: `node scripts/setup-harsll.mjs` (locally add `--create-mailpit-credential`). It creates the tables, writes the new table and workflow IDs into **HARSLL – Settings**, points the Dispatcher's **Load settings** step at Settings, and publishes all six in the right order. A plain import does none of that. See [Run n8n locally](../docs/setup/01-run-n8n-locally.md#6-install-harsll) and [Move HARSLL to another environment](../docs/setup/03-move-to-another-environment.md).
 
-**Publish all six after importing.** A workflow called by another runs only its published version.
+**A workflow called by another runs only its published version.** After editing one by hand in n8n, publish it, then export it here.
 
 ## Reading the workflows in the editor
 

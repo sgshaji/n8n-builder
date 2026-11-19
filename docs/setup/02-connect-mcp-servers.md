@@ -33,6 +33,8 @@ flowchart LR
 
 ## Step 1: Create the n8n API key (for `n8n-mcp`)
 
+If you followed [step 5 of the local setup guide](01-run-n8n-locally.md#5-create-an-api-key), you already have one in `.env`: skip to step 2.
+
 1. Open http://localhost:5678/settings/api (or **Settings → n8n API**).
 2. Click **Create an API key**.
    - **Label:** `claude-code-mcp`

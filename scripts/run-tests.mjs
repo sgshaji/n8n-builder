@@ -5,8 +5,7 @@
 //   node scripts/run-tests.mjs --only 1,2,6        only the groups these scenarios are in
 //   node scripts/run-tests.mjs --include-slow      also scenario 36 (stops and starts n8n)
 //   node scripts/run-tests.mjs --list              show the groups and scenarios, run nothing
-//   node scripts/run-tests.mjs --profile trackC --self-check
-//                                                  check the runner itself, without the workflows
+//   node scripts/run-tests.mjs --self-check        check the runner itself, without the workflows
 //
 // Plain Node.js, no packages. The n8n API key is read from .env and never printed.
 // Guide: docs/testing.md.
@@ -41,7 +40,9 @@ export const PROFILES = {
     n8nUrl: "http://localhost:5678",
     rbisUrl: "http://localhost:8088",
     mailpitUrl: "http://localhost:8025",
-    tables: { cases: "SBZZFYYtjdKZcTha", batches: "4jaeshwJnybiuyp3", lock: "4iFl6qPseCy2DyGb" },
+    // Found by name at start-up, so the runner works on any n8n where HARSLL is set up.
+    tables: null,
+    tableNames: { cases: "harsll_cases", batches: "harsll_batches", lock: "harsll_lock" },
     folders: folderSet(["data"]),
     runNowUrl: "http://localhost:5678/webhook/harsll-run-now",
     dispatcherName: "HARSLL – Dispatcher",
@@ -49,20 +50,6 @@ export const PROFILES = {
     cleanMailpit: true,
     checkEmails: true,
     mayRestartN8n: true,
-  },
-  trackC: {
-    name: "trackC",
-    n8nUrl: "http://localhost:5678",
-    rbisUrl: "http://localhost:8091",
-    mailpitUrl: "http://localhost:8025",
-    tables: { cases: "rMQDvBaEjwGIanqf", batches: "uM2kkAGutYhptMNK", lock: "hCHw5zGXvh5ddm5k" },
-    folders: folderSet(["data", "trackC"]),
-    runNowUrl: null, // no Dispatcher of its own; see --run-now-url
-    dispatcherName: null,
-    cleanFolders: true, // its own folders only
-    cleanMailpit: false, // the test mailbox is shared during the build: read only
-    checkEmails: false,
-    mayRestartN8n: false, // other tracks use the same n8n
   },
 };
 
@@ -201,6 +188,19 @@ export function makeClients(profile, apiKey) {
     async freeLock() {
       const updated = await n8n.updateRows(profile.tables.lock, [{ columnName: "name", condition: "eq", value: "dispatcher" }], { lockedAt: null, lockedBy: "" });
       if (!Array.isArray(updated) || updated.length === 0) await n8n.insertRows(profile.tables.lock, [{ name: "dispatcher", lockedAt: null, lockedBy: "" }]);
+    },
+    /** The HARSLL tables' IDs, found by name. */
+    async findTables(names) {
+      const page = await api("GET", `/data-tables?limit=250`);
+      const out = {};
+      const missing = [];
+      for (const [key, name] of Object.entries(names)) {
+        const t = (page.data ?? []).find((x) => x.name === name);
+        if (t) out[key] = t.id;
+        else missing.push(name);
+      }
+      if (missing.length) throw new Error(`no data table named ${missing.join(", ")}. Set HARSLL up first: node scripts/setup-harsll.mjs`);
+      return out;
     },
     async findWorkflowId(name) {
       const page = await api("GET", `/workflows?name=${encodeURIComponent(name)}&limit=100`);
@@ -670,7 +670,7 @@ export function formatReport(data, runs, skipped, { verbose = false, seconds } =
 }
 
 // ---------------------------------------------------------------------------
-// Self-check: proves the runner without the Dispatcher (trackC profile)
+// Self-check: proves the runner without the Dispatcher
 // ---------------------------------------------------------------------------
 
 const OPERATION_ENDPOINTS = {
@@ -910,11 +910,11 @@ async function selfCheck(ctx) {
 function usage() {
   return `Usage: node scripts/run-tests.mjs [options]
 
-  --profile production|trackC   which tables, pretend RBIS and folders to use (default production)
+  --profile production          which n8n, tables, pretend RBIS and folders to use (the only profile)
   --only 1,2,6                  run only the groups that contain these scenarios, and report only them
   --include-slow                also run scenario 36 (stops and starts the n8n container; up to 15 minutes)
   --list                        show the groups, their scenarios and rough timings; run nothing
-  --self-check                  check the runner itself against the profile's own resources (no workflows)
+  --self-check                  check the runner itself, without the workflows (wipes the HARSLL data, as the tests do)
   --verbose                     also list checks that were skipped
   --run-now-url URL             override the Dispatcher's Run now webhook
   --dispatcher-name NAME        override the Dispatcher's workflow name (to watch its runs)
@@ -979,11 +979,15 @@ async function main() {
   const stale = staleFiles(ctx.builtFiles).filter((n) => !n.startsWith("~$"));
   if (stale.length) console.warn(`Note: test-data/spreadsheets is out of date (${stale.join(", ")}). Run node scripts/make-test-spreadsheets.mjs. The tests use copies built from scenarios.json.`);
 
+  try {
+    profile.tables = await ctx.c.n8n.findTables(profile.tableNames);
+  } catch (err) {
+    console.error(`Cannot start: ${err.message}`);
+    process.exit(2);
+  }
+
   if (opts.selfCheck) {
-    if (opts.profile === "production") {
-      console.error("--self-check writes made-up rows into the tables; use it with --profile trackC (or another non-production profile).");
-      process.exit(2);
-    }
+    profile.checkEmails = false; // the simulated runs send no email
     const ok = await selfCheck(ctx);
     process.exit(ok ? 0 : 1);
   }

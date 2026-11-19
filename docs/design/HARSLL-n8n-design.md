@@ -17,7 +17,7 @@ HARSLL is rebuilt as **six n8n workflows**, a **Cases table** with two small hel
 
 ### Changes made during the build (Phase 4)
 
-The three build tracks met situations this design did not cover, or covered loosely. Each was settled with the most cautious reading and is now part of the design. Detail is in the [build notes](../build-notes/).
+The three build tracks met situations this design did not cover, or covered loosely. Each was settled with the most cautious reading and is now part of the design. Detail is in the [build notes](../history/build-notes/).
 
 **New behaviour**
 
@@ -536,7 +536,7 @@ All settings live in **HARSLL – Settings**. Each default is an **assumption** 
 | `maxAttempts` | `3` | Times a case is tried before it stays `failed` |
 | `stuckMinutes` | `15` | A case `in_progress` for longer than this is treated as stuck |
 | `lockStaleMinutes` | `30` | A lock not refreshed for this long belongs to a run that died |
-| `fileSettleSeconds` | `60` | A file must be unchanged for this long before it is read |
+| `fileSettleSeconds` | `60` | How long the Dispatcher waits after a file arrives. **At least 60**: the file listing only takes files unchanged for a minute, so a shorter wait finds nothing and the file waits for the timer. The set-up script refuses less |
 | `maxFileReadAttempts` | `3` | Runs on which an unreadable file is tried before it is rejected |
 | `summaryEmailTo`, `summaryEmailFrom` | `harsll-team@example.test`, `harsll@example.test` | Test addresses |
 | `inputFolder`, `archiveFolder`, `rejectedFolder`, `reportsFolder` | Under `/files` | |
@@ -682,7 +682,7 @@ All tests use made-up data in `test-data/`. Each scenario names the flowchart pa
 
 ## Build order (Phase 4)
 
-1. **Four short trials**, before anything else. **Done: all four passed.** See [Phase 4 trials: results](phase-4-trials.md).
+1. **Four short trials**, before anything else. **Done: all four passed.** See [Phase 4 trials: results](../history/phase-4-trials.md).
    - the file trigger with Docker on Windows in a OneDrive folder,
    - how Extract from File returns Excel dates,
    - listing settled files and moving a file with a safe name,

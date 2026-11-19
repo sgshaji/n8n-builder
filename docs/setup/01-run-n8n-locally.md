@@ -1,6 +1,6 @@
 # Run n8n locally with Docker
 
-This guide sets up a local n8n for building and testing the HARSLL workflows. It takes about 10 minutes the first time.
+This guide sets up a local n8n, installs HARSLL in it, and shows it working. It takes about 15 minutes the first time.
 
 ## What you get
 
@@ -16,6 +16,8 @@ All three are reachable **only from your own machine**.
 | --- | --- | --- |
 | `data/input/` | `/files/input` | Drop a test spreadsheet here to start the Dispatcher |
 | `data/archive/` | `/files/archive` | Processed spreadsheets are moved here |
+| `data/rejected/` | `/files/rejected` | Spreadsheets that could not be used |
+| `data/reports/` | `/files/reports` | Staff worklists |
 | `workflows/` | `/workflows` | Exported workflow files, for import and export |
 
 n8n's own database (workflows, credentials, run history) lives in a Docker volume called `n8n-builder_n8n_data`, **not** in the repo folder. This keeps it out of Git and out of OneDrive.
@@ -26,6 +28,7 @@ You need:
 
 - **Docker Desktop**, installed and running. On Windows it uses WSL 2. Wait until Docker Desktop shows "Engine running".
 - **Git**, and a clone of this repo.
+- **Node.js 20 or later**, for the set-up script, the sample run and the tests. n8n itself runs in Docker, so your Node version doesn't need to match n8n's.
 
 Check Docker is ready:
 
@@ -68,13 +71,13 @@ Open `.env` and check that `N8N_ENCRYPTION_KEY=` now has a long random value aft
 **Windows (PowerShell):**
 
 ```powershell
-New-Item -ItemType Directory -Force data/input, data/archive
+New-Item -ItemType Directory -Force data/input, data/archive, data/rejected, data/reports
 ```
 
 **macOS or Linux:**
 
 ```bash
-mkdir -p data/input data/archive
+mkdir -p data/input data/archive data/rejected data/reports
 ```
 
 ### 3. Start n8n
@@ -94,6 +97,31 @@ The first start downloads the images (they need about 2 GB of disk space) and ca
 3. Skip or close the optional survey and licence prompts.
 
 You now have a working n8n.
+
+### 5. Create an API key
+
+The set-up script, the sample run and the tests talk to n8n through its API.
+
+1. In n8n, open **Settings → n8n API** and click **Create an API key**. Label: `local scripts`. Expiry: 90 days is sensible.
+2. Copy the key (n8n shows it only once) and paste it into `.env` after `N8N_API_KEY=`.
+
+[Connect the n8n MCP servers](02-connect-mcp-servers.md) uses the same key.
+
+### 6. Install HARSLL
+
+```bash
+node scripts/setup-harsll.mjs --create-mailpit-credential
+```
+
+This creates the three tables, the test-mailbox login and the six workflows, wires them together and publishes them. It takes a few seconds and prints what it did. Running it again later updates HARSLL in place: use it after pulling changes from Git. Add `--dry-run` to see what it would do without changing anything. All its options: [Move HARSLL to another environment](03-move-to-another-environment.md#step-5-install).
+
+### 7. See it work
+
+```bash
+node scripts/try-sample.mjs
+```
+
+This clears the local test data, puts a 10-row made-up spreadsheet into `data/input`, and shows what HARSLL did with each row, in about two minutes. See [Try HARSLL with sample data](../guides/try-harsll-with-sample-data.md).
 
 ## Everyday use
 
@@ -123,11 +151,13 @@ All settings are in [`compose.yaml`](../../compose.yaml) and `.env`.
 | `MOCK_RBIS_PORT` | `8088` | Port for the pretend RBIS on your machine. Workflows always use `http://mock-rbis:8080` |
 | Ports | `127.0.0.1` only | n8n, Mailpit and the pretend RBIS cannot be reached from other machines on the network |
 
-Workflows that send email, such as the Dispatcher summary, use an n8n **SMTP credential** pointing at host `mailpit`, port `1025`, with no SSL and no login. This is set up when the workflows are built (Phase 4).
+Workflows that send email, such as the batch summary, use an n8n **SMTP credential** named "Mailpit (local test mailbox)": host `mailpit`, port `1025`, no SSL, no login. The set-up script creates it (step 6).
 
 ## Importing and exporting workflows
 
 Workflows are kept in Git as JSON files in [`workflows/`](../../workflows/). See that folder's README for naming rules.
+
+**To install or update all six from Git, use the set-up script** (step 6). It also wires the IDs together, which a plain import does not. The methods below are for working on one workflow at a time.
 
 **In the editor:**
 
@@ -153,7 +183,7 @@ From Phase 2, Claude Code can also create and update workflows directly through 
 1. Read the n8n release notes for every version between the current one and the new one. Look for breaking changes.
 2. Change `N8N_VERSION` in `.env.example` **and** in your `.env`.
 3. Run `docker compose up -d --wait`.
-4. Open n8n and run the HARSLL tests (added in Phase 4).
+4. Run the HARSLL tests: `node scripts/run-tests.mjs` (see [Testing HARSLL](../testing.md)).
 5. Commit the `.env.example` change, saying which version you moved to and why.
 
 ## Starting again from scratch
@@ -165,7 +195,7 @@ docker compose down --volumes
 docker compose up -d --wait
 ```
 
-Then create the owner account again (step 4).
+Then create the owner account and an API key again (steps 4 and 5), and install HARSLL again (step 6).
 
 ## Troubleshooting
 

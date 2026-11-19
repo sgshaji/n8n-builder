@@ -42,3 +42,6 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 .claude/settings.local.json
+
+# Browser automation output (screenshots from local checks)
+.playwright-mcp/

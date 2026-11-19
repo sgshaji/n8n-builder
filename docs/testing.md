@@ -4,6 +4,8 @@
 
 This guide explains how the HARSLL workflows are tested: what the tests cover, how to run them, how long they take, how to read the results, and how to add a test. The tests follow the test plan in the [design](design/HARSLL-n8n-design.md#test-plan).
 
+To see HARSLL work on a small sample first, without the full test set, see [Try HARSLL with sample data](guides/try-harsll-with-sample-data.md).
+
 ## What the tests cover
 
 There are **37 scenarios**, one for each line of the design's test plan. Each one is a small story, for example "a tenant moves in and the landlord is liable" or "the same file is dropped twice". For each scenario the test kit holds:
@@ -62,7 +64,7 @@ Everything is plain Node.js with no extra packages.
 ## Before you run the tests
 
 1. The local stack is running: `docker compose up -d` (see [Run n8n locally](setup/01-run-n8n-locally.md)).
-2. The six HARSLL workflows are built and **published**, with the production settings, and the Dispatcher's **Run now** webhook works.
+2. HARSLL is installed: `node scripts/setup-harsll.mjs --create-mailpit-credential` (see [step 6 of the setup guide](setup/01-run-n8n-locally.md#6-install-harsll)). It publishes the six workflows with the local settings and switches on the Dispatcher's **Run now** webhook, which the tests use.
 3. `.env` has a working `N8N_API_KEY`. The runner reads it and never prints it.
 
 > **The tests wipe the HARSLL data.** Each group empties the Cases and Batches tables, frees the lock, resets the pretend RBIS, empties the `input`, `archive`, `rejected` and `reports` folders under `data/`, and deletes every message in the test mailbox. Use them only on a local stack with made-up data.
@@ -73,10 +75,11 @@ Everything is plain Node.js with no extra packages.
 | --- | --- | --- |
 | See the groups and scenarios, without running anything | `node scripts/run-tests.mjs --list` | Seconds |
 | Run every scenario except the slow one | `node scripts/run-tests.mjs` | About 10–11 minutes |
+| Run all 37, including the slow one | `node scripts/run-tests.mjs --include-slow` | About 14–21 minutes |
 | Run some scenarios | `node scripts/run-tests.mjs --only 1,2,6` | About 2–3 minutes per group |
-| Also run scenario 36 (stops and starts n8n) | `node scripts/run-tests.mjs --include-slow` | About 3 minutes more |
+| Also run scenario 36 (stops and starts n8n) | `node scripts/run-tests.mjs --include-slow` | 4 to 10 minutes more, depending on when the 15-minute timer next fires |
 | Check the test kit itself, without n8n | `node --test scripts/` | Seconds |
-| Check the runner against the track C copies, without the workflows | `node scripts/run-tests.mjs --profile trackC --self-check` | Seconds |
+| Check the runner itself against the pretend RBIS and the tables, without the workflows | `node scripts/run-tests.mjs --self-check` | About a minute |
 
 **Why it takes this long.** The Dispatcher waits a minute after a file arrives, so that it never reads a file still being copied. Every time the tests drop a file, they wait that minute too. The groups keep the number of drops low.
 
@@ -90,7 +93,6 @@ Everything is plain Node.js with no extra packages.
 
 | Option | Use |
 | --- | --- |
-| `--profile trackC` | Use the track C copies of the tables, pretend RBIS and folders instead of the production ones |
 | `--verbose` | Also list the checks that were skipped |
 | `--run-now-url URL` | Use a different Run now webhook |
 | `--dispatcher-name NAME` | The Dispatcher's workflow name, if it is not `HARSLL – Dispatcher`. The runner watches its runs to know when it has finished |

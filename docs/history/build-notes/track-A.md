@@ -1,16 +1,16 @@
 # Track A build notes: RBIS adapter and Performer
 
 **Stage:** parallel build, track A, 19 November 2026.
-**Built against:** [design revision 3](../design/HARSLL-n8n-design.md) and [interfaces](../design/interfaces.md), n8n 2.48.5, the pretend RBIS copy `mock-rbis-a` and the table `trackA_cases`.
+**Built against:** [design revision 3](../../design/HARSLL-n8n-design.md) and [interfaces](../../design/interfaces.md), n8n 2.48.5, the pretend RBIS copy `mock-rbis-a` and the table `trackA_cases`.
 **Result:** both workflows are built, published and tested. The full test suite passed twice in a row: **96 of 96 tests, 1,713 checks**.
 
 ## What was built
 
 | Workflow | ID | Published | Export | Nodes |
 | --- | --- | --- | --- | --- |
-| **HARSLL – RBIS adapter** | `UEa9ahhsExQ8SXfb` | Yes, draft = published | [`workflows/harsll-rbis-adapter.json`](../../workflows/harsll-rbis-adapter.json) | 24 |
-| **HARSLL – Performer** | `Bxb1mMwb4TOFuP8j` | Yes, draft = published | [`workflows/harsll-performer.json`](../../workflows/harsll-performer.json) | 70 |
-| **Track A – test harness** (test only) | `Q2EM7lajNcwWV5qJ` | Yes | [`tests/performer/track-a-test-harness.json`](../../tests/performer/track-a-test-harness.json) | 3 |
+| **HARSLL – RBIS adapter** | `UEa9ahhsExQ8SXfb` | Yes, draft = published | [`workflows/harsll-rbis-adapter.json`](../../../workflows/harsll-performer-rbis-adapter.json) | 24 |
+| **HARSLL – Performer** | `Bxb1mMwb4TOFuP8j` | Yes, draft = published | [`workflows/harsll-performer.json`](../../../workflows/harsll-performer.json) | 70 |
+| **Track A – test harness** (test only) | `Q2EM7lajNcwWV5qJ` | Yes | `tests/performer/track-a-test-harness.json` (removed; in Git history) | 3 |
 
 - Both HARSLL workflows: `executionOrder: v1`, `timezone: Europe/London`, **Available in MCP** on, run-history settings left at their defaults (the reconcile stage sets them).
 - Both were checked with the n8n-mcp validator (`n8n_validate_workflow`) after every change: no errors. The Performer has 16 warnings, all the same note that "Execute Once" is on, which is deliberate (each case has one item).

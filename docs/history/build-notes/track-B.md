@@ -2,7 +2,7 @@
 
 **Track:** B of the parallel build (stage 2), 19 November 2026.
 **Builds:** HARSLL – Dispatcher, and a stand-in Performer to test it with.
-**Follows:** [design](../design/HARSLL-n8n-design.md) (revision 3) and [interfaces](../design/interfaces.md). Departures are listed in [Departures and questions](#departures-and-questions).
+**Follows:** [design](../../design/HARSLL-n8n-design.md) (revision 3) and [interfaces](../../design/interfaces.md). Departures are listed in [Departures and questions](#departures-and-questions).
 
 ## What was built
 

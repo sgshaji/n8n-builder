@@ -11,8 +11,14 @@ export function readEnv() {
   if (!existsSync(path)) {
     fail(`No .env file found at ${path}. See docs/setup/01-run-n8n-locally.md, step 1.`);
   }
+  return parseEnv(readFileSync(path, "utf8"));
+}
+
+// Parses the text of a .env-style file: KEY=value lines; quotes around a value are removed.
+// Exported so other scripts (e.g. setup-harsll.mjs) can read a different env file.
+export function parseEnv(text) {
   const values = {};
-  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+  for (const line of text.split(/\r?\n/)) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (match) values[match[1]] = match[2].replace(/^(['"])(.*)\1$/, "$2");
   }
